@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Walkkittie</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_page1_title">Kedinle Tanış! 🐱</string>
+    <string name="welcome_page1_desc">Sanal bir kedi benimsiyorsun. Adım attıkça, su içtikçe ve günlük görevleri tamamladıkça kedin mutlu ve sağlıklı olur!</string>
+    <string name="welcome_page2_title">Sağlığını Takip Et 📊</string>
+    <string name="welcome_page2_desc">Adımlarını, kalorilerini ve su içimini takip et. Günlük görevleri tamamla, yemek puanı ve XP kazan. Kedinle birlikte büyü!</string>
+    <string name="welcome_page3_title">Oyna ve Seviye Atla 🏆</string>
+    <string name="welcome_page3_desc">Taş-Kağıt-Makas, Hafıza, Refleks ve Slot gibi mini oyunlar oyna. XP kazan, yeni ünvanlar aç ve efsanevi bir kedi sahibi ol!</string>
+    <string name="welcome_btn_next">İleri</string>
+    <string name="welcome_btn_start">Başlayalım 🚀</string>
+    
+    <!-- Setup Screen -->
+    <string name="setup_title">Profil Oluştur 📝</string>
+    <string name="setup_subtitle">Seni ve dostunu tanıyalım! ✨</string>
+    <string name="setup_label_name">İsmin</string>
+    <string name="setup_placeholder_name">Adın nedir?</string>
+    <string name="setup_label_cat_name">Kedinin İsmi 🐱</string>
+    <string name="setup_placeholder_cat_name">Ona ne diyeceksin?</string>
+    <string name="setup_label_gender">Cinsiyet</string>
+    <string name="setup_label_goals">Günlük Hedefler</string>
+    <string name="setup_goal_calorie">Kalori Hedefi</string>
+    <string name="setup_error_name">Lütfen ismini gir. Kedin sana nasıl seslensin? 😺</string>
+    <string name="setup_error_cat_name">Lütfen kedine bir isim ver! 🐾</string>
+    <string name="setup_error_gender">Lütfen cinsiyet seçimi yap.</string>
+    <string name="setup_btn_start">Maceraya Başla! 🐱✨</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_cat">Kedim</string>
+    <string name="nav_stats">İstatistik</string>
+    <string name="nav_period">Döngü</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_shop">Market</string>
+    <string name="nav_games">Oyunlar</string>
+    <string name="nav_setup">Kurulum</string>
+    <string name="nav_knowledge">Bilgi Haritası</string>
+
+    <!-- Home Screen -->
+    <string name="home_subtitle">Bugün senin günün!</string>
+    <string name="home_low_energy_snackbar">Kedinin pili azaldı! 🪫 Biraz uyumasına izin ver.</string>
+    <string name="mission_completed_feedback">Görev tamamlandı! 🎉</string>
+    <string name="mission_progress_feedback">Görevi tamamlamak için ilerlemeye devam et! 🐾</string>
+    <string name="home_daily_missions_title">Günlük Görevler 🚀</string>
+    <string name="home_more_missions_btn">Daha Fazla Kazan ✨</string>
+    <string name="mission_completed">Tamamlandı</string>
+    <string name="home_steps_status">Adım Durumu</string>
+    <string name="home_step_goal_label">Hedef: %s</string>
+    <string name="home_water_tracking_title">Su Takibi 💧</string>
+    <string name="home_all_missions_completed">Tüm görevler tamamlandı! Harikasın! 🎉</string>
+
+    <!-- Cat Screen -->
+    <string name="cat_screen_subtitle">Arkadaşınla vakit geçir ✨</string>
+    <string name="cat_stat_hunger">Açlık</string>
+    <string name="cat_stat_energy">Enerji</string>
+    <string name="cat_stat_happiness">Mutluluk</string>
+    <string name="cat_action_feed">Besle</string>
+    <string name="cat_status_sleeping">Lütfen Bekleyin...</string>
+    <string name="cat_feed_cost">10 MP</string>
+    <string name="cat_action_play">Oyna</string>
+    <string name="cat_play_room">Oyun Odası</string>
+    <string name="cat_action_sleep">Uyut</string>
+    <string name="cat_full_energy">Enerjiyi Fuller ⚡</string>
+    <string name="cat_ad_reduce_sleep">Reklam İzle: Enerji Doldur ⚡</string>
+    <string name="cat_pet_limit_reached">Kedin şu an yorgun! Bir saat sonra tekrar sev. 🐱</string>
+    <string name="cat_hint_pet">Dokun!</string>
+    <string name="cat_not_tired_info">Çok enerjik (%1$d)</string>
+
+    <!-- Statistics Screen -->
+    <string name="stats_title">İstatistikler</string>
+    <string name="stats_daily">Günlük</string>
+    <string name="stats_weekly">Haftalık</string>
+    <string name="stats_overview">Genel Bakış</string>
+    <string name="stats_steps">Adım</string>
+    <string name="stats_calories">Kalori</string>
+    <string name="stats_water">Su</string>
+    <string name="stats_burned">Yakılan</string>
+    <string name="stats_steps_card">Adım</string>
+    <string name="stats_distance">Mesafe</string>
+    <string name="stats_monthly">Aylık</string>
+    <string name="stats_weekly_steps">Haftalık Adım Grafiği</string>
+    <string name="stats_monthly_steps">Aylık Adım Trendi</string>
+    <string name="stats_detailed_analysis">Detaylı Analiz</string>
+    <string name="stats_total_steps">Toplam Adım</string>
+    <string name="stats_daily_avg">Günlük Ort.</string>
+    <string name="stats_best_day">En İyi Gün</string>
+    <string name="stats_goal_success">Hedef Başarısı</string>
+    <string name="stats_chart_no_data">Veri Yok</string>
+    <string name="stats_add_meal_title">Öğün Ekle</string>
+    <string name="stats_meal_name">Yemek Adı</string>
+    <string name="stats_calories_input">Kalori (kcal)</string>
+    <string name="stats_save">Kaydet</string>
+    <string name="stats_cancel">İptal</string>
+    
+    <string name="meal_breakfast">Kahvaltı</string>
+    <string name="meal_lunch">Öğle Yemeği</string>
+    <string name="meal_dinner">Akşam Yemeği</string>
+    <string name="meal_snack">Ara Öğün</string>
+    <string name="stats_tab_activity">Aktivite</string>
+    <string name="stats_tab_nutrition">Beslenme</string>
+    <string name="stats_tab_history">Geçmiş</string>
+    <string name="stats_health_score">Günlük Sağlık Puanı</string>
+    <string name="stats_xp_gained">+%d XP Kazanıldı</string>
+    <string name="stats_weekly_activity">Haftalık Aktivite</string>
+    <string name="stats_calorie_balance">Kalori Dengesi</string>
+    <string name="stats_general_performance">Genel Performans</string>
+    <string name="stats_calorie_intake">Alınan Kalori</string>
+    <string name="stats_calorie_goal">Hedef: %d kcal</string>
+    <string name="stats_add">Ekle</string>
+    <string name="stats_remaining">%d kaldı</string>
+    <string name="stats_todays_meals">Bugünkü Öğünler</string>
+    <string name="stats_no_meals">Henüz öğün eklenmedi</string>
+
+    <!-- Games Screen -->
+    <string name="games_title">Oyun Odası 🎮</string>
+    <string name="games_subtitle">Kedini mutlu etmek ve ekstra ödüller kazanmak için oyunlar oyna!</string>
+    <string name="game_rps_title">Taş Kağıt Makas</string>
+    <string name="game_rps_desc">Kedinle klasik düello! Şansını dene.</string>
+    <string name="cost_energy">%d Enerji</string>
+    <string name="reward_happiness_mp">Mutluluk, Mama P.</string>
+    <string name="game_guess_title">Sayı Tahmin</string>
+    <string name="game_guess_desc">Kedin 1-100 arası bir sayı tuttu. Bulabilir misin?</string>
+    <string name="reward_high_mp">Yüksek Mama P.</string>
+    <!-- Removed Slots Strings -->
+    <string name="game_slots_title">Pati Çarkı</string>
+    <string name="game_slots_desc">Şanslı hissediyor musun? Çevir ve büyük ödülü yakala!</string>
+    <string name="reward_jackpot">JACKPOT!</string>
+    <string name="game_rps_header">Taş - Kağıt - Makas</string>
+    <string name="game_win_reward">Ödül kazanmak için yen! 🎁</string>
+    <string name="game_you">Sen</string>
+    <string name="game_vs">VS</string>
+    <string name="result_win">KAZANDIN! 🎉</string>
+    <string name="result_lose">KAYBETTİN... 😿</string>
+    <string name="result_draw">BERABERE! 🤝</string>
+    <string name="rewards_won">Kazanılan Ödüller:</string>
+    <string name="game_guess_instruction">1-100 arası bir sayı tuttum.</string>
+    <string name="game_guess_remaining">Kalan Hak: %d</string>
+    <string name="game_guess_placeholder">Tahminin</string>
+    <string name="btn_guess">Tahmin Et</string>
+    <string name="game_guess_history">Eski Tahminlerin</string>
+    <string name="game_slots_header">Pati Çarkı 🎰</string>
+    <string name="game_slots_spinning">Çevriliyor...</string>
+    <string name="btn_spin">Çevir!</string>
+    <string name="btn_play_again">Tekrar Oyna 🔄</string>
+    <string name="btn_close">Kapat</string>
+    <string name="btn_start_game">Başla! 🚀</string>
+    <string name="game_rps_countdown">Taş... Kağıt... Makas...</string>
+    <string name="game_slots_instruction">Eşleşmeleri bul, ödül kazan!</string>
+    
+    <!-- Memory Game -->
+    <string name="game_memory_title">Hafıza Patisi</string>
+    <string name="game_memory_desc">Kartları çevir, eşlerini bul! Hafızanı test et. 🧠</string>
+    <string name="game_memory_header">Hafıza Patisi 🧠</string>
+    <string name="game_memory_moves">Hamle: %d</string>
+    <string name="game_memory_pairs">Eşleşme: %d/6</string>
+    
+    <!-- Reflex Game -->
+    <string name="game_reflex_title">Kedi Refleksi</string>
+    <string name="game_reflex_desc">Pati izlerini yakala! Hızlı ol, kayboluyorlar! ⚡</string>
+    <string name="game_reflex_header">Kedi Refleksi ⚡</string>
+    <string name="game_reflex_score">Skor: %d</string>
+    <string name="game_reflex_round">Tur: %1$d / %2$d</string>
+    <string name="game_reflex_tap">Yakala!</string>
+    <string name="game_reflex_ready">Hazır ol…</string>
+
+    <!-- Shop Screen -->
+    <string name="shop_title">Market</string>
+    <string name="shop_balance_total">Toplam Bakiye</string>
+    <string name="shop_stock_food">Mama Stoğu</string>
+    <string name="shop_tab_food">Yiyecek</string>
+    <string name="shop_tab_accessories">Aksesuar</string>
+    <string name="shop_tab_special">Özel</string>
+    <string name="shop_error_no_coin">Yetersiz coin!</string>
+    <string name="shop_error_no_food_points">Yetersiz mama puanı!</string>
+    <string name="shop_msg_purchased">%1$s satın alındı! %2$s</string>
+    <string name="shop_error_purchase_failed">Satın alma başarısız: %s</string>
+
+    <!-- Period Screen -->
+    <string name="period_title">Döngü Takibi</string>
+    <string name="period_days_cycle">Gün (Döngü)</string>
+    <string name="period_days_left">Gün Kaldı</string>
+    <string name="period_calendar">Takvim</string>
+    <string name="period_active_btn">Regl Dönemindeyim ✓</string>
+    <!-- Profile Screen -->
+    <string name="profile_title">Profilim</string>
+    <string name="profile_level">Seviye %1$d • %2$d XP</string>
+    <string name="theme_selection_title">Tema Seçimi 🎨</string>
+    <string name="theme_dark_mode">Karanlık Mod 🌙</string>
+    <string name="theme_color_title">Tema Rengi</string>
+    <string name="goals_title">Kişisel Hedefler 🎯</string>
+    <string name="goal_steps_title">Adım Hedefi</string>
+    <string name="goal_water_title">Su Hedefi</string>
+    <string name="unit_happiness">Mutluluk</string>
+    <string name="settings_title">Hesap Ayarları ⚙️</string>
+    <string name="settings_notifications">Bildirimler</string>
+    <string name="settings_language">Dil / Language</string>
+    <string name="stat_streak">Seri</string>
+    <string name="stat_best_streak">En İyi</string>
+    <string name="stat_details">Detaylar →</string>
+    <string name="unit_day">Gün</string>
+    <string name="unit_steps">Adım</string>
+    
+    <string name="unit_food_points">Mama Puanı</string>
+    
+    <!-- Dialogs -->
+    <string name="dialog_edit_name_title">İsim Düzenle</string>
+    <string name="dialog_edit_name_label">İsmin</string>
+    <string name="dialog_edit_cat_title">Kedi İsmi Düzenle</string>
+    <string name="dialog_edit_cat_label">Kedi İsmi</string>
+    <string name="btn_save">Kaydet</string>
+    <string name="btn_cancel">İptal</string>
+    <string name="btn_confirm">Onayla</string>
+    
+    <!-- Missions -->
+    <string name="mission_steps_1000_title">İlk Adımlar</string>
+    <string name="mission_steps_1000_desc">1000 adım at</string>
+    <string name="mission_steps_5000_title">Yürüyüş Ustası</string>
+    <string name="mission_steps_5000_desc">5000 adım at</string>
+    <string name="mission_steps_10000_title">Günlük Hedef</string>
+    <string name="mission_steps_10000_desc">10.000 adım at</string>
+    <string name="mission_water_1000_title">Su İç</string>
+    <string name="mission_water_1000_desc">1 litre su iç</string>
+    <string name="mission_water_2000_title">Hidrasyon Şampiyonu</string>
+    <string name="mission_water_2000_desc">2 litre su iç</string>
+    
+    <!-- Dynamic Missions -->
+    <string name="mission_steps_tier1_title">Adım Hedefi %25</string>
+    <string name="mission_steps_tier1_desc">%d adım at</string>
+    <string name="mission_steps_tier2_title">Adım Hedefi %50</string>
+    <string name="mission_steps_tier2_desc">%d adım at</string>
+    <string name="mission_steps_tier3_title">Adım Hedefi %75</string>
+    <string name="mission_steps_tier3_desc">%d adım at</string>
+    <string name="mission_steps_tier4_title">Adım Hedefi %100</string>
+    <string name="mission_steps_tier4_desc">%d adım at</string>
+    
+    <string name="mission_water_tier1_title">Su Molası</string>
+    <string name="mission_water_tier1_desc">%d ml su iç</string>
+    <string name="mission_water_tier2_title">Sulu Bir Gün</string>
+    <string name="mission_water_tier2_desc">%d ml su iç</string>
+
+    <!-- Level Info -->
+    <string name="level_system_title">Seviye Sistemi ⭐</string>
+    <string name="level_label_with_title">Seviye %1$d (%2$s)</string>
+    <string name="level_label">Seviye %d</string>
+    <string name="level_next_label">Bir sonraki seviyeye %d XP kaldı</string>
+    
+    <!-- Level Titles -->
+    <string name="level_title_kitten">Yavru Kedi</string>
+    <string name="level_title_junior">Genç Kedi</string>
+    <string name="level_title_alley_cat">Sokak Kedisi</string>
+    <string name="level_title_house_cat">Ev Kedisi</string>
+    <string name="level_title_hunter">Avcı Kedi</string>
+    <string name="level_title_chonky">Şişman Kedi</string>
+    <string name="level_title_wise">Bilge Kedi</string>
+    <string name="level_title_legendary">Efsanevi Kedi</string>
+
+    <string name="level_xp_gain_title">XP Nasıl Kazanılır? 💪</string>
+    <string name="level_xp_source_walk">Yürüyüş</string>
+    <string name="level_xp_walk_desc">Her 1000 adım</string>
+    <string name="level_xp_source_game_rps">Oyun Oynamak</string>
+    <string name="level_xp_rps_desc">Taş-Kağıt-Makas kazanma</string>
+    <string name="level_xp_source_game_guess">Sayı Tahmin</string>
+    <string name="level_xp_guess_desc">Doğru bilme</string>
+    <string name="level_xp_source_feed">Kedi Besleme</string>
+    <string name="level_xp_feed_desc">Her besleme</string>
+    <string name="level_xp_source_sleep">Uyku</string>
+    <string name="level_xp_sleep_desc">Kedi uyandığında</string>
+    <string name="level_xp_source_mission">Görev Tamamlama</string>
+    <string name="level_xp_mission_desc">Günlük görevler</string>
+    <string name="level_requirements_title">Seviye Gereksinimleri 📊</string>
+    <string name="level_tip_title">İpucu</string>
+    <string name="level_tips_content">Seviye atlamak zaman ve sabır ister! Her gün düzenli olarak yürüyüş yaparak ve kedine iyi bakarak XP biriktirebilirsin. Oyunları da unutma - kazandığın her oyun seni bir adım öne taşır! 🚀</string>
+
+    <!-- Charts -->
+    <string name="chart_label_goal">Hedef: %s</string>
+    <string name="chart_day_mon">Pzt</string>
+    <string name="chart_day_tue">Sal</string>
+    <string name="chart_day_wed">Çar</string>
+    <string name="chart_day_thu">Per</string>
+    <string name="chart_day_fri">Cum</string>
+    <string name="chart_day_sat">Cmt</string>
+    <string name="chart_day_sun">Paz</string>
+
+    <!-- Dynamic Messages (ViewModel) -->
+    <string name="cat_msg_consistency_happy">Kedin seni gördüğü için mutlu oldu! ❤️ (+Mutluluk)</string>
+    <string name="cat_msg_woke_up">Günaydın! Harika bir uyku çektim ve tamamen şarj oldum! ☀️⚡</string>
+    <string name="cat_msg_sleeping">Şşşt! Uyuyorum... 💤\n(%s kaldı)</string>
+    <string name="cat_msg_no_food">Yeterli mama yok! 😿 (Gereken: %d MP)</string>
+    <string name="cat_msg_full">Çok doydum! 😸</string>
+    <string name="cat_msg_yummy">Nefis! 🍖</string>
+    <string name="cat_msg_too_tired">Çok yorgunum, oynayamam... 😴\n(Enerji &lt; %d)</string>
+    <string name="cat_msg_hungry_game">Karnım zil çalıyor, önce yemek yiyelim! 😿</string>
+    <string name="game_hint_higher">Daha Büyük ⬆️</string>
+    <string name="game_hint_lower">Daha Küçük ⬇️</string>
+    <string name="game_hint_correct">Doğru! 🎉</string>
+    <string name="game_msg_correct_number">Doğru sayı şuydu: %d.</string>
+    <string name="game_msg_jackpot">JACKPOT! 🎉🎉🎉</string>
+    <string name="game_msg_match_two">İkili Eşleşme! ✨</string>
+    <string name="game_msg_unlucky">Şanssızlık... 😿</string>
+    <string name="cat_msg_already_sleeping">Zaten uyuyor... 💤</string>
+    <string name="cat_msg_not_tired">Hiç uykum yok! 👀</string>
+    <string name="cat_msg_goodnight">İyi geceler... %s sonra görüşürüz! 💤</string>
+    <string name="cat_msg_sleep_reduced">Uyku süresi 30 dakika kısaldı! ⏰</string>
+    <string name="cat_msg_food_points_added">30 Mama Puanı Eklendi! 🍖</string>
+    <string name="cat_msg_food_max">Depo dolu! Daha fazla mama puanı biriktiremezsin. 🛑</string>
+    <string name="ad_reward_food_btn">Mama Puanı Kazan (+30 MP)</string>
+    <string name="time_fmt_hm">%1$d sa %2$d dk</string>
+    <string name="time_fmt_m">%1$d dk</string>
+    
+    <!-- Notifications -->
+    <string name="notif_channel_steps_name">Walkkittie Adım Sayar</string>
+    <string name="notif_steps_content">%1$d adım • %2$d kcal</string>
+    <string name="notif_channel_goals_name">Hedefler</string>
+    <string name="notif_channel_goals_desc">Günlük hedefe ulaşıldığında bildirim gönderir</string>
+    <string name="notif_goal_achieved_title">🎉 HEDEF TAMAMLANDI!</string>
+    <string name="notif_goal_achieved_text">Günlük adım hedefine ulaştın! Kedin çok mutlu! 😺</string>
+
+    <string name="notif_channel_cat_status_name">Kedi Durumu</string>
+    <string name="notif_channel_cat_status_desc">Kedi açlık ve uyanma bildirimleri</string>
+    <string name="notif_cat_hungry_title">Acıktım! 😿</string>
+    <string name="notif_cat_hungry_text">Karnım çok aç, lütfen beni besle!</string>
+    <string name="notif_cat_woke_up_title">Günaydın! ☀️</string>
+    <string name="notif_cat_woke_up_text">Ben uyandım, hadi oynayalım! ⚡</string>
+
+    <string name="btn_reduce_sleep_time">Süreyi Azalt (-30 dk)</string>
+    <string name="ad_remaining_rights">Kalan Hak: %1$d/3</string>
+    <string name="unit_percentage">%1$d%%</string>
+
+    <string name="cat_ad_loading">Reklam yükleniyor, lütfen bekleyin... ⏳</string>
+    <string name="cat_no_internet">İnternet bağlantısı yok! 🌐</string>
+    <string name="cat_ad_limit_reached">Maksimum reklam sınırına ulaştın! 🚫</string>
+    <string name="cat_ad_error">Reklam yüklenemedi ❌</string>
+
+    <!-- Settings -->
+    <string name="settings_privacy_policy">Gizlilik Politikası</string>
+    <string name="privacy_policy_content">Walkkittie Gizlilik Politikası\n\nBu uygulama, sanal bir evcil hayvana bakmanız için fiziksel aktivitelerinizi takip etmenizi sağlar. Gizliliğiniz bizim için önemlidir:\n\n1. Aktivite Takibi: Uygulamamız adımlarınızı saymak için cihazınızın sensörlerini kullanır. Bu veriler sadece oyun içi mekaniklerde kullanılır.\n\n2. Health Connect: İsteğe bağlı olarak Health Connect entegrasyonu sağlayabiliriz. Bu veriler yalnızca cihazınızda işlenir ve dış sunuculara aktarılmaz.\n\n3. Reklamlar: Uygulamamız AdMob reklamlarını kullanır. Bu hizmetler size kişiselleştirilmiş reklamlar göstermek için cihaz tanımlayıcılarını kullanabilir.\n\n4. Veri Saklama: Kişisel verileriniz sunucularımızda saklanmaz; tüm ilerlemeniz yerel olarak cihazınızda tutulur.\n\nDaha fazla bilgi için Google\'ın Gizlilik Politikasını inceleyebilirsiniz:</string>
+    <string name="url_google_privacy_policy">https://policies.google.com/privacy</string>
+
+    <!-- Tutorial -->
+    <string name="tutorial_home_welcome_title">Walkkittie\'ye Hoş Geldin! 🐱</string>
+    <string name="tutorial_home_welcome_desc">Bu uygulama ile yürüyüşlerini takip ederken sanal kedine bakacaksın. Adımların enerjiye dönüşür ve kedini mutlu eder!</string>
+    <string name="tutorial_home_cat_title">Kedini Tanı 😺</string>
+    <string name="tutorial_home_cat_desc">Ortadaki kart senin kedini gösterir. Kedinin adı %1$s! Ona dokunarak kedi sayfasına gidebilir, besleyebilir ve oynayabilirsin.</string>
+    <string name="tutorial_home_goals_title">Günlük Hedefler 🎯</string>
+    <string name="tutorial_home_goals_desc">Adım, su ve kalori hedeflerini takip et. Hedeflerine ulaştıkça kedine ödüller kazandırırsın!</string>
+
+    <string name="tutorial_cat_care_title">%1$s Bakımı ❤️</string>
+    <string name="tutorial_cat_care_desc">%1$s\'nin 3 temel ihtiyacı var: Tokluk, Mutluluk ve Enerji. Bu değerleri yüksek tutarak onu sağlıklı ve mutlu tut!</string>
+    <string name="tutorial_cat_food_title">Mama Puanları (MP) 🍖</string>
+    <string name="tutorial_cat_food_desc">Yürüyüş yaparak MP kazanırsın. MP\'lerini kullanarak %1$s\'yi besleyebilirsin. 10 MP = 1 besleme!</string>
+    <string name="tutorial_cat_games_title">Mini Oyunlar 🎮</string>
+    <string name="tutorial_cat_games_desc">Taş-Kağıt-Makas ve Sayı Tahmin oyunlarını oynayarak XP kazan ve %1$s\'yi eğlendir!</string>
+
+    <string name="tutorial_stats_title">İstatistikler 📊</string>
+    <string name="tutorial_stats_desc">Günlük ve haftalık adımlarını, yaktığın kalorileri ve içtiğin suyu grafiklerle takip edebilirsin.</string>
+    <string name="tutorial_stats_water_title">Su Takibi 💧</string>
+    <string name="tutorial_stats_water_desc">Sağlıklı kalmak için su içimini takip et. Bardak ekle butonuyla içtiğin suyu kaydet!</string>
+
+    <string name="tutorial_profile_title">Profilin 👤</string>
+    <string name="tutorial_profile_desc">Burada adını, hedeflerini ve uygulama ayarlarını düzenleyebilirsin. Seviyeni ve XP\'ni de buradan takip edebilirsin!</string>
+    <string name="tutorial_btn_next">Devam Et</string>
+    <string name="tutorial_btn_finish">Anladım!</string>
+    <string name="tutorial_btn_skip">Turu Atla</string>
+    <string name="tutorial_btn_close">Kapat</string>
+</resources>
