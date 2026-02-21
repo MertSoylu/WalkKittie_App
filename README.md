@@ -1,5 +1,7 @@
 # 🐾 WalkKittie
 
+[![Google Play'den İndir](https://img.shields.io/badge/Google%20Play'den-İndir-2ECC71?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.mert.paticat)
+
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=android&logoColor=white)
 ![Material 3](https://img.shields.io/badge/Material%203-7C4DFF?style=for-the-badge&logo=materialdesign&logoColor=white)
@@ -49,3 +51,7 @@ Modern Android teknolojilerini öğrenmek ve uygulamak için bu projeyi gelişti
 ## 📄 Lisans
 
 Bu proje benim portfolyo çalışmamdır. Kodları incelemek veya öğrenmek isterseniz özgürce bakabilirsiniz.
+
+## 📲 WalkKittie
+
+[![Google Play'den İndir](https://img.shields.io/badge/Google%20Play'den-İndir-2ECC71?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.mert.paticat)
