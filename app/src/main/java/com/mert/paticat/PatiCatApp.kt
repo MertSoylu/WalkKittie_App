@@ -37,9 +37,13 @@ class PatiCatApp : Application(), Configuration.Provider {
         try {
             val workManager = WorkManager.getInstance(this)
             
+            val batteryConstraints = Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .build()
+            
             // 1. Cat Status Worker (Every 30 minutes) - Check hunger/sleep
             val catStatusRequest = PeriodicWorkRequestBuilder<CatStatusWorker>(30, TimeUnit.MINUTES)
-                .setConstraints(Constraints.NONE)
+                .setConstraints(batteryConstraints)
                 .build()
                 
             workManager.enqueueUniquePeriodicWork(
@@ -50,7 +54,7 @@ class PatiCatApp : Application(), Configuration.Provider {
             
             // 2. Widget Update Worker (Every 1 hour)
             val widgetUpdateRequest = PeriodicWorkRequestBuilder<com.mert.paticat.widget.WidgetUpdateWorker>(1, TimeUnit.HOURS)
-                .setConstraints(Constraints.NONE)
+                .setConstraints(batteryConstraints)
                 .build()
                 
             workManager.enqueueUniquePeriodicWork(

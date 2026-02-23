@@ -72,12 +72,16 @@ class AdManager @Inject constructor(
                 lastAdLoadTime = System.currentTimeMillis()
                 retryCount = 0
                 isLoading = false
-                android.util.Log.d("AdManager", "Native Ad Loaded Successfully")
+                if (com.mert.paticat.BuildConfig.DEBUG) {
+                    android.util.Log.d("AdManager", "Native Ad Loaded Successfully")
+                }
             }
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     isLoading = false
-                    android.util.Log.e("AdManager", "Native Ad Failed to Load: ${adError.code} - ${adError.message}")
+                    if (com.mert.paticat.BuildConfig.DEBUG) {
+                        android.util.Log.e("AdManager", "Native Ad Failed to Load: ${adError.code} - ${adError.message}")
+                    }
                     
                     // Retry with exponential backoff
                     if (retryCount < MAX_RETRIES) {

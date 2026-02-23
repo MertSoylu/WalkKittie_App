@@ -88,10 +88,10 @@ class StepCounterService : Service(), SensorEventListener {
         private const val STEPS_PER_FOOD_POINT = 100
         
         // Battery optimization settings
-        private const val STEP_SYNC_THRESHOLD = 100      // Sync every 100 steps
-        private const val TIME_SYNC_THRESHOLD = 10 * 60 * 1000L  // Or every 10 minutes
-        private const val NOTIFICATION_UPDATE_THRESHOLD = 100    // Update notification every 100 steps
-        private const val BATCH_LATENCY_US = 60 * 1000 * 1000    // 60 seconds batching for battery optimization
+        private const val STEP_SYNC_THRESHOLD = 250      // Sync every 250 steps (Increased from 100)
+        private const val TIME_SYNC_THRESHOLD = 20 * 60 * 1000L  // Or every 20 minutes (Increased from 10)
+        private const val NOTIFICATION_UPDATE_THRESHOLD = 250    // Update notification every 250 steps
+        private const val BATCH_LATENCY_US = 90 * 1000 * 1000    // 90 seconds batching for battery optimization
 
         fun startService(context: Context) {
             try {
@@ -111,7 +111,9 @@ class StepCounterService : Service(), SensorEventListener {
                     context.startService(intent)
                 }
             } catch (e: Exception) {
+            if (BuildConfig.DEBUG) {
                 android.util.Log.e("StepCounterService", "Start service failed", e)
+            }
             }
         }
         
@@ -122,7 +124,9 @@ class StepCounterService : Service(), SensorEventListener {
                 }
                 context.stopService(intent)
             } catch (e: Exception) {
+            if (BuildConfig.DEBUG) {
                 android.util.Log.e("StepCounterService", "Stop service failed", e)
+            }
             }
         }
     }
@@ -136,7 +140,9 @@ class StepCounterService : Service(), SensorEventListener {
             loadState()
             loadUserWeight()
         } catch (e: Exception) {
-            android.util.Log.e("StepCounterService", "onCreate failed", e)
+            if (BuildConfig.DEBUG) {
+                android.util.Log.e("StepCounterService", "onCreate failed", e)
+            }
         }
     }
     
@@ -184,7 +190,9 @@ class StepCounterService : Service(), SensorEventListener {
             
             registerSensor()
         } catch (e: Exception) {
-            android.util.Log.e("StepCounterService", "onStartCommand failed", e)
+            if (BuildConfig.DEBUG) {
+                android.util.Log.e("StepCounterService", "onStartCommand failed", e)
+            }
         }
         return START_STICKY
     }
@@ -214,23 +222,21 @@ class StepCounterService : Service(), SensorEventListener {
             handleNewDay(today, sensorValue)
         }
         
-        // Ensure we load DB state on first read to avoid data loss on reboot
+        // Ensure we load DB state on first read to avoid data loss on service restart
         if (initialStepCount < 0) {
-            val dbSteps = loadTodayStepsFromDbSync(today)
-            // If DB already has 500 steps, but sensor says 0 (reboot),
-            // We set initial to -500 so formula works: max(0, 0 - (-500)) = 500
-            initialStepCount = sensorValue - dbSteps
-            currentDaySteps = dbSteps
-            lastProcessedStepsForRewards = dbSteps
-            lastSyncedSteps = dbSteps
+            // Load DB state asynchronously (avoids ANR from runBlocking)
+            loadTodayStepsFromDbAsync(today, sensorValue)
+            return // Skip this event; next event will be processed after async init completes
         }
         
-        // Handle device reboot mid-day (sensor value resets to 0 but we already initialized)
-        if (sensorValue < initialStepCount && initialStepCount > 0) {
-            // E.g., we had initial=1000, sensor was 1500 (500 local steps). Devices reboot.
-            // Sensor is now 0. We want next step to be 501. 
-            // We set initial = sensorValue - currentDaySteps = 0 - 500 = -500
+        // Handle device reboot mid-day (sensor value resets to 0)
+        // Check for sudden drop in sensor value that isn't handled by initialStepCount logic
+        if (sensorValue < (initialStepCount + currentDaySteps - 100)) { 
+            // -100 is a buffer to avoid false positives on minor drift
+            // Sensor reset detected! Re-reconcile using currentDaySteps as known truth
+            android.util.Log.i("StepCounterService", "Device reboot detected! Re-calculating baseline.")
             initialStepCount = sensorValue - currentDaySteps
+            saveState()
         }
         
         // Calculate today's steps
@@ -259,6 +265,13 @@ class StepCounterService : Service(), SensorEventListener {
     }
     
     private fun handleNewDay(today: String, sensorValue: Int) {
+        // Clock drift protection: Only move forward
+        if (lastSavedDate.isNotEmpty() && today < lastSavedDate) {
+            android.util.Log.w("StepCounterService", "Clock drift detected? Date $today is before $lastSavedDate. Ignoring.")
+            return
+        }
+        
+        android.util.Log.i("StepCounterService", "New day detected: $today. Resetting steps.")
         lastSavedDate = today
         initialStepCount = sensorValue
         currentDaySteps = 0
@@ -272,15 +285,16 @@ class StepCounterService : Service(), SensorEventListener {
         val steps = currentDaySteps
         serviceScope.launch {
             try {
-                // Calculate calories based on user weight
+                // Calculate calories and distance based on user weight
                 val calories = calculateCalories(steps)
+                val distance = calculateDistance(steps)
                 
                 // Update daily stats
                 val existing = dailyStatsDao.getDailyStatsOnce(date)
                 if (existing != null) {
-                    dailyStatsDao.updateStats(existing.copy(steps = steps, caloriesBurned = calories))
+                    dailyStatsDao.updateStats(existing.copy(steps = steps, caloriesBurned = calories, distanceKm = distance))
                 } else {
-                    dailyStatsDao.insertDailyStats(DailyStatsEntity(date = date, steps = steps, caloriesBurned = calories))
+                    dailyStatsDao.insertDailyStats(DailyStatsEntity(date = date, steps = steps, caloriesBurned = calories, distanceKm = distance))
                 }
                 
                 // Calculate rewards
@@ -299,7 +313,7 @@ class StepCounterService : Service(), SensorEventListener {
                 }
                 
                 // Check missions
-                missionRepository.checkAndCompleteMissions(steps, 0)
+                missionRepository.checkAndCompleteMissions(steps = steps)
                 
                 // Update cat status (decay/recovery) periodically in background
                 catRepository.decreaseHungerOverTime()
@@ -308,7 +322,9 @@ class StepCounterService : Service(), SensorEventListener {
                 saveState()
                 
             } catch (e: Exception) {
-                android.util.Log.e("StepCounterService", "Sync failed", e)
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.e("StepCounterService", "Sync failed", e)
+                }
             }
         }
     }
@@ -323,6 +339,16 @@ class StepCounterService : Service(), SensorEventListener {
     private fun calculateCalories(steps: Int): Int {
         val caloriesPerStep = 0.04f * (userWeightKg / 70f)
         return (steps * caloriesPerStep).toInt()
+    }
+    
+    /**
+     * Calculate distance based on steps
+     * Average stride length: ~0.762 meters (for 170cm person)
+     * Adjusted by user weight as a rough proxy for height
+     */
+    private fun calculateDistance(steps: Int): Double {
+        val strideMeters = 0.762 * (userWeightKg / 70.0).coerceIn(0.8, 1.3)
+        return (steps * strideMeters) / 1000.0 // Convert to km
     }
     
     private fun loadState() {
@@ -343,15 +369,31 @@ class StepCounterService : Service(), SensorEventListener {
             }
     }
     
-    private fun loadTodayStepsFromDbSync(date: String): Int {
-        var steps = 0
-        // Need to run slightly synchronously since sensor event expects an immediate answer
-        // But since this is first time init it's acceptable.
-        kotlinx.coroutines.runBlocking(Dispatchers.IO) {
-            val entity = dailyStatsDao.getDailyStatsOnce(date)
-            steps = entity?.steps ?: 0
+    /**
+     * Load today's steps from DB asynchronously.
+     * Called only once during first sensor event for reconciliation.
+     */
+    private fun loadTodayStepsFromDbAsync(date: String, sensorValue: Int) {
+        serviceScope.launch {
+            try {
+                val entity = dailyStatsDao.getDailyStatsOnce(date)
+                val dbSteps = entity?.steps ?: 0
+                
+                // Reconcile sensor value with DB data
+                initialStepCount = sensorValue - dbSteps
+                currentDaySteps = dbSteps
+                lastProcessedStepsForRewards = dbSteps
+                lastSyncedSteps = dbSteps
+                saveState()
+            } catch (e: Exception) {
+                // Fallback: treat sensor value as starting point
+                initialStepCount = sensorValue
+                currentDaySteps = 0
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.e("StepCounterService", "Failed to load DB steps", e)
+                }
+            }
         }
-        return steps
     }
     
     private fun saveState() {

@@ -15,5 +15,5 @@ interface MissionRepository {
     suspend fun generateDailyMissions()
     suspend fun updateMissionProgress(missionId: String, progress: Int)
     suspend fun completeMission(missionId: String)
-    suspend fun checkAndCompleteMissions(steps: Int, waterMl: Int)
+    suspend fun checkAndCompleteMissions(steps: Int? = null, waterMl: Int? = null)
 }

@@ -85,7 +85,7 @@ fun WaterIntakeCard(
                 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Su Takibi",
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.water_tracking_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -96,7 +96,7 @@ fun WaterIntakeCard(
                         color = PastelBlue
                     )
                     Text(
-                        text = "$glasses bardak içildi 💧",
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.water_glasses_drunk, glasses),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -114,7 +114,7 @@ fun WaterIntakeCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Undo,
-                            contentDescription = "Geri Al",
+                            contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_undo),
                             modifier = Modifier.size(22.dp)
                         )
                     }

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.scale
 import kotlinx.coroutines.isActive
 import kotlin.math.cos
 import kotlin.math.sin
@@ -164,11 +165,13 @@ fun ParticleSystemCanvas(
     }
 }
 
-// --- Drawing Utilities ---
+// --- Cached Paths for Performance ---
+// To prevent massive Garbage Collection stutters, we pre-calculate paths for a base size of 100f
+// and simply scale them during the draw phase instead of creating new Paths every frame.
 
-fun DrawScope.drawHeart(size: Float, color: Color) {
-    val path = Path().apply {
-        // Simple bezier heart shape
+private object ParticlePaths {
+    val heartPath = Path().apply {
+        val size = 100f
         val width = size
         val height = size
         moveTo(width / 2, height / 5)
@@ -176,11 +179,9 @@ fun DrawScope.drawHeart(size: Float, color: Color) {
         cubicTo(width * 1.5f, height / 2, width * 7/8f, -height / 4, width / 2, height / 5)
         close()
     }
-    drawPath(path, color)
-}
 
-fun DrawScope.drawStar(size: Float, color: Color) {
-    val path = Path().apply {
+    val starPath = Path().apply {
+        val size = 100f
         val center = size / 2
         var currentAngle = -Math.PI / 2
         val rot = Math.PI / 5
@@ -206,21 +207,39 @@ fun DrawScope.drawStar(size: Float, color: Color) {
         }
         close()
     }
-    // Center it
-    translate(left = -size/2, top = -size/2) {
-        drawPath(path, color)
-    }
-}
 
-fun DrawScope.drawWaterDroplet(size: Float, color: Color) {
-    val path = Path().apply {
+    val waterDropletPath = Path().apply {
+        val size = 100f
         moveTo(size / 2, 0f) // Top tip
         quadraticBezierTo(size, size * 0.7f, size / 2, size) // Right curve down to bottom
         quadraticBezierTo(0f, size * 0.7f, size / 2, 0f) // Left curve up to top
         close()
     }
-    // Center it
+}
+
+// --- Drawing Utilities ---
+
+fun DrawScope.drawHeart(size: Float, color: Color) {
+    val scale = size / 100f
+    scale(scale = scale, pivot = Offset.Zero) {
+        drawPath(path = ParticlePaths.heartPath, color = color)
+    }
+}
+
+fun DrawScope.drawStar(size: Float, color: Color) {
+    val scale = size / 100f
     translate(left = -size/2, top = -size/2) {
-        drawPath(path, color)
+        scale(scale = scale, pivot = Offset.Zero) {
+            drawPath(path = ParticlePaths.starPath, color = color)
+        }
+    }
+}
+
+fun DrawScope.drawWaterDroplet(size: Float, color: Color) {
+    val scale = size / 100f
+    translate(left = -size/2, top = -size/2) {
+        scale(scale = scale, pivot = Offset.Zero) {
+            drawPath(path = ParticlePaths.waterDropletPath, color = color)
+        }
     }
 }

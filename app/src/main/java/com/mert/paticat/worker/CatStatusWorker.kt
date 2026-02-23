@@ -50,12 +50,9 @@ class CatStatusWorker @AssistedInject constructor(
             }
         }
         
-        // 2. Check Sleep Wake Up (Logic similar to ViewModel)
-        val endTime = prefs.getLong("sleep_end_time", 0L)
+        // 2. Check Sleep Wake Up — read from DB (source of truth), not SharedPrefs
+        val endTime = cat.sleepEndTime
         
-        // If sleep just finished (endTime passed) AND we haven't already processed the wake up (which ViewModel does)
-        // If the user hasn't opened the app, the ViewModel hasn't run.
-        // We can detect if sleep is OVER.
         if (endTime > 0 && currentTime > endTime) {
              val lastWakeNotif = prefs.getLong("last_wake_notif_time", 0L)
              if (currentTime - lastWakeNotif >= twelveHoursInMillis) {
@@ -69,9 +66,6 @@ class CatStatusWorker @AssistedInject constructor(
                      .apply()
              }
         }
-        
-        // If new sleep starts, we don't strictly need to clear the wake notif flag anymore since it's time-based,
-        // but it's good practice. We can just leave it as is or remove it.
 
         return Result.success()
     }

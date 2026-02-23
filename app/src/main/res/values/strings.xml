@@ -66,6 +66,9 @@
     <string name="cat_pet_limit_reached">Kedin şu an yorgun! Bir saat sonra tekrar sev. 🐱</string>
     <string name="cat_hint_pet">Dokun!</string>
     <string name="cat_not_tired_info">Çok enerjik (%1$d)</string>
+    <string name="mood_excited">Heyecanlı</string>
+    <string name="mood_sleeping">Uykulu</string>
+    <string name="mood_idle">Rahat</string>
 
     <!-- Statistics Screen -->
     <string name="stats_title">İstatistikler</string>
@@ -142,7 +145,7 @@
     <string name="game_slots_header">Pati Çarkı 🎰</string>
     <string name="game_slots_spinning">Çevriliyor...</string>
     <string name="btn_spin">Çevir!</string>
-    <string name="btn_play_again">Tekrar Oyna 🔄</string>
+    <string name="btn_play_again">Tekrar Oyna</string>
     <string name="btn_close">Kapat</string>
     <string name="btn_start_game">Başla! 🚀</string>
     <string name="game_rps_countdown">Taş... Kağıt... Makas...</string>
@@ -257,17 +260,15 @@
 
     <string name="level_xp_gain_title">XP Nasıl Kazanılır? 💪</string>
     <string name="level_xp_source_walk">Yürüyüş</string>
-    <string name="level_xp_walk_desc">Her 1000 adım</string>
-    <string name="level_xp_source_game_rps">Oyun Oynamak</string>
-    <string name="level_xp_rps_desc">Taş-Kağıt-Makas kazanma</string>
-    <string name="level_xp_source_game_guess">Sayı Tahmin</string>
-    <string name="level_xp_guess_desc">Doğru bilme</string>
+    <string name="level_xp_walk_desc">Günlük hedeflere ulaşma</string>
+    <string name="level_xp_source_games">Mini Oyunlar</string>
+    <string name="level_xp_games_desc">Oyun kazanma veya rekor kırma</string>
     <string name="level_xp_source_feed">Kedi Besleme</string>
     <string name="level_xp_feed_desc">Her besleme</string>
     <string name="level_xp_source_sleep">Uyku</string>
     <string name="level_xp_sleep_desc">Kedi uyandığında</string>
     <string name="level_xp_source_mission">Görev Tamamlama</string>
-    <string name="level_xp_mission_desc">Günlük görevler</string>
+    <string name="level_xp_mission_desc">Görev başına +10~50 XP</string>
     <string name="level_requirements_title">Seviye Gereksinimleri 📊</string>
     <string name="level_tip_title">İpucu</string>
     <string name="level_tips_content">Seviye atlamak zaman ve sabır ister! Her gün düzenli olarak yürüyüş yaparak ve kedine iyi bakarak XP biriktirebilirsin. Oyunları da unutma - kazandığın her oyun seni bir adım öne taşır! 🚀</string>
@@ -363,4 +364,30 @@
     <string name="tutorial_btn_finish">Anladım!</string>
     <string name="tutorial_btn_skip">Turu Atla</string>
     <string name="tutorial_btn_close">Kapat</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="streak_current">Gün Seri</string>
+    <string name="streak_longest">En Uzun</string>
+    <string name="cat_status_title">Kedi Durumu</string>
+    <string name="cat_stat_hunger_label">Açlık</string>
+    <string name="cat_stat_happiness_label">Mutluluk</string>
+    <string name="cat_stat_energy_label">Enerji</string>
+    <string name="cat_level_label">Seviye %d</string>
+    <string name="water_tracking_title">Su Takibi</string>
+    <string name="water_glasses_drunk">%d bardak içildi 💧</string>
+    <string name="btn_undo">Geri Al</string>
+    <string name="btn_back">Geri</string>
+    <string name="reward_title">Yeni Ödüller Kazandın!</string>
+    <string name="notif_water_channel_name">Su Hatırlatıcı</string>
+    <string name="notif_water_channel_desc">Günlük su içme hatırlatmaları</string>
+    <string name="notif_water_app_title">Walkkittie 🐱</string>
+    <string-array name="water_reminder_messages">
+        <item>💧 Su içme zamanı! Kedini mutlu et!</item>
+        <item>🐱 Minik dostun seninle birlikte su içmek istiyor!</item>
+        <item>💦 Sağlıklı kalmak için bir bardak su iç!</item>
+        <item>🌊 Hidrate ol, mutlu ol! Su içmeyi unutma!</item>
+        <item>💧 Bugün yeterince su içtin mi? Bir bardak daha!</item>
+        <item>🐾 Kedinin sana hatırlatması var: Su iç!</item>
+        <item>💙 Vücudun su bekliyor! Şimdi iç!</item>
+    </string-array>
 </resources>

@@ -88,7 +88,7 @@ fun StreakDisplayCard(
                     color = AccentGold
                 )
                 Text(
-                    text = "Gün Seri",
+                    text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.streak_current),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -126,7 +126,7 @@ fun StreakDisplayCard(
                     color = AccentGold
                 )
                 Text(
-                    text = "En Uzun",
+                    text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.streak_longest),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

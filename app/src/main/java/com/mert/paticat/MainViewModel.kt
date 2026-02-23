@@ -144,8 +144,7 @@ class MainViewModel @Inject constructor(
                 if (xp > 0 || food > 0) {
                     com.mert.paticat.ui.components.RewardNotificationData(
                         xp = xp,
-                        foodPoints = food,
-                        title = "Yeni Ödüller Kazandın!"
+                        foodPoints = food
                     )
                 } else {
                     null
@@ -173,7 +172,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun calculateAndSaveStreak() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val userProfile = userProfileDao.getUserProfileOnce() ?: return@launch
                 val stepGoal = userProfile.dailyStepGoal
@@ -188,9 +187,9 @@ class MainViewModel @Inject constructor(
                     streak++
                 }
                 
-                // Check past days
+                // Check past days (bounded to max 365 days to prevent infinite loop)
                 var i = 1L
-                while (true) {
+                while (i <= 365L) {
                     val date = today.minusDays(i)
                     val stats = dailyStatsDao.getStatsForDateOnce(date.format(formatter))
                     
@@ -200,8 +199,6 @@ class MainViewModel @Inject constructor(
                     } else {
                         break
                     }
-                    
-                    if (i > 365) break 
                 }
                 
                 if (userProfile.currentStreak != streak) {

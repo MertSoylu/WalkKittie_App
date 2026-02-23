@@ -66,6 +66,9 @@
     <string name="cat_pet_limit_reached">Your cat is tired! Come back in an hour to pet again. 🐱</string>
     <string name="cat_hint_pet">Pet me!</string>
     <string name="cat_not_tired_info">Too energetic (%1$d)</string>
+    <string name="mood_excited">Excited</string>
+    <string name="mood_sleeping">Sleepy</string>
+    <string name="mood_idle">Relaxed</string>
     <!-- Statistics Screen -->
     <string name="stats_title">Statistics</string>
     <string name="stats_daily">Daily</string>
@@ -141,7 +144,7 @@
     <string name="game_slots_header">Paw Wheel 🎰</string>
     <string name="game_slots_spinning">Spinning...</string>
     <string name="btn_spin">Spin!</string>
-    <string name="btn_play_again">Play Again 🔄</string>
+    <string name="btn_play_again">Play Again</string>
     <string name="btn_close">Close</string>
     <string name="btn_start_game">Start! 🚀</string>
     <string name="game_rps_countdown">Rock... Paper... Scissors...</string>
@@ -273,17 +276,15 @@
 
     <string name="level_xp_gain_title">How to Earn XP 💪</string>
     <string name="level_xp_source_walk">Walking</string>
-    <string name="level_xp_walk_desc">Every 1000 steps</string>
-    <string name="level_xp_source_game_rps">Playing Games</string>
-    <string name="level_xp_rps_desc">Winning Rock-Paper-Scissors</string>
-    <string name="level_xp_source_game_guess">Number Guess</string>
-    <string name="level_xp_guess_desc">Correct guess</string>
+    <string name="level_xp_walk_desc">Achieving daily goals</string>
+    <string name="level_xp_source_games">Mini Games</string>
+    <string name="level_xp_games_desc">Winning games or breaking records</string>
     <string name="level_xp_source_feed">Cat Feeding</string>
     <string name="level_xp_feed_desc">Every feeding</string>
     <string name="level_xp_source_sleep">Sleep</string>
     <string name="level_xp_sleep_desc">When cat wakes up</string>
     <string name="level_xp_source_mission">Complete Missions</string>
-    <string name="level_xp_mission_desc">Daily missions</string>
+    <string name="level_xp_mission_desc">+10~50 XP per mission</string>
     <string name="level_requirements_title">Level Requirements 📊</string>
     <string name="level_tip_title">Tips</string>
     <string name="level_tips_content">Leveling up takes time and patience! You can accumulate XP by walking regularly every day and taking good care of your cat. Don\'t forget the games - every game you win takes you one step forward! 🚀</string>
@@ -323,6 +324,11 @@
     <string name="ad_remaining_rights">Rights Left: %1$d/3</string>
     <string name="unit_percentage">%1$d%%</string>
 
+    <string name="cat_ad_loading">Ad is loading, please wait... ⏳</string>
+    <string name="cat_no_internet">No internet connection! 🌐</string>
+    <string name="cat_ad_limit_reached">Maximum ad limit reached! 🚫</string>
+    <string name="cat_ad_error">Ad could not be loaded ❌</string>
+
     <!-- Settings -->
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="privacy_policy_content">Walkkittie Privacy Policy\n\nThis app allows users to track their physical activities to care for a virtual pet. Your privacy is important to us:\n\n1. Activity Tracking: Our app uses your device\'s sensors to count your steps. This data is only used for in-game mechanics.\n\n2. Health Connect: Optionally, we can integrate with Health Connect. This data is processed only on your device and not transferred to external servers.\n\n3. Ads: Our app uses AdMob ads. These services may use device identifiers to show personalized ads.\n\n4. Data Storage: Your personal data is not stored on our servers; all progress is kept locally on your device.\n\nFor more information, you can check Google\'s Privacy Policy:</string>
@@ -354,4 +360,30 @@
     <string name="tutorial_btn_finish">Got it!</string>
     <string name="tutorial_btn_skip">Skip Tutorial</string>
     <string name="tutorial_btn_close">Close</string>
+
+    <!-- Hardcoded string fixes -->
+    <string name="streak_current">Day Streak</string>
+    <string name="streak_longest">Longest</string>
+    <string name="cat_status_title">Cat Status</string>
+    <string name="cat_stat_hunger_label">Hunger</string>
+    <string name="cat_stat_happiness_label">Happiness</string>
+    <string name="cat_stat_energy_label">Energy</string>
+    <string name="cat_level_label">Level %d</string>
+    <string name="water_tracking_title">Water Tracking</string>
+    <string name="water_glasses_drunk">%d glasses drunk 💧</string>
+    <string name="btn_undo">Undo</string>
+    <string name="btn_back">Back</string>
+    <string name="reward_title">New Rewards Earned!</string>
+    <string name="notif_water_channel_name">Water Reminder</string>
+    <string name="notif_water_channel_desc">Daily water drinking reminders</string>
+    <string name="notif_water_app_title">Walkkittie 🐱</string>
+    <string-array name="water_reminder_messages">
+        <item>💧 Time to drink water! Make your cat happy!</item>
+        <item>🐱 Your little friend wants to drink water with you!</item>
+        <item>💦 Drink a glass of water to stay healthy!</item>
+        <item>🌊 Stay hydrated, stay happy! Don\'t forget water!</item>
+        <item>💧 Did you drink enough water today? One more glass!</item>
+        <item>🐾 Your cat has a reminder: Drink water!</item>
+        <item>💙 Your body needs water! Drink now!</item>
+    </string-array>
 </resources>

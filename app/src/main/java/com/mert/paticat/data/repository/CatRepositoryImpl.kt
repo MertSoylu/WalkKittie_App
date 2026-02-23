@@ -47,7 +47,7 @@ class CatRepositoryImpl @Inject constructor(
             val currentTime = System.currentTimeMillis()
             val elapsed = currentTime - entity.lastUpdated
             
-            if (elapsed > TimeUnit.MINUTES.toMillis(15)) {
+            if (elapsed > TimeUnit.MINUTES.toMillis(20)) {
                 val decayedCat = applyDecayLogic(entity, currentTime)
                 if (decayedCat.hunger != entity.hunger || 
                     decayedCat.energy != entity.energy || 
@@ -166,8 +166,8 @@ class CatRepositoryImpl @Inject constructor(
         val currentTime = System.currentTimeMillis()
         val elapsed = currentTime - cat.lastUpdated
         
-        // Only update if significant time passed (> 15 mins) to prevent database trashing
-        if (elapsed > TimeUnit.MINUTES.toMillis(15)) {
+        // Only update if significant time passed (> 20 mins) to prevent database trashing and truncation loss
+        if (elapsed > TimeUnit.MINUTES.toMillis(20)) {
             val decayedCat = applyDecayLogic(cat, currentTime)
             
             // Fix: Only update if anything actually changed
@@ -188,9 +188,9 @@ class CatRepositoryImpl @Inject constructor(
         val cat = catDao.getCatOnce() ?: return
         val currentTime = System.currentTimeMillis()
         
-        // First apply any pending decay up to now
+        // First apply any pending decay up to now (Threshold 20 mins minimizes truncation loss)
         val elapsed = currentTime - cat.lastUpdated
-        if (elapsed > TimeUnit.MINUTES.toMillis(5)) {
+        if (elapsed > TimeUnit.MINUTES.toMillis(20)) {
             val updatedCat = applyDecayLogic(cat, currentTime)
             // Then mark interaction time
             catDao.updateCat(updatedCat.copy(lastInteractionTime = currentTime))
@@ -253,9 +253,9 @@ class CatRepositoryImpl @Inject constructor(
         val hoursPassed = (durationMillis.toDouble() / TimeUnit.HOURS.toMillis(1).toDouble())
         
         // 1. Hunger Calculation
-        // Rule: Sleeping -> Less decrease (-2/hr). Awake -> Normal decrease (-3/hr).
-        val hungerLossPerHour = if (isSleeping) 2.0 else 3.0
-        val hungerLoss = (hoursPassed * hungerLossPerHour).toInt()
+        // Rule: Sleeping -> Less decrease (-3/hr). Awake -> Normal decrease (-5/hr).
+        val hungerLossPerHour = if (isSleeping) 3.0 else 5.0
+        val hungerLoss = kotlin.math.round(hoursPassed * hungerLossPerHour).toInt()
         val newHunger = (cat.hunger - hungerLoss).coerceIn(0, 100)
         
         // 2. Energy Calculation
@@ -264,7 +264,7 @@ class CatRepositoryImpl @Inject constructor(
         // User specified: "Energy won't decrease until user logs in". 
         // Since this function calculates decay over elapsed time (user away), Awake energy change is 0.
         val energyChangePerHour = if (isSleeping) 34.0 else 0.0
-        val energyChange = (energyChangePerHour * hoursPassed).toInt()
+        val energyChange = kotlin.math.round(energyChangePerHour * hoursPassed).toInt()
         val newEnergy = (cat.energy + energyChange).coerceIn(0, 100)
         
         // 3. Happiness Calculation
@@ -277,8 +277,8 @@ class CatRepositoryImpl @Inject constructor(
                 else -> 2.0 // Standard sleep happiness
             }
         } else {
-            // Base decay: -4/hr (slightly faster than before)
-            happinessChangePerHour = -4.0
+            // Base decay: -6/hr (faster than before)
+            happinessChangePerHour = -6.0
             
             // Good State: +2/hr (well-fed and full energy)
             if (newHunger > 80 && newEnergy > 80) {
@@ -291,7 +291,7 @@ class CatRepositoryImpl @Inject constructor(
             }
         }
         
-        val happinessChange = (hoursPassed * happinessChangePerHour).toInt()
+        val happinessChange = kotlin.math.round(hoursPassed * happinessChangePerHour).toInt()
         val newHappiness = (cat.happiness + happinessChange).coerceIn(0, 100)
         
         return cat.copy(

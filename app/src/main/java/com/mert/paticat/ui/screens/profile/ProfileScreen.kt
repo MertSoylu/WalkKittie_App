@@ -395,9 +395,9 @@ fun ProfileScreen(
             title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.dialog_edit_name_title), 
             label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.dialog_edit_name_label), 
             value = nameEditValue, 
-            onValueChange = { nameEditValue = it },
+            onValueChange = { if (it.length <= 20) nameEditValue = it },
             onConfirm = { 
-                if (nameEditValue.isNotBlank()) viewModel.updateUserName(nameEditValue)
+                if (nameEditValue.isNotBlank()) viewModel.updateUserName(nameEditValue.trim())
                 showNameDialog = false
             },
             onDismiss = { showNameDialog = false }
@@ -409,9 +409,9 @@ fun ProfileScreen(
             title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.dialog_edit_cat_title), 
             label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.dialog_edit_cat_label), 
             value = catNameEditValue, 
-            onValueChange = { catNameEditValue = it },
+            onValueChange = { if (it.length <= 20) catNameEditValue = it },
             onConfirm = { 
-                if (catNameEditValue.isNotBlank()) viewModel.updateCatName(catNameEditValue)
+                if (catNameEditValue.isNotBlank()) viewModel.updateCatName(catNameEditValue.trim())
                 showCatNameDialog = false
             },
             onDismiss = { showCatNameDialog = false }

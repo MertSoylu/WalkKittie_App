@@ -128,7 +128,7 @@ fun CatStatusCard(
                 .padding(20.dp)
         ) {
             Text(
-                text = "Kedi Durumu",
+                text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_status_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -142,21 +142,21 @@ fun CatStatusCard(
             ) {
                 CatStatItem(
                     icon = Icons.Default.Restaurant,
-                    label = "Açlık",
+                    label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_stat_hunger_label),
                     value = cat.hunger,
                     color = PastelPink
                 )
                 
                 CatStatItem(
                     icon = Icons.Default.Favorite,
-                    label = "Mutluluk",
+                    label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_stat_happiness_label),
                     value = cat.happiness,
                     color = PastelMint
                 )
                 
                 CatStatItem(
                     icon = Icons.Default.BatteryChargingFull,
-                    label = "Enerji",
+                    label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_stat_energy_label),
                     value = cat.energy,
                     color = PastelBlue
                 )
@@ -253,7 +253,7 @@ fun LevelProgressCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Seviye ${cat.level}",
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_level_label, cat.level),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )

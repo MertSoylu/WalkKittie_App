@@ -31,18 +31,10 @@ class WaterReminderWorker @AssistedInject constructor(
     
     companion object {
         const val CHANNEL_ID = "water_reminder_channel"
-        const val NOTIFICATION_ID = 1001
+        const val NOTIFICATION_ID = 2001
         const val WORK_NAME = "water_reminder_work"
         
-        private val waterMessages = listOf(
-            "💧 Su içme zamanı! Kedini mutlu et!",
-            "🐱 Minik dostun seninle birlikte su içmek istiyor!",
-            "💦 Sağlıklı kalmak için bir bardak su iç!",
-            "🌊 Hidrate ol, mutlu ol! Su içmeyi unutma!",
-            "💧 Bugün yeterince su içtin mi? Bir bardak daha!",
-            "🐾 Kedinin sana hatırlatması var: Su iç!",
-            "💙 Vücudun su bekliyor! Şimdi iç!"
-        )
+        // Water messages loaded from string resources at runtime (see showNotification)
     }
     
     override suspend fun doWork(): Result {
@@ -81,11 +73,12 @@ class WaterReminderWorker @AssistedInject constructor(
             PendingIntent.FLAG_IMMUTABLE
         )
         
+        val waterMessages = applicationContext.resources.getStringArray(R.array.water_reminder_messages)
         val message = waterMessages.random()
         
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_paw_small)
-            .setContentTitle("Walkkittie 🐱")
+            .setContentTitle(applicationContext.getString(R.string.notif_water_app_title))
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
@@ -98,8 +91,8 @@ class WaterReminderWorker @AssistedInject constructor(
     
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Su Hatırlatıcı"
-            val descriptionText = "Günlük su içme hatırlatmaları"
+            val name = applicationContext.getString(R.string.notif_water_channel_name)
+            val descriptionText = applicationContext.getString(R.string.notif_water_channel_desc)
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText

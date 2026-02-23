@@ -56,13 +56,13 @@ data class CatUiState(
             CatMood.EXCITED -> "✨"
         }
     
-    val moodText: String
+    val moodTextResId: Int
         get() = when (currentMood) {
-            CatMood.HAPPY -> "Mutlu"
-            CatMood.EXCITED -> "Heyecanlı"
-            CatMood.HUNGRY -> "Aç"
-            CatMood.SLEEPING -> "Uykulu"
-            CatMood.IDLE -> "Rahat"
+            CatMood.HAPPY -> com.mert.paticat.R.string.cat_stat_happiness_label
+            CatMood.EXCITED -> com.mert.paticat.R.string.mood_excited
+            CatMood.HUNGRY -> com.mert.paticat.R.string.cat_stat_hunger_label
+            CatMood.SLEEPING -> com.mert.paticat.R.string.mood_sleeping
+            CatMood.IDLE -> com.mert.paticat.R.string.mood_idle
         }
 }
 

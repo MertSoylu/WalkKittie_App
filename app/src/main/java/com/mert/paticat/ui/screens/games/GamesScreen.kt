@@ -68,7 +68,6 @@ import com.mert.paticat.ui.theme.*
 import com.mert.paticat.ui.components.NativeAdCard
 import com.mert.paticat.ui.components.bounceClick
 import com.mert.paticat.ui.components.pulsate
-import com.mert.paticat.ui.components.AnimatedBackground
 import com.mert.paticat.ui.components.EntranceAnimation
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,10 +139,7 @@ fun GamesScreen(
                         )
                     }
                 )
-        ) {
-            // Background particles
-            AnimatedBackground()
-        }
+        )
 
         Scaffold(
             snackbarHost = { 
@@ -157,7 +153,7 @@ fun GamesScreen(
                     title = { Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.games_title), fontWeight = FontWeight.Bold, color = TextOnPremium) },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Geri", tint = TextOnPremium)
+                            Icon(Icons.Default.ArrowBack, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_back), tint = TextOnPremium)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -396,22 +392,32 @@ fun RockPaperScissorsGame(uiState: com.mert.paticat.ui.screens.cat.CatUiState, p
                 Button(
                     onClick = { viewModel.startGame(GameType.RPS) },
                     colors = ButtonDefaults.buttonColors(containerColor = PremiumPink),
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1.3f).height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again))
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
                 OutlinedButton(
                     onClick = { viewModel.closeMiniGame() },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close))
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
             }
         } else if (!isCountingDown) {
@@ -685,22 +691,32 @@ fun SlotsGame(uiState: com.mert.paticat.ui.screens.cat.CatUiState, viewModel: Ca
                 Button(
                     onClick = { viewModel.startGame(GameType.SLOTS) },
                     colors = ButtonDefaults.buttonColors(containerColor = PremiumPeach),
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1.3f).height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again))
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
                 OutlinedButton(
                     onClick = { viewModel.closeMiniGame() },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close))
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -862,22 +878,32 @@ fun MemoryGame(uiState: com.mert.paticat.ui.screens.cat.CatUiState, viewModel: C
                 Button(
                     onClick = { viewModel.startGame(GameType.MEMORY) },
                     colors = ButtonDefaults.buttonColors(containerColor = PremiumMint),
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1.3f).height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again))
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
                 OutlinedButton(
                     onClick = { viewModel.closeMiniGame() },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close))
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -1148,22 +1174,32 @@ fun ReflexGame(uiState: com.mert.paticat.ui.screens.cat.CatUiState, viewModel: C
                 Button(
                     onClick = { viewModel.startGame(GameType.REFLEX) },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentGold),
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier = Modifier.weight(1.3f).height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again))
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_play_again),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
                 OutlinedButton(
                     onClick = { viewModel.closeMiniGame() },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close))
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_close),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
             }
         }

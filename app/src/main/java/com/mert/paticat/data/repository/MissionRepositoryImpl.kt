@@ -170,17 +170,21 @@ class MissionRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun checkAndCompleteMissions(steps: Int, waterMl: Int) {
+    override suspend fun checkAndCompleteMissions(steps: Int?, waterMl: Int?) {
         val missionList = missionDao.getMissionsForDateOnce(today)
         
         missionList.forEach { mission ->
             if (!mission.isCompleted) {
-                val currentProgress = when (MissionType.valueOf(mission.type)) {
-                    MissionType.STEPS -> steps
-                    MissionType.WATER -> waterMl
-                    else -> mission.currentValue
+                var currentProgress = mission.currentValue
+                when (MissionType.valueOf(mission.type)) {
+                    MissionType.STEPS -> if (steps != null) currentProgress = steps
+                    MissionType.WATER -> if (waterMl != null) currentProgress = waterMl
+                    else -> {}
                 }
-                updateMissionProgress(mission.id, currentProgress)
+                
+                if (currentProgress != mission.currentValue) {
+                    updateMissionProgress(mission.id, currentProgress)
+                }
             }
         }
     }

@@ -10,6 +10,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlin.random.Random
 
 data class AnimParticle(
@@ -26,7 +29,7 @@ data class AnimParticle(
 @Composable
 fun AnimatedBackground(
     modifier: Modifier = Modifier,
-    particleCount: Int = 60,
+    particleCount: Int = 25,
     particleColor: Color? = null
 ) {
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -36,6 +39,18 @@ fun AnimatedBackground(
     val defaultColor = MaterialTheme.colorScheme.primary
     val colorToUse = particleColor ?: defaultColor
 
+    // Pause animation when app is in background to save battery
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isInForeground by remember { mutableStateOf(true) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            isInForeground = event != Lifecycle.Event.ON_STOP
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(size) {
         if (size.width > 0 && size.height > 0 && particles.isEmpty()) {
             val newParticles = List(particleCount) {
@@ -43,11 +58,11 @@ fun AnimatedBackground(
                     x = Random.nextFloat() * size.width,
                     y = Random.nextFloat() * size.height,
                     radius = Random.nextFloat() * 14f + 6f, // 6 to 20
-                    speedX = Random.nextFloat() * 30f - 15f, // Faster drift
-                    speedY = Random.nextFloat() * -50f - 20f, // Faster upward drift
+                    speedX = Random.nextFloat() * 30f - 15f,
+                    speedY = Random.nextFloat() * -50f - 20f,
                     baseAlpha = Random.nextFloat() * 0.4f + 0.2f, // 0.2 to 0.6
                     phase = Random.nextFloat() * 100f,
-                    phaseSpeed = Random.nextFloat() * 4f + 2f // Faster twinkle
+                    phaseSpeed = Random.nextFloat() * 4f + 2f
                 )
             }
             particles = newParticles
@@ -60,6 +75,10 @@ fun AnimatedBackground(
         if (particles.isNotEmpty()) {
             while (true) {
                 withInfiniteAnimationFrameMillis { frameTime ->
+                    // Skip frame when app is in background or throttle to ~30fps
+                    if (!isInForeground || (lastFrameTime != -1L && (frameTime - lastFrameTime) < 32)) {
+                        return@withInfiniteAnimationFrameMillis
+                    }
                     if (lastFrameTime != -1L) {
                         val deltaTime = (frameTime - lastFrameTime) / 1000f
                         

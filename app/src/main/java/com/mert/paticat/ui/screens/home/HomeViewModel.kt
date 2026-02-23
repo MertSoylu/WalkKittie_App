@@ -7,10 +7,13 @@ import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.HealthRepository
 import com.mert.paticat.domain.repository.MissionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +22,7 @@ import javax.inject.Inject
  * ViewModel for Home Screen.
  * Manages health data, cat status, and missions.
  */
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val catRepository: CatRepository,
@@ -82,7 +86,7 @@ class HomeViewModel @Inject constructor(
             combine(
                 catRepository.getCat(),
                 healthRepository.getTodayStats(),
-                missionRepository.getActiveMissions(),
+                missionRepository.getTodayMissions(),
                 userProfileDao.getUserProfile(),
                 stepCounterManager.liveSteps
             ) { cat, stats, missions, profile, liveSteps ->
@@ -101,17 +105,38 @@ class HomeViewModel @Inject constructor(
                     it.copy(
                         cat = data.cat,
                         todayStats = data.stats,
-                        activeMissions = data.missions,
+                        todayMissions = data.missions,
                         stepGoal = data.stepGoal,
                         waterGoal = data.waterGoal
                     )
                 }
+                // NOTE: DB writes (checkAndCompleteMissions, updateCatBasedOnActivity)
+                // moved to separate debounced coroutine below to prevent feedback loop
+            }
+        }
+        
+        // Separate observation to instantly complete missions when their target is reached in the UI.
+        // It does not poll periodically, saving battery, and only writes when crossing the milestone.
+        viewModelScope.launch {
+            _uiState.collect { state ->
+                val activeMissions = state.todayMissions.filter { !it.isCompleted }
+                if (activeMissions.isEmpty()) return@collect
                 
-                // Update missions based on observed data
-                missionRepository.checkAndCompleteMissions(data.stats.steps, data.stats.waterMl)
+                var reachedSteps: Int? = null
+                var reachedWater: Int? = null
                 
-                // Update cat happiness based on activity
-                updateCatBasedOnActivity(data.stats.steps)
+                activeMissions.forEach { mission ->
+                    if (mission.type == com.mert.paticat.domain.model.MissionType.STEPS && state.todayStats.steps >= mission.targetValue) {
+                        reachedSteps = state.todayStats.steps
+                    }
+                    if (mission.type == com.mert.paticat.domain.model.MissionType.WATER && state.todayStats.waterMl >= mission.targetValue) {
+                        reachedWater = state.todayStats.waterMl
+                    }
+                }
+                
+                if (reachedSteps != null || reachedWater != null) {
+                    missionRepository.checkAndCompleteMissions(steps = reachedSteps, waterMl = reachedWater)
+                }
             }
         }
     }
@@ -186,18 +211,4 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
     
-    private suspend fun updateCatBasedOnActivity(steps: Int) {
-        // Only provide POSITIVE rewards for activity. 
-        // Passive decay is handled centrally in CatRepository.
-        val happinessBonus = when {
-            steps >= 10000 -> 10
-            steps >= 5000 -> 5
-            steps >= 1000 -> 2
-            else -> 0
-        }
-        
-        if (happinessBonus > 0) {
-            catRepository.updateHappiness(happinessBonus)
-        }
-    }
 }

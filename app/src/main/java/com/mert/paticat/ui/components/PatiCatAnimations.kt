@@ -69,6 +69,12 @@ fun Modifier.pulsate(
     scaleRange: ClosedFloatingPointRange<Float> = 0.98f..1.02f,
     duration: Int = 1000
 ) = composed {
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+    val isVisible = lifecycleState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+
+    if (!isVisible) return@composed this
+
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = scaleRange.start,

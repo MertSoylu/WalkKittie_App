@@ -126,32 +126,15 @@ fun LevelInfoScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     XpSourceCard(
-                        icon = Icons.Default.DirectionsWalk,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_walk),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_walk_desc),
-                        xp = "+10 XP",
+                        icon = Icons.Default.SportsEsports,
+                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_games),
+                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_games_desc),
+                        xp = "+20~40 XP",
                         color = PremiumPink
                     )
                     
+                    // Spacer and cards for Feed/Sleep/Missions
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    XpSourceCard(
-                        icon = Icons.Default.SportsEsports,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_game_rps),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_rps_desc),
-                        xp = "+20 XP",
-                        color = PremiumMint
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    XpSourceCard(
-                        icon = Icons.Default.Numbers,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_game_guess),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_guess_desc),
-                        xp = "+50 XP",
-                        color = PremiumBlue
-                    )
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
@@ -203,14 +186,14 @@ fun LevelInfoScreen(
                         
                         // Show level requirements
                         listOf(
-                            1 to 200,
-                            2 to 800,
-                            3 to 1800,
-                            4 to 3200,
-                            5 to 5000,
-                            10 to 20000,
-                            15 to 45000,
-                            20 to 80000
+                            2 to 200,
+                            3 to 800,
+                            4 to 1800,
+                            5 to 3200,
+                            10 to 16200,
+                            15 to 39200,
+                            20 to 72200,
+                            50 to 480200
                         ).forEach { (level, xp) ->
                             LevelRequirementRow(
                                 level = level,
@@ -218,7 +201,7 @@ fun LevelInfoScreen(
                                 isCurrentLevel = level == uiState.level,
                                 isPassed = level < uiState.level
                             )
-                            if (level != 20) {
+                            if (level != 50) {
                                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                             }
                         }

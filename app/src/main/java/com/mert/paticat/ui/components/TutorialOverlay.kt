@@ -63,17 +63,7 @@ fun TutorialOverlay(
         label = "tutorial_anim"
     )
     
-    // Pulse animation for the indicator
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = EaseInOut),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_anim"
-    )
+    
     
     Box(
         modifier = Modifier

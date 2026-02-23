@@ -236,7 +236,6 @@ fun CatScreen(
                     Box(
                         modifier = Modifier
                             .size(300.dp)
-                            .pulsate(0.95f..1.05f, 2000)
                             .clip(CircleShape)
                             .background(
                                 Brush.radialGradient(
@@ -301,7 +300,7 @@ fun CatScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(32.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black.copy(alpha = 0.95f) else MaterialTheme.colorScheme.surface
+                        containerColor = if (MaterialTheme.colorScheme.background == BackgroundDark) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
@@ -427,26 +426,22 @@ fun CatScreen(
                             else -> null
                         }
 
-                        statusText?.let {
-                            if (adReady) { 
-                                 // No status text needed if ready
-                            } else {
+                        if (statusText != null && !adReady) {
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    text = it,
+                                    text = statusText,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (!uiState.isNetworkAvailable || sleepAdState is AdState.Error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )
-                            }
                         }
                     }
                 } else {
                     // Normal Interaction Rows
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.Top
                     ) {
                     // Besle

@@ -12,7 +12,7 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val cat: Cat = Cat(),
     val todayStats: DailyStats = DailyStats(date = LocalDate.now()),
-    val activeMissions: List<Mission> = emptyList(),
+    val todayMissions: List<Mission> = emptyList(),
     val stepGoal: Int = 10000,
     val waterGoal: Int = 2000,
     val nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null,

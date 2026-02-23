@@ -31,7 +31,7 @@ data class RewardNotificationData(
     val xp: Int = 0,
     val foodPoints: Int = 0,
     val gold: Int = 0,
-    val title: String = "Ödül Kazanıldı!",
+    val title: String? = null, // null = use localized default from string resource
     val message: String = ""
 )
 
@@ -101,7 +101,7 @@ fun RewardNotificationArea(
                     
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = rewardData.title,
+                            text = rewardData.title ?: androidx.compose.ui.res.stringResource(R.string.reward_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface

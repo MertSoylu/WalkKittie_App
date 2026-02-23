@@ -214,14 +214,18 @@ fun HomeScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         SectionHeader(
                             title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.home_daily_missions_title),
-                            badgeText = "${uiState.activeMissions.count { it.isCompleted }}/${uiState.activeMissions.size}"
+                            badgeText = "${uiState.todayMissions.count { it.isCompleted }}/${uiState.todayMissions.size}"
                         )
                         
-                        if (uiState.activeMissions.isEmpty()) {
+                        if (uiState.todayMissions.isEmpty()) {
                             EmptyMissionState()
                         } else {
-                            uiState.activeMissions.forEach { mission ->
-                                GlassMissionItem(mission = mission)
+                            uiState.todayMissions.forEach { mission ->
+                                GlassMissionItem(
+                                    mission = mission,
+                                    liveSteps = uiState.todayStats.steps,
+                                    liveWater = uiState.todayStats.waterMl
+                                )
                             }
                         }
                         
@@ -374,8 +378,13 @@ fun StatusBarMini(icon: String, value: Int, color: Color) {
 }
 
 @Composable
-fun GlassMissionItem(mission: Mission) {
-    val isCompleted = mission.isCompleted
+fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0) {
+    val displayValue = when (mission.type) {
+        com.mert.paticat.domain.model.MissionType.STEPS -> kotlin.math.max(mission.currentValue, liveSteps)
+        com.mert.paticat.domain.model.MissionType.WATER -> kotlin.math.max(mission.currentValue, liveWater)
+        else -> mission.currentValue
+    }
+    val isCompleted = displayValue >= mission.targetValue
     val itemAlpha = if (isCompleted) 0.6f else 1f
     
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -475,7 +484,7 @@ fun GlassMissionItem(mission: Mission) {
                 if(!isCompleted) {
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { (mission.currentValue.toFloat() / mission.targetValue).coerceIn(0f, 1f) },
+                        progress = { (displayValue.toFloat() / mission.targetValue).coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
                         color = iconColor,
                         trackColor = iconColor.copy(alpha = 0.1f),
@@ -483,7 +492,7 @@ fun GlassMissionItem(mission: Mission) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "${mission.currentValue} / ${mission.targetValue}",
+                        "$displayValue / ${mission.targetValue}",
                          style = MaterialTheme.typography.labelSmall,
                          fontWeight = FontWeight.Bold,
                          color = iconColor
@@ -637,7 +646,7 @@ fun WaterTrackingCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Undo,
-                                contentDescription = "Geri Al",
+                                contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_undo),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -691,7 +700,6 @@ fun WaterTrackingCard(
                         color = PremiumBlue.copy(alpha = 0.1f),
                         modifier = Modifier
                             .bounceClick { onAdd(amount) }
-                            .clickable { onAdd(amount) }
                     ) {
                         Text(
                             "+$amount", 
