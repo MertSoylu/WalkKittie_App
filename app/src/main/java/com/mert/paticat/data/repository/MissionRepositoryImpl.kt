@@ -166,6 +166,7 @@ class MissionRepositoryImpl @Inject constructor(
             
             // Increase cat happiness significantly for completing goals
             val happinessBoost = if (mission.type == MissionType.STEPS.name) 10 else 5
+            // NOTE: mission.type is a String from entity; comparison is correct.
             catRepository.updateHappiness(happinessBoost)
         }
     }

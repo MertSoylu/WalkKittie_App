@@ -45,7 +45,7 @@ data class CatUiState(
         get() = cat.mood
     
     val canFeed: Boolean
-        get() = cat.foodPoints >= 10 && cat.hunger < 100 // Feed cost: 10 MP
+        get() = cat.foodPoints >= 10 && cat.hunger < 95 // Feed cost: 10 MP, guard matches ViewModel
     
     val moodEmoji: String
         get() = when (currentMood) {

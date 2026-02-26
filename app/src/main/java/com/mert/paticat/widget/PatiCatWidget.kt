@@ -62,9 +62,9 @@ class PatiCatWidget : GlanceAppWidget() {
         val catName = prefs[KEY_CAT_NAME] ?: "PatiCat"
         val catEmoji = prefs[KEY_CAT_EMOJI] ?: "😸"
         val steps = prefs[KEY_STEPS] ?: 0
-        val hunger = prefs[KEY_HUNGER] ?: 100
-        val happiness = prefs[KEY_HAPPINESS] ?: 100
-        val energy = prefs[KEY_ENERGY] ?: 100
+        val hunger = prefs[KEY_HUNGER] ?: 50
+        val happiness = prefs[KEY_HAPPINESS] ?: 50
+        val energy = prefs[KEY_ENERGY] ?: 50
 
         Box(
             modifier = GlanceModifier

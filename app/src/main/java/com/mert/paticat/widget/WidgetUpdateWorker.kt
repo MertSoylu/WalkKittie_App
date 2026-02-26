@@ -7,14 +7,12 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.mert.paticat.data.local.dao.CatDao
 import com.mert.paticat.data.local.dao.DailyStatsDao
+import com.mert.paticat.domain.repository.CatRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import com.mert.paticat.domain.model.Cat
 import com.mert.paticat.domain.model.CatMood
 import androidx.glance.appwidget.updateAll
 
@@ -22,31 +20,15 @@ import androidx.glance.appwidget.updateAll
 class WidgetUpdateWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted params: WorkerParameters,
-    private val catDao: CatDao,
+    private val catRepository: CatRepository,
     private val dailyStatsDao: DailyStatsDao
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         try {
-            val catEntity = catDao.getCat().firstOrNull() ?: return Result.success()
-            
-            // Map Entity to Domain to use mood logic
-            val cat = Cat(
-                id = catEntity.id,
-                name = catEntity.name,
-                hunger = catEntity.hunger,
-                happiness = catEntity.happiness,
-                energy = catEntity.energy,
-                xp = catEntity.xp,
-                level = catEntity.level,
-                foodPoints = catEntity.foodPoints,
-                coins = catEntity.coins,
-                isSleeping = catEntity.isSleeping,
-                sleepEndTime = catEntity.sleepEndTime,
-                lastUpdated = catEntity.lastUpdated,
-                lastInteractionTime = catEntity.lastInteractionTime
-            )
-            
+            // Use getCatOnce() which applies decay logic for accurate stats
+            val cat = catRepository.getCatOnce()
+
             val formatter = DateTimeFormatter.ISO_LOCAL_DATE
             val today = LocalDate.now().format(formatter)
             val todayStats = dailyStatsDao.getStatsForDateOnce(today)
@@ -58,7 +40,6 @@ class WidgetUpdateWorker @AssistedInject constructor(
                 CatMood.HUNGRY -> "😿"
                 CatMood.SLEEPING -> "😴"
                 CatMood.EXCITED -> "✨"
-                else -> "😸"
             }
 
             val manager = GlanceAppWidgetManager(context)

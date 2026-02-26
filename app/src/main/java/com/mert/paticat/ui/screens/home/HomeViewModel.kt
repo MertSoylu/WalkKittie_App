@@ -60,11 +60,8 @@ class HomeViewModel @Inject constructor(
                 catRepository.initializeCat()
                 
                 // Mark that user opened the app — updates lastInteractionTime
-                // and triggers decay calculation
+                // and triggers decay calculation (applyDecayLogic included)
                 catRepository.markUserInteraction()
-                
-                // Apply any pending decay
-                catRepository.decreaseHungerOverTime()
                 
                 // Generate daily missions
                 missionRepository.generateDailyMissions()
@@ -147,9 +144,8 @@ class HomeViewModel @Inject constructor(
     fun refreshData() {
         viewModelScope.launch {
             try {
-                // Update interactions and decay
+                // Update interactions and decay (markUserInteraction already applies decay)
                 catRepository.markUserInteraction()
-                catRepository.decreaseHungerOverTime()
                 
                 // Refresh missions
                 missionRepository.generateDailyMissions()
@@ -200,9 +196,10 @@ class HomeViewModel @Inject constructor(
     fun feedCat() {
         viewModelScope.launch {
             val cat = _uiState.value.cat
+            if (cat.isSleeping) return@launch
+            if (cat.hunger >= 95) return@launch
             if (cat.foodPoints >= 10) {
                 catRepository.feedCat(10)
-                catRepository.updateHappiness(5)
             }
         }
     }

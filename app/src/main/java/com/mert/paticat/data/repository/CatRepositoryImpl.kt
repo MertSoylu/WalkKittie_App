@@ -91,28 +91,27 @@ class CatRepositoryImpl @Inject constructor(
         val cat = catDao.getCatOnce() ?: return
         
         // Feeding Logic:
-        // 10 FoodPoints = +10% Hunger (Saturation) + 5 Happiness
+        // 10 FoodPoints = +10% Hunger (Saturation) + 2 Happiness
         // Cap at 100.
         
         val pointsToConsume = foodPoints
         if (cat.foodPoints < pointsToConsume) return 
         
         val newHunger = (cat.hunger + 10).coerceIn(0, 100) // +10% hunger per feed
-        val newHappiness = (cat.happiness + 5).coerceIn(0, 100)
+        val newHappiness = (cat.happiness + 2).coerceIn(0, 100)
         val newFoodPoints = (cat.foodPoints - pointsToConsume).coerceAtLeast(0)
-        
-        // Also gain small XP for caring
-        val newXp = cat.xp + 2
         
         catDao.updateCat(
             cat.copy(
                 hunger = newHunger,
                 happiness = newHappiness,
                 foodPoints = newFoodPoints,
-                xp = newXp,
                 lastUpdated = System.currentTimeMillis()
             )
         )
+        
+        // Small XP for caring (uses addXp for level-up check)
+        addXp(2)
     }
     
     override suspend fun addXp(amount: Int) {
@@ -253,17 +252,15 @@ class CatRepositoryImpl @Inject constructor(
         val hoursPassed = (durationMillis.toDouble() / TimeUnit.HOURS.toMillis(1).toDouble())
         
         // 1. Hunger Calculation
-        // Rule: Sleeping -> Less decrease (-3/hr). Awake -> Normal decrease (-5/hr).
-        val hungerLossPerHour = if (isSleeping) 3.0 else 5.0
+        // Rule: Sleeping -> Less decrease (-5/hr). Awake -> Normal decrease (-7/hr).
+        val hungerLossPerHour = if (isSleeping) 5.0 else 7.0
         val hungerLoss = kotlin.math.round(hoursPassed * hungerLossPerHour).toInt()
         val newHunger = (cat.hunger - hungerLoss).coerceIn(0, 100)
         
         // 2. Energy Calculation
         // Rule: Sleeping -> Recover (+34/hr). 
-        // Awake -> If waiting/inactive, energy change = 0.
-        // User specified: "Energy won't decrease until user logs in". 
-        // Since this function calculates decay over elapsed time (user away), Awake energy change is 0.
-        val energyChangePerHour = if (isSleeping) 34.0 else 0.0
+        // Awake -> Passive drain (-2/hr).
+        val energyChangePerHour = if (isSleeping) 34.0 else -2.0
         val energyChange = kotlin.math.round(energyChangePerHour * hoursPassed).toInt()
         val newEnergy = (cat.energy + energyChange).coerceIn(0, 100)
         

@@ -567,7 +567,7 @@ fun InteractionBtn(
             modifier = Modifier
                 .size(72.dp)
                 .shadow(if (enabled) 8.dp else 0.dp, CircleShape)
-                .bounceClick { onClick() },
+                .bounceClick { if (enabled) onClick() },
             shape = CircleShape,
             color = displayColor
         ) {

@@ -268,9 +268,9 @@ class CatViewModel @Inject constructor(
                 draw = choice == opponentChoice,
                 lose = opponentChoice.beats(choice),
                 energyCost = GameType.RPS.energyCost,
-                winRewards = MiniGameReward(mp = 10, happy = 15, xp = 20),
-                drawRewards = MiniGameReward(mp = 5, happy = 5, xp = 10),
-                loseRewards = MiniGameReward(mp = 0, happy = 5, xp = 5)
+                winRewards = MiniGameReward(mp = 8, happy = 12, xp = 20),
+                drawRewards = MiniGameReward(mp = 4, happy = 4, xp = 10),
+                loseRewards = MiniGameReward(mp = 0, happy = 4, xp = 5)
             )
         }
     }
@@ -364,14 +364,14 @@ class CatViewModel @Inject constructor(
                 allMatch -> {
                     setMessage(context.getString(R.string.game_msg_jackpot))
                     processGameResult(true, false, false, GameType.SLOTS.energyCost,
-                        MiniGameReward(mp = 30, happy = 20, xp = 40),
+                        MiniGameReward(mp = 24, happy = 16, xp = 40),
                         MiniGameReward(), MiniGameReward()
                     )
                 }
                 twoMatch -> {
                     setMessage(context.getString(R.string.game_msg_match_two))
                     processGameResult(true, false, false, GameType.SLOTS.energyCost,
-                        MiniGameReward(mp = 10, happy = 10, xp = 15),
+                        MiniGameReward(mp = 8, happy = 8, xp = 15),
                         MiniGameReward(), MiniGameReward()
                     )
                 }
@@ -380,7 +380,7 @@ class CatViewModel @Inject constructor(
                     processGameResult(false, false, true, GameType.SLOTS.energyCost,
                         MiniGameReward(),
                         MiniGameReward(),
-                        MiniGameReward(mp = 0, happy = 5, xp = 5)
+                        MiniGameReward(mp = 0, happy = 3, xp = 5)
                     )
                 }
             }
@@ -440,8 +440,8 @@ class CatViewModel @Inject constructor(
                 delay(500)
                 val moves = _uiState.value.memoryMoves
                 val reward = when {
-                moves <= 14 -> MiniGameReward(mp = 10, happy = 10, xp = 10) // Perfect
-                moves <= 20 -> MiniGameReward(mp = 5, happy = 5, xp = 5) // Good
+                moves <= 14 -> MiniGameReward(mp = 8, happy = 8, xp = 10) // Perfect
+                moves <= 20 -> MiniGameReward(mp = 4, happy = 4, xp = 5) // Good
                 else -> MiniGameReward(mp = 2, happy = 2, xp = 2) // OK
             }
                 processGameResult(true, false, false, GameType.MEMORY.energyCost, reward, MiniGameReward(), MiniGameReward())
@@ -534,8 +534,8 @@ class CatViewModel @Inject constructor(
     private fun finishReflexGame() {
         val score = _uiState.value.reflexScore
         val reward = when {
-            score >= 15 -> MiniGameReward(mp = 10, happy = 10, xp = 10)
-            score >= 10 -> MiniGameReward(mp = 5, happy = 5, xp = 5)
+            score >= 15 -> MiniGameReward(mp = 8, happy = 8, xp = 10)
+            score >= 10 -> MiniGameReward(mp = 4, happy = 4, xp = 5)
             score >= 5 -> MiniGameReward(mp = 2, happy = 2, xp = 2)
             else -> MiniGameReward(mp = 0, happy = 1, xp = 1)
         }

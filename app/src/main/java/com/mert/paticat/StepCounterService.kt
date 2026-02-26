@@ -57,7 +57,7 @@ class StepCounterService : Service(), SensorEventListener {
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
     
     // Step tracking state
-    private var initialStepCount: Int = -1
+    @Volatile private var initialStepCount: Int = -1
     @Volatile private var currentDaySteps: Int = 0
     private var lastSavedDate: String = ""
     @Volatile private var lastProcessedStepsForRewards: Int = 0
