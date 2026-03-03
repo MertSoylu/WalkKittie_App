@@ -46,6 +46,10 @@ class MainViewModel @Inject constructor(
     private val _levelUpEvent = MutableStateFlow<Int?>(null)
     val levelUpEvent: StateFlow<Int?> = _levelUpEvent.asStateFlow()
 
+    private var lastSeenLevelCache = 1
+
+    @Volatile private var isClearingRewards = false
+
     init {
         try {
             observeUserStatus()
@@ -90,15 +94,16 @@ class MainViewModel @Inject constructor(
     private fun observeCatName() {
         viewModelScope.launch {
             try {
+                lastSeenLevelCache = preferencesRepository.lastSeenLevel.first()
                 catRepository.getCat()
                     .distinctUntilChanged { old, new -> old.level == new.level && old.name == new.name }
                     .collect { cat ->
                         _catName.value = cat.name
 
                         // Level up check
-                        val lastSeenLevel = preferencesRepository.lastSeenLevel.first()
-                        if (cat.level > lastSeenLevel) {
+                        if (cat.level > lastSeenLevelCache) {
                             _levelUpEvent.value = cat.level
+                            lastSeenLevelCache = cat.level
                         }
                     }
             } catch (e: Exception) {
@@ -148,7 +153,7 @@ class MainViewModel @Inject constructor(
                     null
                 }
             }.collect { data ->
-                if (data != null && _rewardNotificationData.value == null) {
+                if (data != null && _rewardNotificationData.value == null && !isClearingRewards) {
                     _rewardNotificationData.value = data
                 }
             }
@@ -156,13 +161,16 @@ class MainViewModel @Inject constructor(
     }
 
     fun clearRewardNotification() {
+        isClearingRewards = true
         viewModelScope.launch {
             _rewardNotificationData.value = null
             preferencesRepository.clearPendingRewards()
+            isClearingRewards = false
         }
     }
 
     fun dismissLevelUpEvent(newLevel: Int) {
+        lastSeenLevelCache = newLevel
         viewModelScope.launch {
             _levelUpEvent.value = null
             preferencesRepository.updateLastSeenLevel(newLevel)

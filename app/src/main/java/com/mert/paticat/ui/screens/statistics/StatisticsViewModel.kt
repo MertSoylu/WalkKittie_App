@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import javax.inject.Inject
@@ -164,7 +165,7 @@ class StatisticsViewModel @Inject constructor(
             val startDate = when (range) {
                 StatsRange.DAILY -> today.minusDays(6)
                 StatsRange.WEEKLY -> today.minusDays(6)
-                StatsRange.MONTHLY -> today.withDayOfMonth(1)
+                StatsRange.MONTHLY -> today.minusMonths(5).withDayOfMonth(1) // Son 6 ay
             }
             val startDateStr = startDate.toDbString()
             
@@ -193,24 +194,33 @@ class StatisticsViewModel @Inject constructor(
                 }
 
                 val rangeDays = ChronoUnit.DAYS.between(startDate, today).toInt() + 1
-                
-                val filteredHistory = historyDomain.filter { 
-                    !it.date.isBefore(startDate) && !it.date.isAfter(today) 
+
+                val filteredHistory = historyDomain.filter {
+                    !it.date.isBefore(startDate) && !it.date.isAfter(today)
                 }
-                
+
                 val chartDataPoints = mutableListOf<Int>()
                 val chartLabelsList = mutableListOf<String>()
 
-                for (i in 0 until rangeDays) {
-                    val dateToCheck = startDate.plusDays(i.toLong())
-                    val statsForDay = filteredHistory.find { it.date == dateToCheck }
-                    chartDataPoints.add(statsForDay?.steps ?: 0)
-                    
-                    val label = if (range == StatsRange.MONTHLY) 
-                        dateToCheck.dayOfMonth.toString()
-                    else
-                        getDayLabel(dateToCheck.dayOfWeek)
-                    chartLabelsList.add(label)
+                if (range == StatsRange.MONTHLY) {
+                    // Her bar = bir ay. Son 6 ayı gerçek ay isimleriyle göster.
+                    for (i in 5 downTo 0) {
+                        val monthDate = today.minusMonths(i.toLong())
+                        val monthStart = monthDate.withDayOfMonth(1)
+                        val monthEnd = monthDate.withDayOfMonth(monthDate.lengthOfMonth())
+                        val monthSteps = filteredHistory
+                            .filter { !it.date.isBefore(monthStart) && !it.date.isAfter(monthEnd) }
+                            .sumOf { it.steps }
+                        chartDataPoints.add(monthSteps)
+                        chartLabelsList.add(monthDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                    }
+                } else {
+                    for (i in 0 until rangeDays) {
+                        val dateToCheck = startDate.plusDays(i.toLong())
+                        val statsForDay = filteredHistory.find { it.date == dateToCheck }
+                        chartDataPoints.add(statsForDay?.steps ?: 0)
+                        chartLabelsList.add(getDayLabel(dateToCheck.dayOfWeek))
+                    }
                 }
                 
                 val totalSteps = filteredHistory.sumOf { it.steps }
@@ -231,8 +241,8 @@ class StatisticsViewModel @Inject constructor(
                         "${startDate.format(fmt)} – ${today.format(fmt)}"
                     }
                     StatsRange.MONTHLY -> {
-                        val fmt = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-                        today.withDayOfMonth(1).format(fmt)
+                        val fmt = DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())
+                        "${startDate.format(fmt)} – ${today.format(fmt)}"
                     }
                     StatsRange.DAILY -> ""
                 }

@@ -39,6 +39,9 @@ playServicesAds = "23.0.0"
 # In-App Update
 playAppUpdate = "2.1.0"
 
+# Google Fonts
+uiTextGoogleFonts = "1.7.8"
+
 [libraries]
 # Core Android
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -89,6 +92,7 @@ play-services-ads = { group = "com.google.android.gms", name = "play-services-ad
 # In-App Update
 play-app-update = { group = "com.google.android.play", name = "app-update", version.ref = "playAppUpdate" }
 play-app-update-ktx = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
+androidx-compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

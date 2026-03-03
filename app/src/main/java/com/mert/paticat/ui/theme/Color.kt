@@ -79,4 +79,16 @@ val CardBlue = PremiumBlue.copy(alpha = 0.05f)
 val CardMint = PremiumMint.copy(alpha = 0.05f)
 val CardLavender = PremiumPurple.copy(alpha = 0.05f)
 
+// --- Game Room Pastel Palette ---
+val GamePastelPink      = Color(0xFFFFB3C6)   // Candy pink  – RPS
+val GamePastelPinkLight = Color(0xFFFFD6E0)
+val GamePastelPeach     = Color(0xFFFFCBA4)   // Soft peach  – Slots
+val GamePastelPeachLight= Color(0xFFFFE5CC)
+val GamePastelMint      = Color(0xFFB5EAD7)   // Soft mint   – Memory
+val GamePastelMintLight = Color(0xFFD4F5E9)
+val GamePastelLavender  = Color(0xFFCDB4DB)   // Lavender    – Reflex
+val GamePastelLavLight  = Color(0xFFE8D8F5)
+val GamePastelBlue      = Color(0xFFBDE0FE)   // Sky blue
+val GamePastelYellow    = Color(0xFFFFF3B0)   // Butter yellow
+
 

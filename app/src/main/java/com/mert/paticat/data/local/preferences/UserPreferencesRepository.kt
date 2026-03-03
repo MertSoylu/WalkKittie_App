@@ -5,10 +5,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -162,4 +164,41 @@ class UserPreferencesRepository @Inject constructor(
             preferences[LAST_SEEN_LEVEL] = level
         }
     }
+
+    private val STEP_BOOST_EXPIRES_AT = longPreferencesKey("step_boost_expires_at")
+
+    val stepBoostExpiresAt: Flow<Long> = context.dataStore.data
+        .map { preferences -> preferences[STEP_BOOST_EXPIRES_AT] ?: 0L }
+
+    suspend fun setStepBoostExpiry(expiresAtMs: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[STEP_BOOST_EXPIRES_AT] = expiresAtMs
+        }
+    }
+
+    suspend fun getStepBoostExpiry(): Long =
+        context.dataStore.data.map { it[STEP_BOOST_EXPIRES_AT] ?: 0L }.first()
+
+    private val XP_BOOST_EXPIRES_AT = longPreferencesKey("xp_boost_expires_at")
+    private val COMBO_BOOST_EXPIRES_AT = longPreferencesKey("combo_boost_expires_at")
+
+    val xpBoostExpiresAt: Flow<Long> = context.dataStore.data
+        .map { it[XP_BOOST_EXPIRES_AT] ?: 0L }
+
+    val comboBoostExpiresAt: Flow<Long> = context.dataStore.data
+        .map { it[COMBO_BOOST_EXPIRES_AT] ?: 0L }
+
+    suspend fun setXpBoostExpiry(expiresAtMs: Long) {
+        context.dataStore.edit { it[XP_BOOST_EXPIRES_AT] = expiresAtMs }
+    }
+
+    suspend fun setComboBoostExpiry(expiresAtMs: Long) {
+        context.dataStore.edit { it[COMBO_BOOST_EXPIRES_AT] = expiresAtMs }
+    }
+
+    suspend fun getXpBoostExpiry(): Long =
+        context.dataStore.data.map { it[XP_BOOST_EXPIRES_AT] ?: 0L }.first()
+
+    suspend fun getComboBoostExpiry(): Long =
+        context.dataStore.data.map { it[COMBO_BOOST_EXPIRES_AT] ?: 0L }.first()
 }

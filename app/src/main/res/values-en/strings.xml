@@ -61,6 +61,8 @@
     <string name="shop_section_title">🏪 Shop</string>
     <string name="inventory_section_title">🎒 Inventory</string>
     <string name="inventory_empty">No food yet. Buy some from the shop!</string>
+    <string name="inventory_empty_hint">You can buy items from the shop</string>
+    <string name="shop_open_button">Open Shop</string>
     <string name="feed_button">Feed 🍖</string>
     <string name="feed_disabled_sleeping">Cat is sleeping 💤</string>
     <string name="cat_action_play">Play</string>
@@ -342,6 +344,21 @@
     <string name="shop_error_purchase_failed">Purchase failed: %s</string>
     <string name="shop_item_dry_food">Dry Food</string>
     <string name="shop_item_dry_food_desc">Basic cat food</string>
+    <string name="shop_item_energy_bar">Energy Bar</string>
+    <string name="shop_item_energy_bar_desc">Quick energy boost</string>
+    <string name="shop_category_food">Food</string>
+    <string name="shop_category_energy">Energy</string>
+    <string name="shop_category_boost">Boost</string>
+    <string name="shop_item_step_multiplier">2x Step Boost</string>
+    <string name="shop_item_step_multiplier_desc">Earn 2x gold from steps for 24 hours</string>
+    <string name="shop_boost_active">⏱ %s left</string>
+    <string name="shop_boost_purchased">Boost active! 2x gold for 24h ⚡</string>
+    <string name="shop_item_xp_multiplier">2x XP Boost</string>
+    <string name="shop_item_xp_multiplier_desc">Earn 2x XP from steps for 24 hours</string>
+    <string name="shop_boost_xp_purchased">XP boost active! 2x XP for 24h 🌟</string>
+    <string name="shop_item_combo_multiplier">2x Combo Boost</string>
+    <string name="shop_item_combo_multiplier_desc">Earn 2x gold and 2x XP from steps for 24 hours</string>
+    <string name="shop_boost_combo_purchased">Combo active! 2x gold + 2x XP for 24h 💎</string>
     <string name="shop_item_canned_food">Canned</string>
     <string name="shop_item_canned_food_desc">Tasty canned food</string>
     <string name="shop_item_tuna">Tuna</string>
@@ -474,4 +491,8 @@
     <!-- UX Improvements -->
     <string name="cat_xp_remaining">%d XP to next level</string>
     <string name="cat_xp_max_level">Legendary Cat — Max Level</string>
+
+    <!-- Boosters -->
+    <string name="booster_title">Active Boosters ⚡</string>
+    <string name="dialog_close">Close</string>
 </resources>

@@ -8,10 +8,13 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -50,6 +53,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mert.paticat.R
 import com.mert.paticat.domain.model.Cat
+import com.mert.paticat.domain.model.ShopCategory
 import com.mert.paticat.domain.model.ShopItem
 import com.mert.paticat.ui.components.*
 import com.mert.paticat.ui.theme.*
@@ -109,8 +113,17 @@ fun CatScreen(
 
     DisposableEffect(Unit) { onDispose { soundManager.release() } }
 
-    // Tab state
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var showShop by remember { mutableStateOf(false) }
+    var showBoosterDialog by remember { mutableStateOf(false) }
+    var boosterRefreshTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(showBoosterDialog) {
+        if (showBoosterDialog) {
+            while (true) {
+                delay(1000)
+                boosterRefreshTick++
+            }
+        }
+    }
 
     // Ad preloading
     LaunchedEffect(uiState.isNetworkAvailable, uiState.foodAdState, uiState.dailyGoldAdsRemaining) {
@@ -127,6 +140,15 @@ fun CatScreen(
     // Gold Tutorial Dialog
     if (uiState.showGoldTutorial) {
         GoldTutorialDialog(onDismiss = { viewModel.dismissGoldTutorial() })
+    }
+
+    // Booster Dialog
+    if (showBoosterDialog) {
+        BoosterDialog(
+            viewModel = viewModel,
+            tick = boosterRefreshTick,
+            onDismiss = { showBoosterDialog = false }
+        )
     }
 
     Scaffold(
@@ -203,7 +225,8 @@ fun CatScreen(
                     val animatedCoins by animateIntAsState(targetValue = uiState.cat.coins, label = "coins")
                     Surface(
                         color = AccentGold.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.clickable { viewModel.showGoldStatus() }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -230,7 +253,8 @@ fun CatScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .then(if (showShop) Modifier.blur(12.dp) else Modifier),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ==================== CAT VISUAL AREA ====================
@@ -295,6 +319,41 @@ fun CatScreen(
                         modifier = Modifier.align(Alignment.TopCenter)
                     ) {
                         Text("❤️", fontSize = 48.sp, modifier = Modifier.padding(bottom = 16.dp))
+                    }
+
+                    // Booster & Shop FABs
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val activeBooters = viewModel.getActiveBooters()
+                        boosterRefreshTick // Force recompose for timer update
+                        // Booster button (only show if there's an active booster)
+                        if (activeBooters.isNotEmpty()) {
+                            Surface(
+                                modifier = Modifier
+                                    .bounceClick { showBoosterDialog = true },
+                                shape = RoundedCornerShape(50),
+                                color = PremiumBlue.copy(alpha = 0.25f),
+                                shadowElevation = 2.dp
+                            ) {
+                                Text(activeBooters.first().emoji, fontSize = 22.sp, modifier = Modifier.padding(10.dp))
+                            }
+                        }
+
+                        // Shop FAB
+                        Surface(
+                            modifier = Modifier
+                                .bounceClick { showShop = true },
+                            shape = RoundedCornerShape(50),
+                            color = AccentGold.copy(alpha = 0.20f),
+                            shadowElevation = 2.dp
+                        ) {
+                            Text("🛒", fontSize = 22.sp, modifier = Modifier.padding(10.dp))
+                        }
                     }
                 }
 
@@ -416,41 +475,27 @@ fun CatScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ==================== TAB SELECTOR ====================
-                EntranceAnimation(delay = 100) {
-                    PremiumTabSelector(
-                        options = listOf(
-                            stringResource(R.string.cat_tab_my_cat),
-                            stringResource(R.string.cat_tab_shop)
-                        ),
-                        selectedIndex = selectedTab,
-                        onSelect = { selectedTab = it }
-                    )
-                }
+                // ==================== INVENTORY (always visible) ====================
+                InventorySection(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    particleSystem = particleSystem,
+                    catCenter = catCenter,
+                    haptic = haptic,
+                    onOpenShop = { showShop = true }
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // ==================== TAB CONTENT ====================
-                AnimatedVisibility(visible = selectedTab == 0) {
-                    MyCatTabContent(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        tick = tick,
-                        context = context,
-                        haptic = haptic,
-                        onNavigate = onNavigate
-                    )
-                }
-
-                AnimatedVisibility(visible = selectedTab == 1) {
-                    ShopTabContent(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        particleSystem = particleSystem,
-                        catCenter = catCenter,
-                        haptic = haptic
-                    )
-                }
+                // ==================== MY CAT CONTENT ====================
+                MyCatTabContent(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    tick = tick,
+                    context = context,
+                    haptic = haptic,
+                    onNavigate = onNavigate
+                )
 
                 Spacer(modifier = Modifier.height(110.dp))
             }
@@ -460,6 +505,19 @@ fun CatScreen(
                 state = particleSystem,
                 modifier = Modifier.fillMaxSize()
             )
+
+            // Shop overlay
+            AnimatedVisibility(
+                visible = showShop,
+                enter = fadeIn() + slideInVertically { it / 4 },
+                exit = fadeOut() + slideOutVertically { it / 4 }
+            ) {
+                ShopOverlay(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    onDismiss = { showShop = false }
+                )
+            }
         }
     }
 }
@@ -510,39 +568,32 @@ private fun MyCatTabContent(
 ) {
     val isCatSleeping = viewModel.isCatSleeping()
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        if (isCatSleeping) {
-            // ===== SLEEPING STATE =====
-            SleepingStateCard(uiState, viewModel, tick, context)
-        } else {
-            // ===== PLAY BUTTON CARD =====
-            val minEnergy = GameType.values().minOf { it.energyCost }
-            val canPlay = uiState.cat.energy >= minEnergy
-            ActionCard(
+    if (isCatSleeping) {
+        SleepingStateCard(uiState, viewModel, tick, context)
+    } else {
+        val minEnergy = GameType.values().minOf { it.energyCost }
+        val canPlay = uiState.cat.energy >= minEnergy
+        val sleepEnabled = uiState.cat.energy < 40
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ActionPillButton(
+                modifier = Modifier.weight(1f),
                 emoji = "🎮",
-                title = stringResource(R.string.cat_action_play),
-                subtitle = if (canPlay) stringResource(R.string.cat_play_room)
-                           else stringResource(R.string.cat_play_room_disabled),
+                label = stringResource(R.string.cat_action_play),
                 accentColor = MaterialTheme.colorScheme.primary,
                 enabled = canPlay,
                 onClick = {
-                    if (canPlay) {
-                        onNavigate(com.mert.paticat.ui.navigation.Screen.Games.route)
-                    } else {
-                        viewModel.setMessage(context.getString(R.string.home_low_energy_snackbar))
-                    }
+                    if (canPlay) onNavigate(com.mert.paticat.ui.navigation.Screen.Games.route)
+                    else viewModel.setMessage(context.getString(R.string.home_low_energy_snackbar))
                 }
             )
-
-            // ===== SLEEP BUTTON CARD =====
-            val sleepEnabled = uiState.cat.energy < 40
-            ActionCard(
+            ActionPillButton(
+                modifier = Modifier.weight(1f),
                 emoji = "💤",
-                title = stringResource(R.string.cat_action_sleep),
-                subtitle = if (sleepEnabled)
-                    stringResource(R.string.cat_full_energy)
-                else
-                    stringResource(R.string.cat_not_tired_info, uiState.cat.energy),
+                label = stringResource(R.string.cat_action_sleep),
                 accentColor = PremiumBlue,
                 enabled = sleepEnabled,
                 onClick = {
@@ -551,6 +602,49 @@ private fun MyCatTabContent(
                     )
                     viewModel.sleepCat()
                 }
+            )
+        }
+    }
+}
+
+// ==================== ACTION PILL BUTTON (PLAY / SLEEP) ====================
+
+@Composable
+private fun ActionPillButton(
+    modifier: Modifier = Modifier,
+    emoji: String,
+    label: String,
+    accentColor: Color,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .height(72.dp)
+            .bounceClick { if (enabled) onClick() },
+        shape = RoundedCornerShape(20.dp),
+        color = if (enabled) accentColor.copy(alpha = 0.18f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shadowElevation = if (enabled) 4.dp else 0.dp,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.5.dp,
+            color = if (enabled) accentColor.copy(alpha = 0.5f)
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(emoji, fontSize = 26.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) accentColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
             )
         }
     }
@@ -773,6 +867,7 @@ private fun ShopTabContent(
 ) {
     val isSleeping = viewModel.isCatSleeping()
     val ownedItems = uiState.inventory.filter { it.value > 0 }
+    var selectedCategory by remember { mutableStateOf(0) }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // ===== INVENTORY =====
@@ -871,43 +966,377 @@ private fun ShopTabContent(
             )
         }
 
-        // Gold hint when broke
-        if (uiState.cat.coins < ShopItem.ALL.minOf { it.price }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(AccentGold.copy(alpha = 0.08f))
-            ) {
-                Text(
-                    stringResource(R.string.cat_earn_gold_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AccentGold,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(12.dp),
-                    textAlign = TextAlign.Center
+        PremiumTabSelector(
+            options = listOf(
+                stringResource(R.string.shop_category_food),
+                stringResource(R.string.shop_category_energy),
+                stringResource(R.string.shop_category_boost)
+            ),
+            selectedIndex = selectedCategory,
+            onSelect = { selectedCategory = it }
+        )
+
+        val selectedShopCategory = when (selectedCategory) {
+            0 -> ShopCategory.FOOD
+            1 -> ShopCategory.ENERGY
+            else -> ShopCategory.BOOST
+        }
+        val visibleItems = ShopItem.byCategory(selectedShopCategory)
+
+        if (selectedShopCategory != ShopCategory.BOOST) {
+            // Gold hint when broke
+            if (visibleItems.isNotEmpty() && uiState.cat.coins < visibleItems.minOf { it.price }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AccentGold.copy(alpha = 0.08f))
+                ) {
+                    Text(
+                        stringResource(R.string.cat_earn_gold_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AccentGold,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(12.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            visibleItems.chunked(2).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowItems.forEach { item ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            ShopItemCard(
+                                item = item,
+                                gold = uiState.cat.coins,
+                                ownedQty = uiState.inventory[item] ?: 0,
+                                onBuy = { viewModel.buyFood(item) }
+                            )
+                        }
+                    }
+                    if (rowItems.size < 2) Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        } else {
+            visibleItems.forEach { item ->
+                val boostExpiry = when (item.id) {
+                    "xp_multiplier" -> uiState.xpBoostExpiresAt
+                    "combo_multiplier" -> uiState.comboBoostExpiresAt
+                    else -> uiState.stepBoostExpiresAt
+                }
+                BoostItemCard(
+                    item = item,
+                    gold = uiState.cat.coins,
+                    boostExpiresAt = boostExpiry,
+                    onBuy = { viewModel.buyFood(item) }
                 )
             }
         }
+    }
+}
 
-        ShopItem.ALL.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+// ==================== INVENTORY SECTION (always visible) ====================
+
+@Composable
+private fun InventorySection(
+    uiState: CatUiState,
+    viewModel: CatViewModel,
+    particleSystem: com.mert.paticat.ui.components.ParticleSystemState,
+    catCenter: Offset,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    onOpenShop: () -> Unit
+) {
+    val isSleeping = viewModel.isCatSleeping()
+    val ownedItems = uiState.inventory.filter { it.value > 0 }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) { Text("🎒", fontSize = 15.sp) }
+            Text(
+                stringResource(R.string.inventory_section_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        if (ownedItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
             ) {
-                rowItems.forEach { item ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        ShopItemCard(
+                Column(
+                    modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.inventory_empty_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = onOpenShop,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentGold)
+                    ) {
+                        Text(
+                            stringResource(R.string.shop_open_button),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(ownedItems.toList()) { (item, qty) ->
+                    InventoryChipCard(
+                        item = item,
+                        quantity = qty,
+                        isSleeping = isSleeping,
+                        canFeed = !isSleeping && uiState.cat.hunger < 95,
+                        onFeed = {
+                            particleSystem.emit(
+                                x = catCenter.x,
+                                y = catCenter.y - 100f,
+                                count = 15,
+                                type = ParticleType.HEART,
+                                color = PremiumPink
+                            )
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.feedCatWithItem(item)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ==================== SHOP OVERLAY ====================
+
+@Composable
+private fun ShopOverlay(
+    uiState: CatUiState,
+    viewModel: CatViewModel,
+    onDismiss: () -> Unit
+) {
+    var selectedCategory by remember { mutableStateOf(0) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.4f))
+            .clickable(onClick = onDismiss)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.90f)
+                .align(Alignment.BottomCenter)
+                .clickable(enabled = false) {}
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                ),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.10f))
+                                .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) { Text("🛒", fontSize = 15.sp) }
+                        Text(
+                            stringResource(R.string.shop_section_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Text("✕", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                PremiumTabSelector(
+                    options = listOf(
+                        stringResource(R.string.shop_category_food),
+                        stringResource(R.string.shop_category_energy),
+                        stringResource(R.string.shop_category_boost)
+                    ),
+                    selectedIndex = selectedCategory,
+                    onSelect = { selectedCategory = it }
+                )
+
+                val selectedShopCategory = when (selectedCategory) {
+                    0 -> ShopCategory.FOOD
+                    1 -> ShopCategory.ENERGY
+                    else -> ShopCategory.BOOST
+                }
+                val visibleItems = ShopItem.byCategory(selectedShopCategory)
+
+                if (selectedShopCategory != ShopCategory.BOOST) {
+                    if (visibleItems.isNotEmpty() && uiState.cat.coins < visibleItems.minOf { it.price }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                                .border(1.dp, AccentGold.copy(alpha = 0.20f), RoundedCornerShape(16.dp))
+                        ) {
+                            Text(
+                                stringResource(R.string.cat_earn_gold_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AccentGold,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(12.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    visibleItems.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowItems.forEach { item ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ShopItemCard(
+                                        item = item,
+                                        gold = uiState.cat.coins,
+                                        ownedQty = uiState.inventory[item] ?: 0,
+                                        onBuy = { viewModel.buyFood(item) }
+                                    )
+                                }
+                            }
+                            if (rowItems.size < 2) Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                } else {
+                    visibleItems.forEach { item ->
+                        val boostExpiry = when (item.id) {
+                            ShopItem.ID_XP_MULTIPLIER -> uiState.xpBoostExpiresAt
+                            ShopItem.ID_COMBO_MULTIPLIER -> uiState.comboBoostExpiresAt
+                            else -> uiState.stepBoostExpiresAt
+                        }
+                        BoostItemCard(
                             item = item,
                             gold = uiState.cat.coins,
-                            ownedQty = uiState.inventory[item] ?: 0,
+                            boostExpiresAt = boostExpiry,
                             onBuy = { viewModel.buyFood(item) }
                         )
                     }
                 }
-                if (rowItems.size < 2) {
-                    Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+// ==================== BOOST ITEM CARD ====================
+
+@Composable
+private fun BoostItemCard(
+    item: ShopItem,
+    gold: Int,
+    boostExpiresAt: Long,
+    onBuy: () -> Unit
+) {
+    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(boostExpiresAt) {
+        while (true) {
+            delay(60_000L)
+            currentTime = System.currentTimeMillis()
+        }
+    }
+    val isActive = currentTime < boostExpiresAt
+
+    val remainingText = if (isActive) {
+        val diffMs = boostExpiresAt - currentTime
+        val hours = (diffMs / 3600000).toInt()
+        val mins = ((diffMs % 3600000) / 60000).toInt()
+        val timeStr = if (hours > 0) "${hours}s ${mins}dk" else "${mins}dk"
+        stringResource(R.string.shop_boost_active, timeStr)
+    } else null
+
+    val boostShape = RoundedCornerShape(20.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(boostShape)
+            .background(Color.White.copy(alpha = 0.08f))
+            .border(1.dp, Color.White.copy(alpha = 0.10f), boostShape)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(item.emoji, fontSize = 32.sp)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(item.nameResId), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(stringResource(item.descResId), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (remainingText != null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(remainingText, style = MaterialTheme.typography.labelSmall, color = AccentGold, fontWeight = FontWeight.SemiBold)
                 }
+            }
+            Button(
+                onClick = onBuy,
+                enabled = !isActive && gold >= item.price,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("⚡ ${item.price}", style = MaterialTheme.typography.labelMedium)
             }
         }
     }
@@ -1014,36 +1443,33 @@ private fun ShopItemCard(
     val inventoryFull = ownedQty >= ShopItem.MAX_INVENTORY_PER_ITEM
     val canBuy = canAfford && !inventoryFull
 
+    val cardShape = RoundedCornerShape(24.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(cardShape)
             .background(
                 Brush.verticalGradient(
                     if (canBuy)
-                        listOf(AccentGold.copy(alpha = 0.14f), AccentGold.copy(alpha = 0.03f))
+                        listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.06f))
                     else
-                        listOf(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                        )
+                        listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f))
                 )
             )
+            .border(1.dp, Color.White.copy(alpha = 0.12f), cardShape)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Emoji in soft gold circle
+            // Emoji in glass circle
             Box(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (canBuy) AccentGold.copy(alpha = 0.15f)
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-                    ),
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(item.emoji, fontSize = 28.sp)
@@ -1057,8 +1483,12 @@ private fun ShopItemCard(
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
+            val statText = if (item.category == ShopCategory.ENERGY)
+                "+${item.energyBoost} ⚡ +${item.hungerRestore} 🍖"
+            else
+                "+${item.hungerRestore} 🍖 +${item.happinessBoost} 😊"
             Text(
-                "+${item.hungerRestore} 🍖 +${item.happinessBoost} 😊",
+                statText,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1075,12 +1505,12 @@ private fun ShopItemCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             if (canAfford)
-                                Brush.horizontalGradient(listOf(AccentGold, AccentGold.copy(alpha = 0.70f)))
+                                Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.85f), AccentGold.copy(alpha = 0.55f)))
                             else
-                                Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.30f), AccentGold.copy(alpha = 0.15f)))
+                                Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.20f), AccentGold.copy(alpha = 0.10f)))
                         )
                         .then(if (canAfford) Modifier.clickable { onBuy() } else Modifier),
                     contentAlignment = Alignment.Center
@@ -1268,6 +1698,110 @@ fun GoldTutorialDialog(onDismiss: () -> Unit) {
                                else stringResource(R.string.gold_tutorial_btn_next),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BoosterDialog(
+    viewModel: CatViewModel,
+    tick: Int,
+    onDismiss: () -> Unit
+) {
+    tick // Use tick to trigger recomposition for timer updates
+    val activeBooters = viewModel.getActiveBooters()
+
+    if (activeBooters.isEmpty()) {
+        onDismiss()
+        return
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .padding(24.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.booster_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    activeBooters.forEach { booster ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = PremiumBlue.copy(alpha = 0.08f)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(booster.emoji, fontSize = 24.sp)
+                                    Column {
+                                        Text(
+                                            text = booster.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = viewModel.getBoosterRemainingTime(booster.expiresAt),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PremiumBlue
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentGold)
+                ) {
+                    Text(
+                        text = stringResource(R.string.dialog_close),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }

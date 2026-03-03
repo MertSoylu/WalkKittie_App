@@ -40,7 +40,8 @@ class GameDelegate(
 
     // ===== Game entry =====
 
-    fun startGame(type: GameType, catEnergy: Int, isSleeping: Boolean, sleepTimeStr: String) {
+    fun startGame(type: GameType, catEnergy: Int, catLevel: Int, isSleeping: Boolean, sleepTimeStr: String) {
+        if (catLevel < type.minLevel) return
         if (isSleeping) {
             onMessage(context.getString(R.string.cat_msg_sleeping, sleepTimeStr))
             return
@@ -70,6 +71,10 @@ class GameDelegate(
                 it.copy(activeGame = type, miniGameState = MiniGameState.PRE_GAME,
                     reflexScore = 0, reflexRound = 0, reflexMaxRounds = 10,
                     reflexTargets = emptyList(), reflexIsWaiting = false, lastReward = null)
+            }
+            GameType.CATCH -> _gameUiState.update {
+                it.copy(activeGame = type, miniGameState = MiniGameState.PRE_GAME,
+                    catchScore = 0, catchLives = 3, lastReward = null)
             }
         }
     }
@@ -262,6 +267,31 @@ class GameDelegate(
         scope.launch { processGameResult(isWin, false, !isWin, GameType.REFLEX.energyCost, GameType.REFLEX, reward, MiniGameReward(), reward) }
     }
 
+    // ===== CATCH GAME =====
+
+    fun startCatchGame() {
+        if (_gameUiState.value.activeGame != GameType.CATCH) return
+        _gameUiState.update { it.copy(miniGameState = MiniGameState.PLAYING, catchScore = 0, catchLives = 3) }
+    }
+
+    fun finishCatchGame(score: Int) {
+        val reward = when {
+            score >= 30 -> MiniGameReward(gold = 12, happy = 12, xp = 25)
+            score >= 20 -> MiniGameReward(gold = 8,  happy = 8,  xp = 15)
+            score >= 10 -> MiniGameReward(gold = 4,  happy = 5,  xp = 8)
+            else        -> MiniGameReward(gold = 1,  happy = 2,  xp = 3)
+        }
+        val isWin = score >= 15
+        scope.launch {
+            processGameResult(
+                win = isWin, draw = false, lose = !isWin,
+                energyCost = GameType.CATCH.energyCost,
+                gameType = GameType.CATCH,
+                winRewards = reward, drawRewards = MiniGameReward(), loseRewards = reward
+            )
+        }
+    }
+
     // ===== Shared result processing =====
 
     private suspend fun processGameResult(
@@ -278,10 +308,11 @@ class GameDelegate(
         catRepository.addXp(reward.xp.toInt())
 
         val interactionType = when (gameType) {
-            GameType.RPS -> InteractionType.GAME_RPS
-            GameType.SLOTS -> InteractionType.GAME_SLOTS
+            GameType.RPS    -> InteractionType.GAME_RPS
+            GameType.SLOTS  -> InteractionType.GAME_SLOTS
             GameType.MEMORY -> InteractionType.GAME_MEMORY
             GameType.REFLEX -> InteractionType.GAME_REFLEX
+            GameType.CATCH  -> InteractionType.GAME_REFLEX
         }
         val result = when { win -> "WIN"; lose -> "LOSE"; else -> "DRAW" }
         interactionRepository.logInteraction(type = interactionType, details = result)

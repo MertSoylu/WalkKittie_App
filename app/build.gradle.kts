@@ -125,4 +125,5 @@ dependencies {
     // In-App Update
     implementation(libs.play.app.update)
     implementation(libs.play.app.update.ktx)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
 }

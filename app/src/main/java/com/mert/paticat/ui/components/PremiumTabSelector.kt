@@ -1,7 +1,9 @@
 package com.mert.paticat.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,22 +26,26 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PremiumTabSelector(options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
+    val containerShape = RoundedCornerShape(50.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(50.dp))
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+            .clip(containerShape)
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.10f), containerShape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         options.forEachIndexed { index, text ->
             val isSelected = selectedIndex == index
             val bgColor by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f) else Color.Transparent,
+                animationSpec = tween(250),
                 label = "tab_bg"
             )
             val textColor by animateColorAsState(
-                if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                animationSpec = tween(250),
                 label = "tab_text"
             )
 
@@ -54,7 +60,7 @@ fun PremiumTabSelector(options: List<String>, selectedIndex: Int, onSelect: (Int
             ) {
                 Text(
                     text,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                     color = textColor,
                     fontSize = if (options.size > 3) 12.sp else 14.sp,
                     maxLines = 1,

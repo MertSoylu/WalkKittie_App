@@ -303,9 +303,13 @@ class StepCounterService : Service(), SensorEventListener {
                 if (diffForRewards >= STEPS_PER_FOOD_POINT) {
                     val pointsEarned = diffForRewards / STEPS_PER_FOOD_POINT
                     val remainder = diffForRewards % STEPS_PER_FOOD_POINT
-                    
-                    catRepository.addCoins(pointsEarned)
-                    catRepository.addXp(pointsEarned)
+
+                    val now = System.currentTimeMillis()
+                    val comboExpiry = userPreferencesRepository.getComboBoostExpiry()
+                    val goldMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getStepBoostExpiry()) 2 else 1
+                    val xpMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getXpBoostExpiry()) 2 else 1
+                    catRepository.addCoins(pointsEarned * goldMultiplier)
+                    catRepository.addXp(pointsEarned * xpMultiplier)
                     
                     // Track pending rewards for the UI notification
                     userPreferencesRepository.addPendingRewards(pointsEarned, pointsEarned)

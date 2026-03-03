@@ -8,6 +8,7 @@ import android.net.NetworkCapabilities
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mert.paticat.R
+import com.mert.paticat.data.local.preferences.UserPreferencesRepository
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.InteractionRepository
 import com.mert.paticat.domain.repository.ShopRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,6 +37,7 @@ class CatViewModel @Inject constructor(
     private val shopRepository: ShopRepository,
     private val interactionRepository: InteractionRepository,
     private val adManager: com.mert.paticat.data.ads.AdManager,
+    private val userPreferencesRepository: UserPreferencesRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -73,6 +76,7 @@ class CatViewModel @Inject constructor(
         observeCat()
         observeAds()
         observeInventory()
+        observeStepBoost()
         startNetworkMonitoring()
         refreshDailyAdCount()
     }
@@ -120,6 +124,25 @@ class CatViewModel @Inject constructor(
         }
     }
 
+    private fun observeStepBoost() {
+        viewModelScope.launch {
+            combine(
+                userPreferencesRepository.stepBoostExpiresAt,
+                userPreferencesRepository.xpBoostExpiresAt,
+                userPreferencesRepository.comboBoostExpiresAt
+            ) { step, xp, combo -> Triple(step, xp, combo) }
+                .collect { (step, xp, combo) ->
+                    _uiState.update {
+                        it.copy(
+                            stepBoostExpiresAt = step,
+                            xpBoostExpiresAt = xp,
+                            comboBoostExpiresAt = combo
+                        )
+                    }
+                }
+        }
+    }
+
     private fun observeCat() {
         viewModelScope.launch {
             catRepository.getCat().collect { cat ->
@@ -155,13 +178,37 @@ class CatViewModel @Inject constructor(
         }
     }
 
-    fun getSleepRemainingTime(): String {
-        val diff = _uiState.value.cat.sleepEndTime - System.currentTimeMillis()
+    private fun formatRemainingTime(expiresAtMs: Long): String {
+        val diff = expiresAtMs - System.currentTimeMillis()
         if (diff <= 0) return ""
         val minutes = (diff / 1000 / 60).toInt()
         val hours = minutes / 60; val mins = minutes % 60
         return if (hours > 0) context.getString(R.string.time_fmt_hm, hours, mins)
         else context.getString(R.string.time_fmt_m, mins)
+    }
+
+    fun getSleepRemainingTime(): String = formatRemainingTime(_uiState.value.cat.sleepEndTime)
+
+    fun getBoosterRemainingTime(expiresAt: Long): String = formatRemainingTime(expiresAt)
+
+    data class BoosterInfo(val name: String, val expiresAt: Long, val emoji: String)
+
+    fun getActiveBooters(): List<BoosterInfo> {
+        val state = _uiState.value
+        val now = System.currentTimeMillis()
+        val boosters = mutableListOf<BoosterInfo>()
+
+        if (state.stepBoostExpiresAt > now) {
+            boosters.add(BoosterInfo("Step Boost", state.stepBoostExpiresAt, "👟"))
+        }
+        if (state.xpBoostExpiresAt > now) {
+            boosters.add(BoosterInfo("XP Boost", state.xpBoostExpiresAt, "⭐"))
+        }
+        if (state.comboBoostExpiresAt > now) {
+            boosters.add(BoosterInfo("Combo Boost", state.comboBoostExpiresAt, "💫"))
+        }
+
+        return boosters
     }
 
     fun feedCatWithItem(item: ShopItem) {
@@ -174,16 +221,31 @@ class CatViewModel @Inject constructor(
         }
     }
 
+    private fun getPurchaseSuccessMessage(item: ShopItem): String =
+        if (item.isBoost) {
+            val msgRes = when (item.id) {
+                ShopItem.ID_XP_MULTIPLIER -> R.string.shop_boost_xp_purchased
+                ShopItem.ID_COMBO_MULTIPLIER -> R.string.shop_boost_combo_purchased
+                else -> R.string.shop_boost_purchased
+            }
+            context.getString(msgRes)
+        } else {
+            context.getString(R.string.shop_msg_purchased, item.emoji, "")
+        }
+
     fun buyFood(item: ShopItem) {
-        val currentQty = _uiState.value.inventory[item] ?: 0
-        if (currentQty >= ShopItem.MAX_INVENTORY_PER_ITEM) {
-            setMessage(context.getString(R.string.shop_error_inventory_full, ShopItem.MAX_INVENTORY_PER_ITEM)); return
+        if (!item.isBoost) {
+            val currentQty = _uiState.value.inventory[item] ?: 0
+            if (currentQty >= ShopItem.MAX_INVENTORY_PER_ITEM) {
+                setMessage(context.getString(R.string.shop_error_inventory_full, ShopItem.MAX_INVENTORY_PER_ITEM)); return
+            }
         }
         if (_uiState.value.cat.coins < item.price) { setMessage(context.getString(R.string.shop_error_no_coin)); return }
         viewModelScope.launch {
             val success = shopRepository.buyFood(item)
-            if (success) setMessage(context.getString(R.string.shop_msg_purchased, item.emoji, ""))
-            else setMessage(context.getString(R.string.shop_error_no_coin))
+            if (success) {
+                setMessage(getPurchaseSuccessMessage(item))
+            } else setMessage(context.getString(R.string.shop_error_no_coin))
         }
     }
 
@@ -236,7 +298,7 @@ class CatViewModel @Inject constructor(
 
     // ===== Game delegation =====
 
-    fun startGame(type: GameType) = gameDelegate.startGame(type, _uiState.value.cat.energy, isCatSleeping(), getSleepRemainingTime())
+    fun startGame(type: GameType) = gameDelegate.startGame(type, _uiState.value.cat.energy, _uiState.value.cat.level, isCatSleeping(), getSleepRemainingTime())
     fun closeMiniGame() = gameDelegate.closeMiniGame()
     fun playRPS(choice: RockPaperScissors) = gameDelegate.playRPS(choice)
     fun spinSlots() = gameDelegate.spinSlots()
@@ -245,6 +307,8 @@ class CatViewModel @Inject constructor(
     fun startReflexGame() = gameDelegate.startReflexGame()
     fun nextReflexRound() = gameDelegate.nextReflexRound()
     fun tapReflexTarget(targetId: Int) = gameDelegate.tapReflexTarget(targetId)
+    fun startCatchGame() = gameDelegate.startCatchGame()
+    fun finishCatchGame(score: Int) = gameDelegate.finishCatchGame(score)
 
     // ===== Ads =====
 
@@ -297,7 +361,9 @@ class CatViewModel @Inject constructor(
 
     fun setAdLoading(isLoading: Boolean) { _uiState.update { it.copy(isAdLoading = isLoading, adLoadError = false) } }
     fun setAdError(hasError: Boolean) { _uiState.update { it.copy(adLoadError = hasError, isAdLoading = false) } }
-    fun showGoldStatus() { /* no-op */ }
+    fun showGoldStatus() {
+        _uiState.update { it.copy(userMessage = context.getString(R.string.cat_earn_gold_hint)) }
+    }
 
     // ===== Messages =====
 

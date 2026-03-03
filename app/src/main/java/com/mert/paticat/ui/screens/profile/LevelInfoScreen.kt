@@ -120,7 +120,8 @@ fun LevelInfoScreen(
                     Text(
                         androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_gain_title),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -179,7 +180,8 @@ fun LevelInfoScreen(
                         Text(
                             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_requirements_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         
                         Spacer(modifier = Modifier.height(16.dp))

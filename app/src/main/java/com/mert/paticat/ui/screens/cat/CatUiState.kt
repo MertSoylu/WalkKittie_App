@@ -28,7 +28,11 @@ data class CatUiState(
     val inventory: Map<ShopItem, Int> = emptyMap(),
     val dailyGoldAdsRemaining: Int = ShopItem.MAX_GOLD_ADS_PER_DAY,
     // Gold tutorial (shown once after update)
-    val showGoldTutorial: Boolean = false
+    val showGoldTutorial: Boolean = false,
+    // Boosts
+    val stepBoostExpiresAt: Long = 0L,
+    val xpBoostExpiresAt: Long = 0L,
+    val comboBoostExpiresAt: Long = 0L
 ) {
     val currentMood: CatMood
         get() = cat.mood
@@ -75,12 +79,15 @@ data class GameUiState(
     val reflexRound: Int = 0,
     val reflexMaxRounds: Int = 10,
     val reflexIsWaiting: Boolean = false,
+    // Catch – score & lives passed back from UI when game ends
+    val catchScore: Int = 0,
+    val catchLives: Int = 3,
     // Result
     val lastReward: MiniGameReward? = null,
 )
 
-enum class GameType(val energyCost: Int) {
-    RPS(8), SLOTS(12), MEMORY(10), REFLEX(10)
+enum class GameType(val energyCost: Int, val minLevel: Int) {
+    RPS(8, 1), SLOTS(12, 3), MEMORY(10, 5), REFLEX(10, 7), CATCH(15, 9)
 }
 
 enum class MiniGameState {

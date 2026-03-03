@@ -61,6 +61,8 @@
     <string name="shop_section_title">🏪 Mağaza</string>
     <string name="inventory_section_title">🎒 Envanter</string>
     <string name="inventory_empty">Henüz yiyeceğin yok. Mağazadan satın al!</string>
+    <string name="inventory_empty_hint">Mağazadan ürün satın alabilirsin</string>
+    <string name="shop_open_button">Mağazayı Aç</string>
     <string name="feed_button">Besle 🍖</string>
     <string name="feed_disabled_sleeping">Kedi uyuyor 💤</string>
     <string name="shop_buy_button_price">%1$d 🪙</string>
@@ -198,6 +200,21 @@
     <string name="shop_error_purchase_failed">Satın alma başarısız: %s</string>
     <string name="shop_item_dry_food">Kuru Mama</string>
     <string name="shop_item_dry_food_desc">Temel kedi maması</string>
+    <string name="shop_item_energy_bar">Enerji Barı</string>
+    <string name="shop_item_energy_bar_desc">Hızlı enerji takviyesi</string>
+    <string name="shop_category_food">Yiyecek</string>
+    <string name="shop_category_energy">Enerji</string>
+    <string name="shop_category_boost">Güçlendirme</string>
+    <string name="shop_item_step_multiplier">2x Adım Çarpanı</string>
+    <string name="shop_item_step_multiplier_desc">24 saat boyunca adımdan 2x altın kazan</string>
+    <string name="shop_boost_active">⏱ %s kaldı</string>
+    <string name="shop_boost_purchased">Güçlendirme aktif! 24 saat 2x altın ⚡</string>
+    <string name="shop_item_xp_multiplier">2x XP Çarpanı</string>
+    <string name="shop_item_xp_multiplier_desc">24 saat boyunca adımdan 2x XP kazan</string>
+    <string name="shop_boost_xp_purchased">XP güçlendirmesi aktif! 24 saat 2x XP 🌟</string>
+    <string name="shop_item_combo_multiplier">2x Kombo Güçlendirmesi</string>
+    <string name="shop_item_combo_multiplier_desc">24 saat boyunca adımdan 2x altın ve 2x XP kazan</string>
+    <string name="shop_boost_combo_purchased">Kombo aktif! 24 saat 2x altın + 2x XP 💎</string>
     <string name="shop_item_canned_food">Konserve</string>
     <string name="shop_item_canned_food_desc">Lezzetli konserve mama</string>
     <string name="shop_item_tuna">Ton Balığı</string>
@@ -471,4 +488,8 @@
     <!-- UX Improvements -->
     <string name="cat_xp_remaining">Sonraki seviye için %d XP</string>
     <string name="cat_xp_max_level">Efsanevi Kedi — Maksimum Seviye</string>
+
+    <!-- Boosters -->
+    <string name="booster_title">Aktif Güçlendirmeler ⚡</string>
+    <string name="dialog_close">Kapat</string>
 </resources>

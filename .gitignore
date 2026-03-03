@@ -16,3 +16,6 @@ compile_log.txt
 *.jks
 *.keystore
 local.properties
+.claude
+.kotlin
+CLAUDE.md

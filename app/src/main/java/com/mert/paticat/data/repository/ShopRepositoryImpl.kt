@@ -8,6 +8,7 @@ import com.mert.paticat.data.local.entity.InventoryEntity
 import com.mert.paticat.data.local.toDbString
 import com.mert.paticat.domain.model.InteractionType
 import com.mert.paticat.domain.model.ShopItem
+import com.mert.paticat.data.local.preferences.UserPreferencesRepository
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.ShopRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,7 +28,8 @@ class ShopRepositoryImpl @Inject constructor(
     private val inventoryDao: InventoryDao,
     private val catDao: CatDao,
     private val catRepository: CatRepository,
-    private val catInteractionDao: CatInteractionDao
+    private val catInteractionDao: CatInteractionDao,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ShopRepository {
 
     /** Mutex to serialize buy/feed operations and prevent race conditions */
@@ -52,10 +54,25 @@ class ShopRepositoryImpl @Inject constructor(
         // Check if the cat has enough gold
         if (cat.coins < item.price) return false
 
-        // Check inventory cap
+        if (item.isBoost) {
+            val expiry = System.currentTimeMillis() + 24 * 3600 * 1000L
+            when (item.id) {
+                "step_multiplier" -> userPreferencesRepository.setStepBoostExpiry(expiry)
+                "xp_multiplier" -> userPreferencesRepository.setXpBoostExpiry(expiry)
+                "combo_multiplier" -> userPreferencesRepository.setComboBoostExpiry(expiry)
+            }
+            // Deduct gold for boost
+            val newCoins = cat.coins - item.price
+            catDao.updateCoins(newCoins)
+            return true
+        }
+
+        // Check inventory cap BEFORE deducting gold
         val existing = inventoryDao.getItem(item.id)
         val currentQty = existing?.quantity ?: 0
-        if (currentQty >= ShopItem.MAX_INVENTORY_PER_ITEM) return false
+        if (currentQty >= ShopItem.MAX_INVENTORY_PER_ITEM) {
+            return false
+        }
 
         // Deduct gold
         val newCoins = cat.coins - item.price
@@ -87,6 +104,9 @@ class ShopRepositoryImpl @Inject constructor(
 
         catDao.updateHunger(newHunger)
         catDao.updateHappiness(newHappiness)
+
+        // Apply energy boost if item provides it
+        if (item.energyBoost > 0) catRepository.updateEnergy(item.energyBoost)
 
         // Add XP for caring
         catRepository.addXp(item.xpBoost)

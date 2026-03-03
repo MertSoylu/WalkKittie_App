@@ -71,6 +71,7 @@ fun HomeScreen(
         }
     }
 
+    val scope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
 
     LaunchedEffect(isVisible) {
@@ -295,7 +296,19 @@ fun HomeScreen(
                                 GlassMissionItem(
                                     mission = mission,
                                     liveSteps = uiState.todayStats.steps,
-                                    liveWater = uiState.todayStats.waterMl
+                                    liveWater = uiState.todayStats.waterMl,
+                                    onMissionClick = { clickedMission ->
+                                        val isCompleted = when (clickedMission.type) {
+                                            com.mert.paticat.domain.model.MissionType.STEPS -> kotlin.math.max(clickedMission.currentValue, uiState.todayStats.steps) >= clickedMission.targetValue
+                                            com.mert.paticat.domain.model.MissionType.WATER -> kotlin.math.max(clickedMission.currentValue, uiState.todayStats.waterMl) >= clickedMission.targetValue
+                                            else -> clickedMission.isCompleted
+                                        }
+                                        val msg = if (isCompleted)
+                                            mContext.getString(com.mert.paticat.R.string.mission_completed_feedback)
+                                        else
+                                            mContext.getString(com.mert.paticat.R.string.mission_progress_feedback)
+                                        scope.launch { snackbarHostState.showSnackbar(msg) }
+                                    }
                                 )
                             }
                         }
@@ -458,7 +471,7 @@ fun StatusBarMini(icon: String, value: Int, color: Color) {
 }
 
 @Composable
-fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0) {
+fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0, onMissionClick: (Mission) -> Unit = {}) {
     val displayValue = when (mission.type) {
         com.mert.paticat.domain.model.MissionType.STEPS -> kotlin.math.max(mission.currentValue, liveSteps)
         com.mert.paticat.domain.model.MissionType.WATER -> kotlin.math.max(mission.currentValue, liveWater)
@@ -499,7 +512,7 @@ fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0) {
         modifier = Modifier
             .fillMaxWidth()
             .alpha(itemAlpha)
-            .clickable { },
+            .clickable { onMissionClick(mission) },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isCompleted)
@@ -695,9 +708,23 @@ fun DashboardStatItem(label: String, value: String, progress: Float, color: Colo
                 strokeWidth = 8.dp,
                 strokeCap = StrokeCap.Round
             )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
-                Text(label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    value,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    label,
+                    fontSize = 9.sp,
+                    lineHeight = 9.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -957,6 +984,10 @@ private fun getMissionStringId(key: String): Int {
         "mission_steps_tier3_desc" -> com.mert.paticat.R.string.mission_steps_tier3_desc
         "mission_steps_tier4_title" -> com.mert.paticat.R.string.mission_steps_tier4_title
         "mission_steps_tier4_desc" -> com.mert.paticat.R.string.mission_steps_tier4_desc
+        "mission_water_tier1_title" -> com.mert.paticat.R.string.mission_water_tier1_title
+        "mission_water_tier1_desc" -> com.mert.paticat.R.string.mission_water_tier1_desc
+        "mission_water_tier2_title" -> com.mert.paticat.R.string.mission_water_tier2_title
+        "mission_water_tier2_desc" -> com.mert.paticat.R.string.mission_water_tier2_desc
         else -> 0
     }
 }
