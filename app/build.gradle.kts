@@ -16,8 +16,8 @@ android {
         applicationId = "com.mert.paticat"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.0.6"
+        versionCode = 9
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -122,7 +122,7 @@ dependencies {
     implementation(libs.play.services.ads)
     implementation("com.google.android.ump:user-messaging-platform:3.0.0")
     
-    // Glance (Widgets)
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
+    // In-App Update
+    implementation(libs.play.app.update)
+    implementation(libs.play.app.update.ktx)
 }

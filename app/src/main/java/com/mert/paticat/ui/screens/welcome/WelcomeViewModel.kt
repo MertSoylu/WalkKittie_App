@@ -2,9 +2,10 @@ package com.mert.paticat.ui.screens.welcome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mert.paticat.data.local.dao.UserProfileDao
-import com.mert.paticat.data.local.entity.UserProfileEntity
 import com.mert.paticat.data.local.preferences.UserPreferencesRepository
+import com.mert.paticat.domain.model.UserProfile
+import com.mert.paticat.domain.repository.CatRepository
+import com.mert.paticat.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
-    private val userProfileDao: UserProfileDao,
-    private val catRepository: com.mert.paticat.domain.repository.CatRepository
+    private val userProfileRepository: UserProfileRepository,
+    private val catRepository: CatRepository
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
@@ -44,10 +45,10 @@ class WelcomeViewModel @Inject constructor(
             val cat = catRepository.getCatOnce()
             catRepository.updateCat(cat.copy(name = catName))
 
-            // Update Room Database
-            val existingProfile = userProfileDao.getUserProfileOnce()
+            // Update profile through repository
+            val existingProfile = userProfileRepository.getUserProfileOnce()
             if (existingProfile != null) {
-                userProfileDao.updateProfile(
+                userProfileRepository.updateProfile(
                     existingProfile.copy(
                         name = name,
                         gender = gender,
@@ -57,8 +58,8 @@ class WelcomeViewModel @Inject constructor(
                     )
                 )
             } else {
-                userProfileDao.insertProfile(
-                    UserProfileEntity(
+                userProfileRepository.updateProfile(
+                    UserProfile(
                         name = name,
                         gender = gender,
                         dailyStepGoal = stepGoal,

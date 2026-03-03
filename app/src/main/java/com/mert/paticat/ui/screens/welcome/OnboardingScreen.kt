@@ -51,7 +51,7 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -76,7 +76,7 @@ fun OnboardingScreen(
             ) {
                 repeat(3) { iteration ->
                     val isSelected = pagerState.currentPage == iteration
-                    val color = if (isSelected) PremiumPink else Color.LightGray
+                    val color = if (isSelected) PremiumPink else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     val width by animateDpAsState(if (isSelected) 24.dp else 8.dp)
                     
                     Box(

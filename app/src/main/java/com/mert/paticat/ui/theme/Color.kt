@@ -32,7 +32,7 @@ val AccentTeal = Color(0xFF26A69A)
 
 // --- System Colors ---
 val BackgroundLight = Color(0xFFFDFDFD)
-val BackgroundDark = Color(0xFF000000)
+val BackgroundDark = Color(0xFF0A0E1A)
 
 val SurfaceLight = Color(0xFFFFFFFF)
 val SurfaceDark = Color(0x330F0F0F) // ~20% opaque — glassmorphism
@@ -78,3 +78,5 @@ val CardPink = PremiumPink.copy(alpha = 0.05f)
 val CardBlue = PremiumBlue.copy(alpha = 0.05f)
 val CardMint = PremiumMint.copy(alpha = 0.05f)
 val CardLavender = PremiumPurple.copy(alpha = 0.05f)
+
+

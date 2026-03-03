@@ -5,7 +5,7 @@
     <string name="welcome_page1_title">Meet Your Cat! 🐱</string>
     <string name="welcome_page1_desc">Adopt a virtual cat companion. Walk, drink water, and complete daily goals to keep it happy and healthy!</string>
     <string name="welcome_page2_title">Track Your Health 📊</string>
-    <string name="welcome_page2_desc">Track your steps, calories, and water intake. Complete daily missions to earn food points and XP. Grow together with your cat!</string>
+    <string name="welcome_page2_desc">Track your steps, calories, and water intake. Complete daily missions to earn gold and XP. Grow together with your cat!</string>
     <string name="welcome_page3_title">Play and Level Up 🏆</string>
     <string name="welcome_page3_desc">Play mini-games like RPS, Memory, Reflex, and Slots. Earn XP, unlock new titles, and become a legendary cat owner!</string>
     <string name="welcome_btn_next">Next</string>
@@ -58,17 +58,31 @@
     <string name="cat_action_feed">Feed</string>
     <string name="cat_status_sleeping">Please Wait...</string>
     <string name="cat_feed_cost">-10 M.Points</string>
+    <string name="shop_section_title">🏪 Shop</string>
+    <string name="inventory_section_title">🎒 Inventory</string>
+    <string name="inventory_empty">No food yet. Buy some from the shop!</string>
+    <string name="feed_button">Feed 🍖</string>
+    <string name="feed_disabled_sleeping">Cat is sleeping 💤</string>
     <string name="cat_action_play">Play</string>
     <string name="cat_play_room">Game Room</string>
+    <string name="cat_play_room_disabled">Not enough energy ⚡</string>
     <string name="cat_action_sleep">Sleep</string>
     <string name="cat_full_energy">Restores Energy ⚡</string>
     <string name="cat_ad_reduce_sleep">Watch Ad: Fill Energy ⚡</string>
-    <string name="cat_pet_limit_reached">Your cat is tired! Come back in an hour to pet again. 🐱</string>
+    <string name="cat_pet_limit_reached">Your cat is tired! Come back in 5 hours to pet again. 🐱</string>
     <string name="cat_hint_pet">Pet me!</string>
     <string name="cat_not_tired_info">Too energetic (%1$d)</string>
     <string name="mood_excited">Excited</string>
     <string name="mood_sleeping">Sleepy</string>
     <string name="mood_idle">Relaxed</string>
+    <string name="cat_tab_my_cat">🐱 My Cat</string>
+    <string name="cat_tab_shop">🏪 Shop</string>
+    <string name="cat_level_badge">Lv. %1$d · %2$s</string>
+    <string name="cat_earn_gold_hint">🎮 Play games, 📺 watch ads, 🎯 complete missions or 🚶 walk!</string>
+    <string name="cat_energy_cost">%d ⚡ Required</string>
+    <string name="cat_sleep_remaining">Remaining: %s</string>
+    <string name="cat_sleeping_title">💤 Sleeping…</string>
+    <string name="cat_xp_label">%1$d / %2$d XP</string>
     <!-- Statistics Screen -->
     <string name="stats_title">Statistics</string>
     <string name="stats_daily">Daily</string>
@@ -180,20 +194,37 @@
     <string name="theme_selection_title">Theme Selection 🎨</string>
     <string name="theme_dark_mode">Dark Mode 🌙</string>
     <string name="theme_color_title">Theme Color</string>
+    <string name="bg_style_title">Background Style</string>
+    <string name="bg_pastel_cat">Pastel Cat</string>
+    <string name="bg_minimal_modern">Minimal</string>
+    <string name="bg_playful_cartoon">Playful</string>
+    <string name="bg_elegant_dark">Elegant Dark</string>
+    <string name="bg_cozy_warm">Cozy Warm</string>
     <string name="goals_title">Personal Goals 🎯</string>
     <string name="goal_steps_title">Step Goal</string>
+    <string name="goal_change_next_day_note">Change applies to tomorrow\'s missions</string>
     <string name="goal_water_title">Water Goal</string>
+    <string name="generic_error">An error occurred</string>
     <string name="unit_happiness">Happiness</string>
     <string name="settings_title">Account Settings ⚙️</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_language">Language / Dil</string>
     <string name="stat_streak">Streak</string>
+    <string name="stat_details">Details →</string>
     <string name="stat_best_streak">Best</string>
     <string name="unit_day">Days</string>
     <string name="unit_steps">Steps</string>
     
     <string name="unit_food_points">Food Points</string>
-    
+    <string name="unit_gold">Gold</string>
+
+    <!-- Period Screen -->
+    <string name="period_title">Cycle Tracking</string>
+    <string name="period_days_cycle">Days (Cycle)</string>
+    <string name="period_days_left">Days Left</string>
+    <string name="period_calendar">Calendar</string>
+    <string name="period_active_btn">Currently on period ✓</string>
+
     <!-- Dialogs -->
     <string name="dialog_edit_name_title">Edit Name</string>
     <string name="dialog_edit_name_label">Your Name</string>
@@ -236,10 +267,12 @@
     <string name="cat_msg_already_sleeping">Already sleeping... 💤</string>
     <string name="cat_msg_not_tired">I\'m not tired at all! 👀</string>
     <string name="cat_msg_goodnight">Good night... See you in %s! 💤</string>
-    <string name="cat_msg_sleep_reduced">Sleep time reduced by 30 minutes! ⏰</string>
+    <string name="cat_msg_sleep_reduced">Energy boosted! Sleep time reduced ⏰</string>
     <string name="cat_msg_food_points_added">30 Food Points Added! 🍖</string>
     <string name="cat_msg_food_max">Storage full! Can\'t accumulate more food points. 🛑</string>
     <string name="ad_reward_food_btn">Earn Food Points (+30 FP)</string>
+    <string name="cat_msg_gold_added">+%d 🪙 gold earned!</string>
+    <string name="ad_reward_gold_btn">+10 🪙</string>
     <string name="time_fmt_hm">%1$d h %2$d m</string>
     <string name="time_fmt_m">%1$d m</string>
 
@@ -300,10 +333,21 @@
     <string name="chart_day_sun">Sun</string>
     
     <!-- Shop -->
-    <string name="shop_error_no_coin">Not enough coins!</string>
+    <string name="shop_error_no_coin">Not enough gold! 🪙</string>
     <string name="shop_error_no_food_points">Not enough food points!</string>
+    <string name="shop_error_no_stock">No food in inventory! 📦</string>
+    <string name="shop_error_inventory_full">Inventory full! (Max %d) Feed first.</string>
+    <string name="shop_inventory_full_label">Full (%d/%d)</string>
     <string name="shop_msg_purchased">%1$s purchased! %2$s</string>
     <string name="shop_error_purchase_failed">Purchase failed: %s</string>
+    <string name="shop_item_dry_food">Dry Food</string>
+    <string name="shop_item_dry_food_desc">Basic cat food</string>
+    <string name="shop_item_canned_food">Canned</string>
+    <string name="shop_item_canned_food_desc">Tasty canned food</string>
+    <string name="shop_item_tuna">Tuna</string>
+    <string name="shop_item_tuna_desc">Cat favorite</string>
+    <string name="shop_item_premium_feast">Premium Feast</string>
+    <string name="shop_item_premium_feast_desc">Best value! Big feast</string>
     
     <!-- Notifications -->
     <string name="notif_channel_steps_name">Walkkittie Step Counter</string>
@@ -321,7 +365,7 @@
     <string name="notif_cat_woke_up_text">I woke up, let\'s play! ⚡</string>
 
     <string name="btn_reduce_sleep_time">Reduce Time (-30 m)</string>
-    <string name="ad_remaining_rights">Rights Left: %1$d/3</string>
+    <string name="ad_remaining_rights">Rights Left: %1$d/5</string>
     <string name="unit_percentage">%1$d%%</string>
 
     <string name="cat_ad_loading">Ad is loading, please wait... ⏳</string>
@@ -344,10 +388,10 @@
 
     <string name="tutorial_cat_care_title">%1$s Care ❤️</string>
     <string name="tutorial_cat_care_desc">%1$s has 3 basic needs: Satiety, Happiness, and Energy. Keep these values high to keep it healthy and happy!</string>
-    <string name="tutorial_cat_food_title">Food Points (FP) 🍖</string>
-    <string name="tutorial_cat_food_desc">You earn FP by walking. You can use your FP to feed %1$s. 10 FP = 1 feed!</string>
+    <string name="tutorial_cat_food_title">Gold &amp; Shop 🪙</string>
+    <string name="tutorial_cat_food_desc">Earn gold by completing missions and watching ads. Buy food from the shop and feed %1$s!</string>
     <string name="tutorial_cat_games_title">Mini Games 🎮</string>
-    <string name="tutorial_cat_games_desc">Play Rock-Paper-Scissors and Number Guessing games to earn XP and entertain %1$s!</string>
+    <string name="tutorial_cat_games_desc">Play Rock-Paper-Scissors, Memory, Reflex and Slots to earn XP and entertain %1$s!</string>
 
     <string name="tutorial_stats_title">Statistics 📊</string>
     <string name="tutorial_stats_desc">You can track your daily and weekly steps, calories burned, and water intake with graphs.</string>
@@ -386,4 +430,48 @@
         <item>🐾 Your cat has a reminder: Drink water!</item>
         <item>💙 Your body needs water! Drink now!</item>
     </string-array>
+
+    <!-- Cat Care Statistics -->
+    <string name="stats_tab_cat_care">Cat Care</string>
+    <string name="stats_care_feed_count">Feeding</string>
+    <string name="stats_care_game_count">Games</string>
+    <string name="stats_care_sleep_count">Sleep</string>
+    <string name="stats_care_pet_count">Petting</string>
+    <string name="stats_care_score">Care Score</string>
+    <string name="stats_care_score_desc">A summary of how well you care for your cat</string>
+    <string name="stats_game_rps">Rock Paper Scissors</string>
+    <string name="stats_game_slots">Paw Wheel</string>
+    <string name="stats_game_memory">Memory Paw</string>
+    <string name="stats_game_reflex">Cat Reflex</string>
+    <string name="stats_care_chart_title">Interaction Chart</string>
+    <string name="stats_care_total_interactions">Total Interactions</string>
+    <string name="stats_care_game_breakdown">Game Breakdown</string>
+    <string name="stats_care_no_data">No interaction data yet. Feed, play and love your cat!</string>
+    <string name="stats_care_daily_summary">Daily Summary</string>
+    <string name="stats_times">%d times</string>
+    <string name="stats_range_daily">Today</string>
+    <string name="stats_range_weekly">This Week</string>
+    <string name="stats_range_monthly">This Month</string>
+
+    <!-- In-App Update -->
+    <string name="update_downloaded">Update downloaded!</string>
+    <string name="update_install">Install</string>
+    <!-- Error Messages -->
+    <string name="error_water_add">Error adding water</string>
+    <string name="error_water_undo">Error undoing water</string>
+
+    <!-- Gold Tutorial -->
+    <string name="gold_tutorial_title_1">Gold System 🪙</string>
+    <string name="gold_tutorial_desc_1">Earn gold and buy cat food from the shop! Spending time with your cat is now even more fun.</string>
+    <string name="gold_tutorial_title_2">How to Earn? 📺</string>
+    <string name="gold_tutorial_desc_2">Watch ads, play mini-games, complete daily missions, and walk to earn gold!</string>
+    <string name="gold_tutorial_title_3">Where to Spend? 🛒</string>
+    <string name="gold_tutorial_desc_3">Switch to the Shop tab and buy food for your cat. Your cat will love you for it!</string>
+    <string name="gold_tutorial_bonus">+50 🪙 added to your account!</string>
+    <string name="gold_tutorial_btn_next">Next</string>
+    <string name="gold_tutorial_btn_done">Awesome! 🎉</string>
+
+    <!-- UX Improvements -->
+    <string name="cat_xp_remaining">%d XP to next level</string>
+    <string name="cat_xp_max_level">Legendary Cat — Max Level</string>
 </resources>

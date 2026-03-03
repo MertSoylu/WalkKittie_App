@@ -3,11 +3,13 @@ package com.mert.paticat.utils
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
+import android.os.SystemClock
 import com.mert.paticat.R
 
 class SoundManager(context: Context) {
     private val soundPool: SoundPool
-    private var purrSoundId = -1
+    private var purrMediaPlayer: android.media.MediaPlayer? = null
+    // Keep soundPool for future short sounds (like meow)
     private var meowSoundId = -1
     private val isLoaded = mutableMapOf<Int, Boolean>()
 
@@ -28,21 +30,33 @@ class SoundManager(context: Context) {
             }
         }
         
-        // Load sounds (Assuming purr.ogg is added to res/raw/purr.ogg)
+        // Initialize MediaPlayer for purr
         try {
-            purrSoundId = soundPool.load(context, R.raw.purr, 1)
+            purrMediaPlayer = android.media.MediaPlayer.create(context, R.raw.purr)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
     
     fun playPurr() {
-        if (isLoaded[purrSoundId] == true) {
-            soundPool.play(purrSoundId, 1f, 1f, 1, 0, 1f)
+        try {
+            // Only play if not already playing
+            if (purrMediaPlayer?.isPlaying == true) {
+                return
+            }
+            purrMediaPlayer?.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
     
     fun release() {
-        soundPool.release()
+        try {
+            soundPool.release()
+            purrMediaPlayer?.release()
+            purrMediaPlayer = null
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

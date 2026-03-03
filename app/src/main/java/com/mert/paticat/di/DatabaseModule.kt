@@ -25,8 +25,11 @@ object DatabaseModule {
             PatiCatDatabase::class.java,
             PatiCatDatabase.DATABASE_NAME
         )
-            .addMigrations(PatiCatDatabase.MIGRATION_8_9)
-            .fallbackToDestructiveMigration()
+            .addMigrations(PatiCatDatabase.MIGRATION_8_9, PatiCatDatabase.MIGRATION_9_10, PatiCatDatabase.MIGRATION_10_11)
+            // Only allow destructive migration from versions before explicit migrations existed.
+            // Versions 8+ are covered by explicit migrations — a missing migration will crash
+            // instead of silently wiping user data.
+            .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5, 6, 7)
             .build()
     }
     
@@ -53,4 +56,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideMealDao(database: PatiCatDatabase): MealDao = database.mealDao()
+    
+    @Provides
+    @Singleton
+    fun provideInventoryDao(database: PatiCatDatabase): InventoryDao = database.inventoryDao()
+    
+    @Provides
+    @Singleton
+    fun provideCatInteractionDao(database: PatiCatDatabase): CatInteractionDao = database.catInteractionDao()
 }

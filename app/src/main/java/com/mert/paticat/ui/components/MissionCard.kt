@@ -183,7 +183,7 @@ fun MissionCard(
             Column(horizontalAlignment = Alignment.End) {
                 if (mission.foodPointReward > 0) {
                     RewardBadge(
-                        text = "+${mission.foodPointReward} 🍖",
+                        text = "+${mission.foodPointReward} 🪙",
                         color = PremiumPink
                     )
                 }

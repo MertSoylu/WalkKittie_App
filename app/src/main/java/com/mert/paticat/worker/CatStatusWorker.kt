@@ -50,10 +50,13 @@ class CatStatusWorker @AssistedInject constructor(
             }
         }
         
-        // 2. Check Sleep Wake Up — read from DB (source of truth), not SharedPrefs
+        // 2. Check Sleep Wake Up — only notify if cat was sleeping and just woke up
+        //    isSleeping comes from DB which may not yet reflect the decay logic,
+        //    so we check sleepEndTime > 0 AND currentTime > endTime.
+        //    After decay runs in-app, sleepEndTime is reset to 0, preventing repeat notifications.
         val endTime = cat.sleepEndTime
         
-        if (endTime > 0 && currentTime > endTime) {
+        if (cat.isSleeping && endTime > 0 && currentTime > endTime) {
              val lastWakeNotif = prefs.getLong("last_wake_notif_time", 0L)
              if (currentTime - lastWakeNotif >= twelveHoursInMillis) {
                  sendNotification(

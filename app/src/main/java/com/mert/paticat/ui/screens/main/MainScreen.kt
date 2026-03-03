@@ -15,7 +15,7 @@ import com.mert.paticat.MainViewModel
 import com.mert.paticat.ui.navigation.PatiCatNavHost
 
 import androidx.compose.ui.graphics.Color
-import com.mert.paticat.ui.components.AnimatedBackground
+import com.mert.paticat.ui.components.PatiCatBackground
 
 @Composable
 fun MainScreen(
@@ -34,7 +34,7 @@ fun MainScreen(
         .fillMaxSize()
         .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
     ) {
-        AnimatedBackground(modifier = Modifier.fillMaxSize())
+        PatiCatBackground(modifier = Modifier.fillMaxSize())
         
         Scaffold(
             modifier = Modifier.fillMaxSize(),

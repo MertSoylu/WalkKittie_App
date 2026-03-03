@@ -59,18 +59,14 @@ class MissionRepositoryImpl @Inject constructor(
         val stepMilestone3 = (stepGoal * 0.75).roundToInt()
         val stepMilestone4 = stepGoal
 
-        // Check if missions already exist and are valid for the current goal
+        // Check if missions already exist for today
         val existingMissions = missionDao.getMissionsForDateOnce(today)
         
-        // Validation: Must be 4 missions AND the final goal must match user's current goal
-        if (existingMissions.isNotEmpty()) {
-            val tier4Mission = existingMissions.find { it.id.contains("tier4") }
-            val isTargetValid = tier4Mission?.targetValue == stepGoal
-            
-            if (existingMissions.size == 4 && isTargetValid) {
-                 return
-            }
-            // If targets don't match or count is wrong, we proceed to regenerate/update
+        // Once all 4 missions are generated for today, lock them.
+        // Goal changes mid-day will NOT regenerate missions (anti-exploit).
+        // The new goal takes effect when missions are generated for the next day.
+        if (existingMissions.size >= 4) {
+            return
         }
         
         // Generate missions dynamically
@@ -158,14 +154,15 @@ class MissionRepositoryImpl @Inject constructor(
             // Award rewards
             catRepository.addXp(mission.xpReward)
             if (mission.foodPointReward > 0) {
-                catRepository.addFoodPoints(mission.foodPointReward)
+                catRepository.addCoins(mission.foodPointReward)
             }
             if (mission.coinReward > 0) {
                 catRepository.addCoins(mission.coinReward)
             }
             
             // Increase cat happiness significantly for completing goals
-            val happinessBoost = if (mission.type == MissionType.STEPS.name) 10 else 5
+            val missionType = try { MissionType.valueOf(mission.type) } catch (e: Exception) { null }
+            val happinessBoost = if (missionType == MissionType.STEPS) 10 else 5
             // NOTE: mission.type is a String from entity; comparison is correct.
             catRepository.updateHappiness(happinessBoost)
         }

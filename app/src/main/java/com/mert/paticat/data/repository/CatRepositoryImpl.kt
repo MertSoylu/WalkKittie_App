@@ -2,14 +2,20 @@ package com.mert.paticat.data.repository
 
 import android.content.Context
 import com.mert.paticat.data.local.dao.CatDao
+import com.mert.paticat.data.local.dao.CatInteractionDao
 import com.mert.paticat.data.local.toDomain
+import com.mert.paticat.data.local.toDbString
 import com.mert.paticat.data.local.toEntity
 import com.mert.paticat.data.local.entity.CatEntity
+import com.mert.paticat.data.local.entity.CatInteractionEntity
 import com.mert.paticat.domain.model.Cat
+import com.mert.paticat.domain.model.InteractionType
+import com.mert.paticat.domain.model.ShopItem
 import com.mert.paticat.domain.repository.CatRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,6 +29,7 @@ import kotlin.math.min
 @Singleton
 class CatRepositoryImpl @Inject constructor(
     private val catDao: CatDao,
+    private val catInteractionDao: CatInteractionDao,
     @ApplicationContext private val context: Context
 ) : CatRepository {
 
@@ -86,32 +93,9 @@ class CatRepositoryImpl @Inject constructor(
     override suspend fun updateCat(cat: Cat) {
         catDao.updateCat(cat.toEntity())
     }
-    
-    override suspend fun feedCat(foodPoints: Int) {
-        val cat = catDao.getCatOnce() ?: return
-        
-        // Feeding Logic:
-        // 10 FoodPoints = +10% Hunger (Saturation) + 2 Happiness
-        // Cap at 100.
-        
-        val pointsToConsume = foodPoints
-        if (cat.foodPoints < pointsToConsume) return 
-        
-        val newHunger = (cat.hunger + 10).coerceIn(0, 100) // +10% hunger per feed
-        val newHappiness = (cat.happiness + 2).coerceIn(0, 100)
-        val newFoodPoints = (cat.foodPoints - pointsToConsume).coerceAtLeast(0)
-        
-        catDao.updateCat(
-            cat.copy(
-                hunger = newHunger,
-                happiness = newHappiness,
-                foodPoints = newFoodPoints,
-                lastUpdated = System.currentTimeMillis()
-            )
-        )
-        
-        // Small XP for caring (uses addXp for level-up check)
-        addXp(2)
+
+    override suspend fun updateSleepState(isSleeping: Boolean, sleepEndTime: Long, energy: Int, lastUpdated: Long) {
+        catDao.updateSleepState(isSleeping, sleepEndTime, energy, lastUpdated)
     }
     
     override suspend fun addXp(amount: Int) {
@@ -129,16 +113,9 @@ class CatRepositoryImpl @Inject constructor(
         catDao.updateXpAndLevel(newXp, newLevel)
     }
     
-    override suspend fun addFoodPoints(amount: Int) {
-        val cat = catDao.getCatOnce() ?: return
-        // Cap food points at 150 to prevent hoarding (approx 3 full feeds)
-        val newPoints = (cat.foodPoints + amount).coerceAtMost(150)
-        catDao.updateFoodPoints(newPoints)
-    }
-    
     override suspend fun addCoins(amount: Int) {
         val cat = catDao.getCatOnce() ?: return
-        val newCoins = (cat.coins + amount).coerceAtLeast(0)
+        val newCoins = (cat.coins + amount).coerceIn(0, ShopItem.MAX_GOLD)
         catDao.updateCoins(newCoins)
     }
     
@@ -222,6 +199,7 @@ class CatRepositoryImpl @Inject constructor(
                 // Wake up event
                 tempCat = tempCat.copy(
                     isSleeping = false,
+                    sleepEndTime = 0L, // Reset so workers don't re-trigger wake notification
                     xp = tempCat.xp + 5, // Bonus XP for full sleep
                     lastUpdated = wakeTime 
                 )
@@ -299,16 +277,25 @@ class CatRepositoryImpl @Inject constructor(
     }
 
     override suspend fun petCat(): Boolean {
-        val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        val storedHour = petPrefs.getInt("pet_hour_key", -1)
-        val count = if (storedHour == currentHour) petPrefs.getInt("pet_count_hour", 0) else 0
+        val now = System.currentTimeMillis()
+        val windowStart = petPrefs.getLong("pet_window_start", 0L)
+        val fiveHoursMs = 5 * 60 * 60 * 1000L
+        val count = if (now - windowStart < fiveHoursMs) petPrefs.getInt("pet_count_window", 0) else 0
 
-        return if (count < 10) {
+        return if (count < 5) {
             petPrefs.edit()
-                .putInt("pet_hour_key", currentHour)
-                .putInt("pet_count_hour", count + 1)
+                .putLong("pet_window_start", if (count == 0) now else windowStart)
+                .putInt("pet_count_window", count + 1)
                 .apply()
             updateHappiness(2)
+            // Log pet interaction
+            catInteractionDao.insertInteraction(
+                CatInteractionEntity(
+                    date = LocalDate.now().toDbString(),
+                    type = InteractionType.PET.name,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
             true
         } else {
             false

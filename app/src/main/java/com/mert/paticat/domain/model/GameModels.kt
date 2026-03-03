@@ -71,6 +71,7 @@ data class UserProfile(
     val id: Long = 1L,
     val name: String = "User",
     val gender: String = "FEMALE",
+    val weight: Float = 70f,
     val dailyStepGoal: Int = 10000,
     val dailyWaterGoalMl: Int = 2000,
     val dailyCalorieGoal: Int = 2000,

@@ -30,6 +30,7 @@ class UserPreferencesRepository @Inject constructor(
     private val IS_LANGUAGE_SELECTED = booleanPreferencesKey("is_language_selected_v2")
     private val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
     private val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+    private val BACKGROUND_STYLE = stringPreferencesKey("background_style")
     
     val isOnboardingCompleted: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -59,6 +60,11 @@ class UserPreferencesRepository @Inject constructor(
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[NOTIFICATIONS_ENABLED] ?: true
+        }
+
+    val backgroundStyle: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[BACKGROUND_STYLE] ?: "PastelCat"
         }
     
     suspend fun setOnboardingCompleted(completed: Boolean) {
@@ -98,9 +104,15 @@ class UserPreferencesRepository @Inject constructor(
         }
     }
 
+    suspend fun updateBackgroundStyle(style: String) {
+        context.dataStore.edit { preferences ->
+            preferences[BACKGROUND_STYLE] = style
+        }
+    }
+
     private val STEP_COUNTING_ENABLED = booleanPreferencesKey("step_counting_enabled_v2")
     private val PENDING_REWARD_XP = androidx.datastore.preferences.core.intPreferencesKey("pending_reward_xp")
-    private val PENDING_REWARD_FOOD = androidx.datastore.preferences.core.intPreferencesKey("pending_reward_food")
+    private val PENDING_REWARD_GOLD = androidx.datastore.preferences.core.intPreferencesKey("pending_reward_food")
     private val LAST_SEEN_LEVEL = androidx.datastore.preferences.core.intPreferencesKey("last_seen_level")
 
     val stepCountingEnabled: Flow<Boolean> = context.dataStore.data
@@ -113,9 +125,9 @@ class UserPreferencesRepository @Inject constructor(
             preferences[PENDING_REWARD_XP] ?: 0
         }
 
-    val pendingRewardFood: Flow<Int> = context.dataStore.data
+    val pendingRewardGold: Flow<Int> = context.dataStore.data
         .map { preferences ->
-            preferences[PENDING_REWARD_FOOD] ?: 0
+            preferences[PENDING_REWARD_GOLD] ?: 0
         }
 
     suspend fun updateStepCountingEnabled(enabled: Boolean) {
@@ -124,19 +136,19 @@ class UserPreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun addPendingRewards(xp: Int, food: Int) {
+    suspend fun addPendingRewards(xp: Int, gold: Int) {
         context.dataStore.edit { preferences ->
             val currentXp = preferences[PENDING_REWARD_XP] ?: 0
-            val currentFood = preferences[PENDING_REWARD_FOOD] ?: 0
+            val currentGold = preferences[PENDING_REWARD_GOLD] ?: 0
             preferences[PENDING_REWARD_XP] = currentXp + xp
-            preferences[PENDING_REWARD_FOOD] = currentFood + food
+            preferences[PENDING_REWARD_GOLD] = currentGold + gold
         }
     }
 
     suspend fun clearPendingRewards() {
         context.dataStore.edit { preferences ->
             preferences[PENDING_REWARD_XP] = 0
-            preferences[PENDING_REWARD_FOOD] = 0
+            preferences[PENDING_REWARD_GOLD] = 0
         }
     }
 

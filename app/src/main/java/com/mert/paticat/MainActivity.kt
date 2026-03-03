@@ -1,6 +1,7 @@
 package com.mert.paticat
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,21 +13,13 @@ import com.mert.paticat.ui.theme.WalkkittieTheme
 import androidx.activity.result.contract.ActivityResultContracts
 import com.mert.paticat.ui.screens.main.MainScreen
 import javax.inject.Inject
-import com.google.android.gms.ads.MobileAds
-import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.activity.result.IntentSenderRequest
+import com.mert.paticat.update.InAppUpdateManager
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -45,12 +38,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-@Inject
+    // In-App Update
+    private lateinit var inAppUpdateManager: InAppUpdateManager
+
+    private val updateResultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) {
+            Log.w("InAppUpdate", "Update flow cancelled or failed, resultCode: ${result.resultCode}")
+        }
+    }
+
+    @Inject
     lateinit var userPreferencesRepository: com.mert.paticat.data.local.preferences.UserPreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize In-App Update Manager
+        inAppUpdateManager = InAppUpdateManager(this, updateResultLauncher)
+        inAppUpdateManager.checkForUpdate()
 
         // Sync Locale from DataStore
         lifecycleScope.launch {
@@ -70,10 +78,7 @@ class MainActivity : AppCompatActivity() {
         // Request necessary permissions on start
         checkPermissions()
         
-        // Initialize Mobile Ads SDK
-        // MobileAds.initialize(this) {} // Moved to after consent
-        
-        // GDPR Consent (UMP)
+        // GDPR Consent (UMP) — ad initialization handled by AdManager.initialize() in Application class
         requestConsentInfoUpdate()
 
         setContent {
@@ -84,6 +89,16 @@ class MainActivity : AppCompatActivity() {
                 MainScreen()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        inAppUpdateManager.onResume()
+    }
+
+    override fun onDestroy() {
+        inAppUpdateManager.onDestroy()
+        super.onDestroy()
     }
 
     private fun checkPermissions() {
@@ -107,9 +122,6 @@ class MainActivity : AppCompatActivity() {
     private fun requestConsentInfoUpdate() {
         val params = ConsentRequestParameters.Builder().build()
         val consentInformation = UserMessagingPlatform.getConsentInformation(this)
-        
-        // Uncomment to test:
-        // consentInformation.reset() 
 
         consentInformation.requestConsentInfoUpdate(
             this,
@@ -119,16 +131,18 @@ class MainActivity : AppCompatActivity() {
                     this
                 ) { loadAndShowError ->
                     if (loadAndShowError != null) {
-                        android.util.Log.w("AdMob", "${loadAndShowError.errorCode}: ${loadAndShowError.message}")
+                        if (BuildConfig.DEBUG) {
+                            android.util.Log.w("AdMob", "${loadAndShowError.errorCode}: ${loadAndShowError.message}")
+                        }
                     }
-
-                    if (consentInformation.canRequestAds()) {
-                        MobileAds.initialize(this) {}
-                    }
+                    // Ad initialization is handled by AdManager.initialize() in PatiCatApp —
+                    // no need to call MobileAds.initialize() again here.
                 }
             },
             { requestConsentError ->
-                android.util.Log.w("AdMob", "${requestConsentError.errorCode}: ${requestConsentError.message}")
+                if (BuildConfig.DEBUG) {
+                    android.util.Log.w("AdMob", "${requestConsentError.errorCode}: ${requestConsentError.message}")
+                }
             }
         )
     }

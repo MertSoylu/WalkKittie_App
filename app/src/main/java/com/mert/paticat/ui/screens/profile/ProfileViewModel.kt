@@ -2,12 +2,9 @@ package com.mert.paticat.ui.screens.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mert.paticat.data.local.dao.UserProfileDao
-import com.mert.paticat.data.local.entity.UserProfileEntity
 import com.mert.paticat.data.local.preferences.UserPreferencesRepository
-import com.mert.paticat.data.local.toDomain
 import com.mert.paticat.domain.repository.CatRepository
-import com.mert.paticat.domain.repository.MissionRepository
+import com.mert.paticat.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,9 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val catRepository: CatRepository,
-    private val userProfileDao: UserProfileDao,
-    private val preferencesRepository: UserPreferencesRepository,
-    private val missionRepository: MissionRepository
+    private val userProfileRepository: UserProfileRepository,
+    private val preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -41,10 +37,7 @@ class ProfileViewModel @Inject constructor(
     
     private fun initializeProfile() {
         viewModelScope.launch {
-            val existing = userProfileDao.getUserProfileOnce()
-            if (existing == null) {
-                userProfileDao.insertProfile(UserProfileEntity())
-            }
+            userProfileRepository.initializeProfileIfNeeded()
             _uiState.update { it.copy(isLoading = false) }
         }
     }
@@ -57,9 +50,9 @@ class ProfileViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
-            userProfileDao.getUserProfile().collect { profileEntity ->
-                profileEntity?.let { entity ->
-                    _uiState.update { it.copy(userProfile = entity.toDomain()) }
+            userProfileRepository.getUserProfile().collect { profile ->
+                profile?.let {
+                    _uiState.update { it.copy(userProfile = profile) }
                 }
             }
         }
@@ -82,7 +75,7 @@ class ProfileViewModel @Inject constructor(
             preferencesRepository.updateTheme(colorName)
         }
     }
-    
+
     fun updateNotifications(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.updateNotificationsEnabled(enabled)
@@ -91,36 +84,30 @@ class ProfileViewModel @Inject constructor(
     
     fun updateStepGoal(goal: Int) {
         viewModelScope.launch {
-            userProfileDao.updateStepGoal(goal)
-            // Regenerate missions based on new goal
-            try {
-                missionRepository.generateDailyMissions()
-            } catch (e: Exception) {
-                android.util.Log.e("ProfileViewModel", "Failed to update missions", e)
-            }
+            userProfileRepository.updateStepGoal(goal)
         }
     }
     
     fun updateWaterGoal(goal: Int) {
         viewModelScope.launch {
-            userProfileDao.updateWaterGoal(goal)
+            userProfileRepository.updateWaterGoal(goal)
         }
     }
     
     fun updateUserName(name: String) {
         viewModelScope.launch {
-            val current = userProfileDao.getUserProfileOnce()
+            val current = userProfileRepository.getUserProfileOnce()
             current?.let {
-                userProfileDao.updateProfile(it.copy(name = name))
+                userProfileRepository.updateProfile(it.copy(name = name))
             }
         }
     }
 
     fun updateGender(gender: String) {
         viewModelScope.launch {
-            val current = userProfileDao.getUserProfileOnce()
+            val current = userProfileRepository.getUserProfileOnce()
             current?.let {
-                userProfileDao.updateProfile(it.copy(gender = gender))
+                userProfileRepository.updateProfile(it.copy(gender = gender))
             }
         }
     }

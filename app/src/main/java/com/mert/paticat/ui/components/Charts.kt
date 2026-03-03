@@ -3,9 +3,13 @@ package com.mert.paticat.ui.components
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -81,21 +86,33 @@ fun AnimatedWeeklyBarChart(
                 .padding(20.dp)
         ) {
             // Chart
-            Row(
+            // Chart Canvas for background dashed line
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
+                    .height(180.dp)
             ) {
-                data.forEachIndexed { index, value ->
-                    AnimatedBarWithLabel(
-                        value = value,
-                        maxValue = maxValue,
-                        label = labels[index],
-                        barColor = if (goalValue != null && value >= goalValue) PastelMint else barColor,
-                        isToday = index == data.lastIndex
-                    )
+                // Dashed goal line removed per user request
+                
+                val isScrollable = data.size > 7
+                val scrollState = rememberScrollState()
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .let { if (isScrollable) it.horizontalScroll(scrollState) else it },
+                    horizontalArrangement = if (isScrollable) Arrangement.spacedBy(16.dp) else Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    data.forEachIndexed { index, value ->
+                        AnimatedBarWithLabel(
+                            value = value,
+                            maxValue = maxValue,
+                            label = labels[index],
+                            barColor = if (goalValue != null && value >= goalValue) PastelMint else barColor,
+                            isToday = index == data.lastIndex
+                        )
+                    }
                 }
             }
             
@@ -135,7 +152,7 @@ private fun AnimatedBarWithLabel(
     var animatedHeight by remember { mutableFloatStateOf(0f) }
     val heightAnimation by animateFloatAsState(
         targetValue = animatedHeight,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
         label = "bar_height"
     )
     
@@ -154,7 +171,7 @@ private fun AnimatedBarWithLabel(
             text = formatNumber(value),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-            fontSize = 9.sp,
+            fontSize = 10.sp,
             color = if (isToday) barColor else MaterialTheme.colorScheme.onSurfaceVariant
         )
         
@@ -167,24 +184,24 @@ private fun AnimatedBarWithLabel(
                 .height(maxHeight),
             contentAlignment = Alignment.BottomCenter
         ) {
-            // Background
+            // Background Track
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(barColor.copy(alpha = 0.15f))
+                    .clip(CircleShape)
+                    .background(barColor.copy(alpha = 0.10f))
             )
             
-            // Animated fill
+            // Animated fill gradient capsule
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(heightAnimation)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(CircleShape)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(barColor, barColor.copy(alpha = 0.7f))
+                            colors = listOf(barColor.copy(alpha = 0.9f), barColor)
                         )
                     )
             )
@@ -312,7 +329,8 @@ fun AnimatedLineChart(
             val maxValue = data.maxOrNull() ?: 1
             val minValue = data.minOrNull() ?: 0
             val valueRange = (maxValue - minValue).coerceAtLeast(1)
-            
+            val pointHaloColor = MaterialTheme.colorScheme.surface
+
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val width = size.width
                 val height = size.height - 30.dp.toPx()
@@ -365,7 +383,7 @@ fun AnimatedLineChart(
                 // Draw points
                 points.forEach { point ->
                     drawCircle(
-                        color = Color.White,
+                        color = pointHaloColor,
                         radius = 6.dp.toPx(),
                         center = point
                     )
@@ -444,15 +462,15 @@ fun BeautifulProgressBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(12.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(color.copy(alpha = 0.2f))
+                .height(10.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(color.copy(alpha = 0.15f))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(progressAnimation)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(5.dp))
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(color, color.copy(alpha = 0.7f))
@@ -508,6 +526,7 @@ fun CalorieDonutChart(
         animatedBurned = burnedProgress
     }
     
+    val trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
@@ -516,10 +535,10 @@ fun CalorieDonutChart(
             val strokeWidth = 20.dp.toPx()
             val radius = (size.toPx() - strokeWidth) / 2
             val center = Offset(size.toPx() / 2, size.toPx() / 2)
-            
+
             // Background
             drawCircle(
-                color = Color.Gray.copy(alpha = 0.1f),
+                color = trackColor,
                 radius = radius,
                 center = center,
                 style = Stroke(width = strokeWidth)

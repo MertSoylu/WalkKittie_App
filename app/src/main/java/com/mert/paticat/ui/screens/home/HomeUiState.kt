@@ -15,6 +15,7 @@ data class HomeUiState(
     val todayMissions: List<Mission> = emptyList(),
     val stepGoal: Int = 10000,
     val waterGoal: Int = 2000,
+    val currentStreak: Int = 0,
     val nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null,
     val error: String? = null,
     val lastAddedWater: Int? = null

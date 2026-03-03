@@ -6,14 +6,16 @@ import com.mert.paticat.StepCounterManager
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.HealthRepository
 import com.mert.paticat.domain.repository.MissionRepository
+import com.mert.paticat.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
+import com.mert.paticat.R
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,9 +30,10 @@ class HomeViewModel @Inject constructor(
     private val catRepository: CatRepository,
     private val healthRepository: HealthRepository,
     private val missionRepository: MissionRepository,
-    private val userProfileDao: com.mert.paticat.data.local.dao.UserProfileDao,
+    private val userProfileRepository: UserProfileRepository,
     private val stepCounterManager: StepCounterManager,
-    private val adManager: com.mert.paticat.data.ads.AdManager
+    private val adManager: com.mert.paticat.data.ads.AdManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -71,7 +74,7 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 
-                        error = e.message ?: "Bir hata oluştu"
+                        error = e.message ?: ""
                     ) 
                 }
             }
@@ -84,7 +87,7 @@ class HomeViewModel @Inject constructor(
                 catRepository.getCat(),
                 healthRepository.getTodayStats(),
                 missionRepository.getTodayMissions(),
-                userProfileDao.getUserProfile(),
+                userProfileRepository.getUserProfile(),
                 stepCounterManager.liveSteps
             ) { cat, stats, missions, profile, liveSteps ->
                 // Apply goals from profile if available, otherwise defaults
@@ -96,24 +99,22 @@ class HomeViewModel @Inject constructor(
                 val currentSteps = if (liveSteps > stats.steps) liveSteps else stats.steps
                 val currentStats = stats.copy(steps = currentSteps)
                 
-                HomeData(cat, currentStats, missions, currentStepGoal, currentWaterGoal)
+                HomeData(cat, currentStats, missions, currentStepGoal, currentWaterGoal, profile?.currentStreak ?: 0)
             }.collect { data ->
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         cat = data.cat,
                         todayStats = data.stats,
                         todayMissions = data.missions,
                         stepGoal = data.stepGoal,
-                        waterGoal = data.waterGoal
+                        waterGoal = data.waterGoal,
+                        currentStreak = data.currentStreak
                     )
                 }
-                // NOTE: DB writes (checkAndCompleteMissions, updateCatBasedOnActivity)
-                // moved to separate debounced coroutine below to prevent feedback loop
             }
         }
         
         // Separate observation to instantly complete missions when their target is reached in the UI.
-        // It does not poll periodically, saving battery, and only writes when crossing the milestone.
         viewModelScope.launch {
             _uiState.collect { state ->
                 val activeMissions = state.todayMissions.filter { !it.isCompleted }
@@ -144,10 +145,7 @@ class HomeViewModel @Inject constructor(
     fun refreshData() {
         viewModelScope.launch {
             try {
-                // Update interactions and decay (markUserInteraction already applies decay)
                 catRepository.markUserInteraction()
-                
-                // Refresh missions
                 missionRepository.generateDailyMissions()
             } catch (e: Exception) {
                 // Silently fail on refresh
@@ -161,7 +159,8 @@ class HomeViewModel @Inject constructor(
         val stats: com.mert.paticat.domain.model.DailyStats,
         val missions: List<com.mert.paticat.domain.model.Mission>,
         val stepGoal: Int,
-        val waterGoal: Int
+        val waterGoal: Int,
+        val currentStreak: Int
     )
     
     fun addWater(amountMl: Int) {
@@ -176,7 +175,7 @@ class HomeViewModel @Inject constructor(
                     catRepository.updateHappiness(2)
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Su eklenirken hata: ${e.message}") }
+                _uiState.update { it.copy(error = context.getString(R.string.error_water_add)) }
             }
         }
     }
@@ -188,18 +187,7 @@ class HomeViewModel @Inject constructor(
                 healthRepository.removeWater(lastAmount)
                 _uiState.update { it.copy(lastAddedWater = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Su geri alınırken hata: ${e.message}") }
-            }
-        }
-    }
-    
-    fun feedCat() {
-        viewModelScope.launch {
-            val cat = _uiState.value.cat
-            if (cat.isSleeping) return@launch
-            if (cat.hunger >= 95) return@launch
-            if (cat.foodPoints >= 10) {
-                catRepository.feedCat(10)
+                _uiState.update { it.copy(error = context.getString(R.string.error_water_undo)) }
             }
         }
     }

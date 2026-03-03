@@ -61,6 +61,7 @@ class StepCounterService : Service(), SensorEventListener {
     @Volatile private var currentDaySteps: Int = 0
     private var lastSavedDate: String = ""
     @Volatile private var lastProcessedStepsForRewards: Int = 0
+
     
     // Battery optimization thresholds
     @Volatile private var lastSyncedSteps: Int = 0
@@ -303,7 +304,7 @@ class StepCounterService : Service(), SensorEventListener {
                     val pointsEarned = diffForRewards / STEPS_PER_FOOD_POINT
                     val remainder = diffForRewards % STEPS_PER_FOOD_POINT
                     
-                    catRepository.addFoodPoints(pointsEarned)
+                    catRepository.addCoins(pointsEarned)
                     catRepository.addXp(pointsEarned)
                     
                     // Track pending rewards for the UI notification

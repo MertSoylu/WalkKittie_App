@@ -5,7 +5,7 @@
     <string name="welcome_page1_title">Kedinle Tanış! 🐱</string>
     <string name="welcome_page1_desc">Sanal bir kedi benimsiyorsun. Adım attıkça, su içtikçe ve günlük görevleri tamamladıkça kedin mutlu ve sağlıklı olur!</string>
     <string name="welcome_page2_title">Sağlığını Takip Et 📊</string>
-    <string name="welcome_page2_desc">Adımlarını, kalorilerini ve su içimini takip et. Günlük görevleri tamamla, yemek puanı ve XP kazan. Kedinle birlikte büyü!</string>
+    <string name="welcome_page2_desc">Adımlarını, kalorilerini ve su içimini takip et. Günlük görevleri tamamla, altın ve XP kazan. Kedinle birlikte büyü!</string>
     <string name="welcome_page3_title">Oyna ve Seviye Atla 🏆</string>
     <string name="welcome_page3_desc">Taş-Kağıt-Makas, Hafıza, Refleks ve Slot gibi mini oyunlar oyna. XP kazan, yeni ünvanlar aç ve efsanevi bir kedi sahibi ol!</string>
     <string name="welcome_btn_next">İleri</string>
@@ -58,17 +58,32 @@
     <string name="cat_action_feed">Besle</string>
     <string name="cat_status_sleeping">Lütfen Bekleyin...</string>
     <string name="cat_feed_cost">10 MP</string>
+    <string name="shop_section_title">🏪 Mağaza</string>
+    <string name="inventory_section_title">🎒 Envanter</string>
+    <string name="inventory_empty">Henüz yiyeceğin yok. Mağazadan satın al!</string>
+    <string name="feed_button">Besle 🍖</string>
+    <string name="feed_disabled_sleeping">Kedi uyuyor 💤</string>
+    <string name="shop_buy_button_price">%1$d 🪙</string>
     <string name="cat_action_play">Oyna</string>
     <string name="cat_play_room">Oyun Odası</string>
+    <string name="cat_play_room_disabled">Yetersiz Enerji ⚡</string>
     <string name="cat_action_sleep">Uyut</string>
     <string name="cat_full_energy">Enerjiyi Fuller ⚡</string>
     <string name="cat_ad_reduce_sleep">Reklam İzle: Enerji Doldur ⚡</string>
-    <string name="cat_pet_limit_reached">Kedin şu an yorgun! Bir saat sonra tekrar sev. 🐱</string>
+    <string name="cat_pet_limit_reached">Kedin şu an yorgun! 5 saat sonra tekrar sevebilirsin. 🐱</string>
     <string name="cat_hint_pet">Dokun!</string>
     <string name="cat_not_tired_info">Çok enerjik (%1$d)</string>
     <string name="mood_excited">Heyecanlı</string>
     <string name="mood_sleeping">Uykulu</string>
     <string name="mood_idle">Rahat</string>
+    <string name="cat_tab_my_cat">🐱 Kedim</string>
+    <string name="cat_tab_shop">🏪 Mağaza</string>
+    <string name="cat_level_badge">Sv. %1$d · %2$s</string>
+    <string name="cat_earn_gold_hint">🎮 Oyun oyna, 📺 reklam izle, 🎯 görevleri tamamla veya 🚶 yürü!</string>
+    <string name="cat_energy_cost">%d ⚡ Gerekli</string>
+    <string name="cat_sleep_remaining">Kalan: %s</string>
+    <string name="cat_sleeping_title">💤 Uyuyor…</string>
+    <string name="cat_xp_label">%1$d / %2$d XP</string>
 
     <!-- Statistics Screen -->
     <string name="stats_title">İstatistikler</string>
@@ -174,10 +189,21 @@
     <string name="shop_tab_food">Yiyecek</string>
     <string name="shop_tab_accessories">Aksesuar</string>
     <string name="shop_tab_special">Özel</string>
-    <string name="shop_error_no_coin">Yetersiz coin!</string>
+    <string name="shop_error_no_coin">Yetersiz altın! 🪙</string>
     <string name="shop_error_no_food_points">Yetersiz mama puanı!</string>
+    <string name="shop_error_no_stock">Envanterde bu yiyecek yok! 📦</string>
+    <string name="shop_error_inventory_full">Envanter dolu! (Maks %d) Önce besle.</string>
+    <string name="shop_inventory_full_label">Dolu (%d/%d)</string>
     <string name="shop_msg_purchased">%1$s satın alındı! %2$s</string>
     <string name="shop_error_purchase_failed">Satın alma başarısız: %s</string>
+    <string name="shop_item_dry_food">Kuru Mama</string>
+    <string name="shop_item_dry_food_desc">Temel kedi maması</string>
+    <string name="shop_item_canned_food">Konserve</string>
+    <string name="shop_item_canned_food_desc">Lezzetli konserve mama</string>
+    <string name="shop_item_tuna">Ton Balığı</string>
+    <string name="shop_item_tuna_desc">Kedilerin favorisi</string>
+    <string name="shop_item_premium_feast">Premium Ziyafet</string>
+    <string name="shop_item_premium_feast_desc">En iyi değer! Büyük şölen</string>
 
     <!-- Period Screen -->
     <string name="period_title">Döngü Takibi</string>
@@ -191,9 +217,17 @@
     <string name="theme_selection_title">Tema Seçimi 🎨</string>
     <string name="theme_dark_mode">Karanlık Mod 🌙</string>
     <string name="theme_color_title">Tema Rengi</string>
+    <string name="bg_style_title">Arka Plan Stili</string>
+    <string name="bg_pastel_cat">Pastel Kedi</string>
+    <string name="bg_minimal_modern">Minimal</string>
+    <string name="bg_playful_cartoon">Eğlenceli</string>
+    <string name="bg_elegant_dark">Şık Koyu</string>
+    <string name="bg_cozy_warm">Sıcak Yuva</string>
     <string name="goals_title">Kişisel Hedefler 🎯</string>
     <string name="goal_steps_title">Adım Hedefi</string>
+    <string name="goal_change_next_day_note">Değişiklik yarınki görevlere uygulanır</string>
     <string name="goal_water_title">Su Hedefi</string>
+    <string name="generic_error">Bir hata oluştu</string>
     <string name="unit_happiness">Mutluluk</string>
     <string name="settings_title">Hesap Ayarları ⚙️</string>
     <string name="settings_notifications">Bildirimler</string>
@@ -205,6 +239,7 @@
     <string name="unit_steps">Adım</string>
     
     <string name="unit_food_points">Mama Puanı</string>
+    <string name="unit_gold">Altın</string>
     
     <!-- Dialogs -->
     <string name="dialog_edit_name_title">İsim Düzenle</string>
@@ -302,10 +337,12 @@
     <string name="cat_msg_already_sleeping">Zaten uyuyor... 💤</string>
     <string name="cat_msg_not_tired">Hiç uykum yok! 👀</string>
     <string name="cat_msg_goodnight">İyi geceler... %s sonra görüşürüz! 💤</string>
-    <string name="cat_msg_sleep_reduced">Uyku süresi 30 dakika kısaldı! ⏰</string>
+    <string name="cat_msg_sleep_reduced">Enerji yüklendi! Uyku süresi kısaldı ⏰</string>
     <string name="cat_msg_food_points_added">30 Mama Puanı Eklendi! 🍖</string>
     <string name="cat_msg_food_max">Depo dolu! Daha fazla mama puanı biriktiremezsin. 🛑</string>
     <string name="ad_reward_food_btn">Mama Puanı Kazan (+30 MP)</string>
+    <string name="cat_msg_gold_added">+%d 🪙 altın kazanıldı!</string>
+    <string name="ad_reward_gold_btn">+10 🪙</string>
     <string name="time_fmt_hm">%1$d sa %2$d dk</string>
     <string name="time_fmt_m">%1$d dk</string>
     
@@ -325,7 +362,7 @@
     <string name="notif_cat_woke_up_text">Ben uyandım, hadi oynayalım! ⚡</string>
 
     <string name="btn_reduce_sleep_time">Süreyi Azalt (-30 dk)</string>
-    <string name="ad_remaining_rights">Kalan Hak: %1$d/3</string>
+    <string name="ad_remaining_rights">Kalan Hak: %1$d/5</string>
     <string name="unit_percentage">%1$d%%</string>
 
     <string name="cat_ad_loading">Reklam yükleniyor, lütfen bekleyin... ⏳</string>
@@ -348,10 +385,10 @@
 
     <string name="tutorial_cat_care_title">%1$s Bakımı ❤️</string>
     <string name="tutorial_cat_care_desc">%1$s\'nin 3 temel ihtiyacı var: Tokluk, Mutluluk ve Enerji. Bu değerleri yüksek tutarak onu sağlıklı ve mutlu tut!</string>
-    <string name="tutorial_cat_food_title">Mama Puanları (MP) 🍖</string>
-    <string name="tutorial_cat_food_desc">Yürüyüş yaparak MP kazanırsın. MP\'lerini kullanarak %1$s\'yi besleyebilirsin. 10 MP = 1 besleme!</string>
+    <string name="tutorial_cat_food_title">Altın ve Mağaza 🪙</string>
+    <string name="tutorial_cat_food_desc">Görevleri tamamlayarak ve reklam izleyerek altın kazan. Mağazadan yiyecek satın al ve %1$s\'yi besle!</string>
     <string name="tutorial_cat_games_title">Mini Oyunlar 🎮</string>
-    <string name="tutorial_cat_games_desc">Taş-Kağıt-Makas ve Sayı Tahmin oyunlarını oynayarak XP kazan ve %1$s\'yi eğlendir!</string>
+    <string name="tutorial_cat_games_desc">Taş-Kağıt-Makas, Hafıza, Refleks ve Slot oyunlarını oynayarak XP kazan ve %1$s\'yi eğlendir!</string>
 
     <string name="tutorial_stats_title">İstatistikler 📊</string>
     <string name="tutorial_stats_desc">Günlük ve haftalık adımlarını, yaktığın kalorileri ve içtiğin suyu grafiklerle takip edebilirsin.</string>
@@ -390,4 +427,48 @@
         <item>🐾 Kedinin sana hatırlatması var: Su iç!</item>
         <item>💙 Vücudun su bekliyor! Şimdi iç!</item>
     </string-array>
+
+    <!-- Cat Care Statistics -->
+    <string name="stats_tab_cat_care">Kedi Bakımı</string>
+    <string name="stats_care_feed_count">Besleme</string>
+    <string name="stats_care_game_count">Oyun</string>
+    <string name="stats_care_sleep_count">Uyku</string>
+    <string name="stats_care_pet_count">Sevme</string>
+    <string name="stats_care_score">Bakım Puanı</string>
+    <string name="stats_care_score_desc">Kedine ne kadar iyi baktığının özeti</string>
+    <string name="stats_game_rps">Taş Kağıt Makas</string>
+    <string name="stats_game_slots">Pati Çarkı</string>
+    <string name="stats_game_memory">Hafıza Patisi</string>
+    <string name="stats_game_reflex">Kedi Refleksi</string>
+    <string name="stats_care_chart_title">Etkileşim Grafiği</string>
+    <string name="stats_care_total_interactions">Toplam Etkileşim</string>
+    <string name="stats_care_game_breakdown">Oyun Dağılımı</string>
+    <string name="stats_care_no_data">Henüz etkileşim verisi yok. Kedini besle, oyna ve sev!</string>
+    <string name="stats_care_daily_summary">Günlük Özet</string>
+    <string name="stats_times">%d kez</string>
+    <string name="stats_range_daily">Bugün</string>
+    <string name="stats_range_weekly">Bu Hafta</string>
+    <string name="stats_range_monthly">Bu Ay</string>
+
+    <!-- In-App Update -->
+    <string name="update_downloaded">Güncelleme indirildi!</string>
+    <string name="update_install">Yükle</string>
+    <!-- Error Messages -->
+    <string name="error_water_add">Su eklenirken hata oluştu</string>
+    <string name="error_water_undo">Su geri alınırken hata oluştu</string>
+
+    <!-- Gold Tutorial -->
+    <string name="gold_tutorial_title_1">Altın Sistemi 🪙</string>
+    <string name="gold_tutorial_desc_1">Altın kazanabilir ve mağazadan kedi maması satın alabilirsin! Kedinle vakit geçirmek artık çok daha eğlenceli.</string>
+    <string name="gold_tutorial_title_2">Nasıl Kazanırsın? 📺</string>
+    <string name="gold_tutorial_desc_2">Reklam izle, mini oyunlar oyna, günlük görevleri tamamla ve yürüyerek altın kazan!</string>
+    <string name="gold_tutorial_title_3">Nerede Kullanırsın? 🛒</string>
+    <string name="gold_tutorial_desc_3">Mağaza sekmesine geç ve kedinle için mama satın al. Kediniz seni bunun için çok sevecek!</string>
+    <string name="gold_tutorial_bonus">+50 🪙 hesabına eklendi!</string>
+    <string name="gold_tutorial_btn_next">İleri</string>
+    <string name="gold_tutorial_btn_done">Harika! 🎉</string>
+
+    <!-- UX Improvements -->
+    <string name="cat_xp_remaining">Sonraki seviye için %d XP</string>
+    <string name="cat_xp_max_level">Efsanevi Kedi — Maksimum Seviye</string>
 </resources>

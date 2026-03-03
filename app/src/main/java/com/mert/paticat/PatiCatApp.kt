@@ -52,21 +52,6 @@ class PatiCatApp : Application(), Configuration.Provider {
                 catStatusRequest
             )
             
-            // 2. Widget Update Worker (Every 1 hour)
-            val widgetUpdateRequest = PeriodicWorkRequestBuilder<com.mert.paticat.widget.WidgetUpdateWorker>(1, TimeUnit.HOURS)
-                .setConstraints(batteryConstraints)
-                .build()
-                
-            workManager.enqueueUniquePeriodicWork(
-                "widget_update",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                widgetUpdateRequest
-            )
-            
-            // 3. One-time trigger on App launch
-            val oneTimeWidgetUpdate = OneTimeWorkRequestBuilder<com.mert.paticat.widget.WidgetUpdateWorker>().build()
-            workManager.enqueue(oneTimeWidgetUpdate)
-            
         } catch (e: Exception) {
              android.util.Log.e("PatiCatApp", "Worker setup error", e)
         }

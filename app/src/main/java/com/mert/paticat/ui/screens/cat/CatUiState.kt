@@ -2,10 +2,13 @@ package com.mert.paticat.ui.screens.cat
 
 import com.mert.paticat.domain.model.Cat
 import com.mert.paticat.domain.model.CatMood
+import com.mert.paticat.domain.model.ShopItem
 import com.google.android.gms.ads.rewarded.RewardedAd
 
 /**
- * UI State for Cat Screen
+ * Core UI State for Cat Screen — cat status, ads, inventory, network.
+ * Game state is separated into [GameUiState] to prevent recomposition of the
+ * entire CatScreen when only game state changes.
  */
 data class CatUiState(
     val isLoading: Boolean = true,
@@ -13,39 +16,25 @@ data class CatUiState(
     val showFeedAnimation: Boolean = false,
     val showPetAnimation: Boolean = false,
     val userMessage: String? = null,
-    val activeGame: GameType? = null,
-    val miniGameState: MiniGameState = MiniGameState.IDLE,
-
-    // Slots Game State
-    val slotResults: List<String> = listOf("🐱", "🐱", "🐱"),
-    val isSpinning: Boolean = false,
-    // Memory Game State
-    val memoryCards: List<MemoryCard> = emptyList(),
-    val memoryFlippedIndices: List<Int> = emptyList(),
-    val memoryMatchedPairs: Int = 0,
-    val memoryMoves: Int = 0,
-    // Reflex Game State
-    val reflexTargets: List<ReflexTarget> = emptyList(),
-    val reflexScore: Int = 0,
-    val reflexRound: Int = 0,
-    val reflexMaxRounds: Int = 10,
-    val reflexIsWaiting: Boolean = false,
-    // Result State
-    val lastReward: MiniGameReward? = null,
+    // Ad states
     val sleepAdCount: Int = 0,
     val isAdLoading: Boolean = false,
     val isNetworkAvailable: Boolean = true,
     val nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null,
-    val adLoadError: Boolean = false, // Reklam yüklenemedi hatası için (Native/Genel)
-    // Rewarded Ads States
+    val adLoadError: Boolean = false,
     val foodAdState: AdState = AdState.Idle,
-    val sleepAdState: AdState = AdState.Idle
+    val sleepAdState: AdState = AdState.Idle,
+    // Shop & Inventory
+    val inventory: Map<ShopItem, Int> = emptyMap(),
+    val dailyGoldAdsRemaining: Int = ShopItem.MAX_GOLD_ADS_PER_DAY,
+    // Gold tutorial (shown once after update)
+    val showGoldTutorial: Boolean = false
 ) {
     val currentMood: CatMood
         get() = cat.mood
     
     val canFeed: Boolean
-        get() = cat.foodPoints >= 10 && cat.hunger < 95 // Feed cost: 10 MP, guard matches ViewModel
+        get() = inventory.any { it.value > 0 } && cat.hunger < 95
     
     val moodEmoji: String
         get() = when (currentMood) {
@@ -66,6 +55,30 @@ data class CatUiState(
         }
 }
 
+/**
+ * Separated game UI state — prevents full CatScreen recomposition for game-only changes.
+ */
+data class GameUiState(
+    val activeGame: GameType? = null,
+    val miniGameState: MiniGameState = MiniGameState.IDLE,
+    // Slots
+    val slotResults: List<String> = listOf("🐱", "🐱", "🐱"),
+    val isSpinning: Boolean = false,
+    // Memory
+    val memoryCards: List<MemoryCard> = emptyList(),
+    val memoryFlippedIndices: List<Int> = emptyList(),
+    val memoryMatchedPairs: Int = 0,
+    val memoryMoves: Int = 0,
+    // Reflex
+    val reflexTargets: List<ReflexTarget> = emptyList(),
+    val reflexScore: Int = 0,
+    val reflexRound: Int = 0,
+    val reflexMaxRounds: Int = 10,
+    val reflexIsWaiting: Boolean = false,
+    // Result
+    val lastReward: MiniGameReward? = null,
+)
+
 enum class GameType(val energyCost: Int) {
     RPS(8), SLOTS(12), MEMORY(10), REFLEX(10)
 }
@@ -85,9 +98,7 @@ enum class RockPaperScissors {
     }
 }
 
-
-
-data class MiniGameReward(val mp: Int = 0, val happy: Int = 0, val xp: Long = 0)
+data class MiniGameReward(val gold: Int = 0, val happy: Int = 0, val xp: Long = 0)
 
 // Memory Game
 data class MemoryCard(

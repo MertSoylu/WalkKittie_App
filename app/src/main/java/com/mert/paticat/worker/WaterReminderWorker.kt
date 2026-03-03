@@ -31,7 +31,7 @@ class WaterReminderWorker @AssistedInject constructor(
     
     companion object {
         const val CHANNEL_ID = "water_reminder_channel"
-        const val NOTIFICATION_ID = 2001
+        const val NOTIFICATION_ID = 3001
         const val WORK_NAME = "water_reminder_work"
         
         // Water messages loaded from string resources at runtime (see showNotification)

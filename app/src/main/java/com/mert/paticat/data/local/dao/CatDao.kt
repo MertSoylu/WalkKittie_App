@@ -43,4 +43,7 @@ interface CatDao {
     
     @Query("UPDATE cat_state SET coins = :coins WHERE id = 1")
     suspend fun updateCoins(coins: Int)
+
+    @Query("UPDATE cat_state SET isSleeping = :isSleeping, sleepEndTime = :sleepEndTime, energy = :energy, lastUpdated = :lastUpdated WHERE id = 1")
+    suspend fun updateSleepState(isSleeping: Boolean, sleepEndTime: Long, energy: Int, lastUpdated: Long)
 }

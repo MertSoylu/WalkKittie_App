@@ -44,10 +44,10 @@ data class Cat(
     val mood: CatMood
         get() = when {
             isSleeping -> CatMood.SLEEPING
-            hunger < 20 -> CatMood.HUNGRY
-            energy < 20 -> CatMood.IDLE // If tired but not sleeping
-            happiness > 80 && energy > 60 -> CatMood.EXCITED
-            happiness > 50 -> CatMood.HAPPY
+            hunger < 25 -> CatMood.HUNGRY
+            energy < 25 -> CatMood.IDLE // If tired but not sleeping
+            happiness >= 80 -> CatMood.EXCITED
+            happiness >= 45 -> CatMood.HAPPY
             else -> CatMood.IDLE
         }
 

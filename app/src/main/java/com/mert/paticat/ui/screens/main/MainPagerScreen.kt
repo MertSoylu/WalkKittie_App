@@ -59,11 +59,30 @@ fun MainPagerScreen(
     var currentStep by remember { mutableIntStateOf(0) }
     var currentTargets by remember { mutableStateOf<List<TutorialTarget>>(emptyList()) }
 
+    // Mark existing users so they never see the tutorial.
+    // Fresh installs go through Welcome → Setup flow before reaching here,
+    // and the Setup screen sets "tutorial_new_user" = true.
+    // If we reach MainPagerScreen without that flag, skip all tutorials permanently.
+    val isTutorialEligible = remember {
+        if (!prefs.contains("tutorial_new_user")) {
+            // Existing user upgrading – mark all tutorials as done
+            val editor = prefs.edit()
+            listOf("home", "cat", "statistics", "profile").forEach { route ->
+                editor.putBoolean("tutorial_completed_v5_$route", true)
+            }
+            editor.putBoolean("tutorial_new_user", true)
+            editor.apply()
+            false
+        } else {
+            true
+        }
+    }
+
     // Page Change Effect for Tutorial
-    LaunchedEffect(pagerState.currentPage, catName) {
+    LaunchedEffect(pagerState.currentPage, catName, isTutorialEligible) {
+        if (!isTutorialEligible) return@LaunchedEffect
         val currentPage = bottomNavItems[pagerState.currentPage]
-        // Use versioned key to force show tutorial if needed/reset
-        val prefKey = "tutorial_completed_v4_${currentPage.route}"
+        val prefKey = "tutorial_completed_v5_${currentPage.route}"
         
         if (!prefs.getBoolean(prefKey, false)) {
             val targets = when(currentPage) {
@@ -211,13 +230,13 @@ fun MainPagerScreen(
                     } else {
                         showTutorial = false
                         val currentPage = bottomNavItems[pagerState.currentPage]
-                        prefs.edit().putBoolean("tutorial_completed_v4_${currentPage.route}", true).apply()
+                        prefs.edit().putBoolean("tutorial_completed_v5_${currentPage.route}", true).apply()
                     }
                 },
                 onSkip = {
                     showTutorial = false
                     val currentPage = bottomNavItems[pagerState.currentPage]
-                    prefs.edit().putBoolean("tutorial_completed_v4_${currentPage.route}", true).apply()
+                    prefs.edit().putBoolean("tutorial_completed_v5_${currentPage.route}", true).apply()
                 }
             )
         }
@@ -226,39 +245,10 @@ fun MainPagerScreen(
 
 @Composable
 fun AnimatedGradientBackground() {
-    // Check if the current theme is dark comparing the background color
-    val isDark = MaterialTheme.colorScheme.background.red == 0f && 
-                 MaterialTheme.colorScheme.background.green == 0f && 
-                 MaterialTheme.colorScheme.background.blue == 0f
-    
-    // In dark mode, draw nothing here! 
-    // The background will be the completely dark Activity background (from MainScreen)
-    // allowing bright particles from MainScreen to shine through transparent scaffolds.
-    if (isDark) {
-        return
-    }
-
-    val color1 = MaterialTheme.colorScheme.primaryContainer
-    val color2 = MaterialTheme.colorScheme.secondaryContainer
-    val color3 = Color.Transparent
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(color1.copy(alpha = 0.4f), color2.copy(alpha = 0.4f), color3)
-                )
-            )
-    ) {
-        // Glass Overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.3f))
-        )
-    }
+    // Background is now fully handled by AnimatedBackground in MainScreen.
+    // This function is kept as a no-op to avoid breaking the call site.
 }
+
 
 @Composable
 fun GlassFloatingBottomBar(

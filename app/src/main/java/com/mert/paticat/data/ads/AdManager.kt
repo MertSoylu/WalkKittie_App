@@ -20,12 +20,13 @@ import javax.inject.Singleton
 class AdManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    // Real Native Ad Unit ID
-    var nativeAdUnitId: String = com.mert.paticat.BuildConfig.NATIVE_AD_ID
+    // Ad Unit IDs — debug builds use test IDs automatically
+    private val nativeAdUnitId: String
+        get() = if (com.mert.paticat.BuildConfig.DEBUG) "ca-app-pub-3940256099942544/2247696110"
+                else com.mert.paticat.BuildConfig.NATIVE_AD_ID
     
-    // Rewarded Ad Unit IDs
-    val FOOD_AD_ID = com.mert.paticat.BuildConfig.FOOD_AD_ID
-    val SLEEP_AD_ID = com.mert.paticat.BuildConfig.SLEEP_AD_ID 
+    val FOOD_AD_ID: String = com.mert.paticat.BuildConfig.FOOD_AD_ID
+    val SLEEP_AD_ID: String = com.mert.paticat.BuildConfig.SLEEP_AD_ID
 
     private val _nativeAd = MutableStateFlow<NativeAd?>(null)
     val nativeAd: StateFlow<NativeAd?> = _nativeAd.asStateFlow()
@@ -41,7 +42,11 @@ class AdManager @Inject constructor(
     private var isLoading = false
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
+    private var isInitialized = false
+
     fun initialize() {
+        if (isInitialized) return
+        isInitialized = true
         MobileAds.initialize(context) { 
             loadNativeAd()
         }
@@ -51,10 +56,7 @@ class AdManager @Inject constructor(
         val currentTime = System.currentTimeMillis()
         val isExpired = (currentTime - lastAdLoadTime) > AD_EXPIRATION_TIME
         
-        // Use Test ID for Debug builds
-        if (com.mert.paticat.BuildConfig.DEBUG) {
-            nativeAdUnitId = "ca-app-pub-3940256099942544/2247696110"
-        }
+
 
         // If ad exists and is not expired, keep using it
         if (_nativeAd.value != null && !isExpired) return

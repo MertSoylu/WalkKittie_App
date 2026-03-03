@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import com.mert.paticat.ui.components.EntranceAnimation
 import com.mert.paticat.ui.components.bounceClick
 import com.mert.paticat.ui.theme.*
@@ -38,9 +39,18 @@ fun SetupProfileScreen(
     var catName by remember { mutableStateOf("") }
     var stepGoal by remember { mutableIntStateOf(6000) }
     var waterGoal by remember { mutableIntStateOf(2000) }
+
+    val context = LocalContext.current
+    val markNewUser: () -> Unit = remember {
+        {
+            context.getSharedPreferences("paticat_prefs", android.content.Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("tutorial_new_user", true)
+                .apply()
+        }
+    }
     var calorieGoal by remember { mutableIntStateOf(2000) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
@@ -181,6 +191,7 @@ fun SetupProfileScreen(
                             } else {
                                 // Default gender set to MALE since we removed selection
                                 viewModel.saveUserProfile(name, catName, "MALE", stepGoal, waterGoal, calorieGoal)
+                                markNewUser()
                                 onSetupComplete()
                             }
                         },
@@ -194,6 +205,7 @@ fun SetupProfileScreen(
                                 errorMessage = context.getString(com.mert.paticat.R.string.setup_error_cat_name)
                             } else {
                                 viewModel.saveUserProfile(name, catName, "MALE", stepGoal, waterGoal, calorieGoal)
+                                markNewUser()
                                 onSetupComplete()
                             }
                             },
@@ -231,7 +243,7 @@ fun SetupGoalItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha=0.1f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
