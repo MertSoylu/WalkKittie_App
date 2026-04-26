@@ -19,3 +19,5 @@ local.properties
 .claude
 .kotlin
 CLAUDE.md
+.agent
+.github

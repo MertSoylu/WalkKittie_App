@@ -1,6 +1,7 @@
 package com.mert.paticat.domain.repository
 
 import com.mert.paticat.domain.model.Cat
+import com.mert.paticat.domain.model.EconomySource
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -13,7 +14,7 @@ interface CatRepository {
     suspend fun updateCat(cat: Cat)
     suspend fun updateSleepState(isSleeping: Boolean, sleepEndTime: Long, energy: Int, lastUpdated: Long)
     suspend fun addXp(amount: Int)
-    suspend fun addCoins(amount: Int)
+    suspend fun addCoins(amount: Int, source: EconomySource = EconomySource.UNKNOWN, note: String? = null)
     suspend fun updateHappiness(delta: Int)
     suspend fun updateEnergy(delta: Int)
     suspend fun decreaseHungerOverTime()

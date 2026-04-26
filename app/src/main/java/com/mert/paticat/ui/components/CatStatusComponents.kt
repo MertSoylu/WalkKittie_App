@@ -67,11 +67,11 @@ fun CircularStatIndicator(
         animationSpec = tween(durationMillis = 1000),
         label = "circular_progress"
     )
-    
+
     LaunchedEffect(progress) {
         animatedProgress = progress
     }
-    
+
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
@@ -79,7 +79,7 @@ fun CircularStatIndicator(
         Canvas(modifier = Modifier.size(size)) {
             val strokeWidthPx = strokeWidth.toPx()
             val arcSize = size.toPx() - strokeWidthPx
-            
+
             // Background arc
             drawArc(
                 color = color.copy(alpha = 0.2f),
@@ -90,7 +90,7 @@ fun CircularStatIndicator(
                 size = Size(arcSize, arcSize),
                 style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
             )
-            
+
             // Progress arc
             drawArc(
                 color = color,
@@ -133,9 +133,9 @@ fun CatStatusCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -146,14 +146,14 @@ fun CatStatusCard(
                     value = cat.hunger,
                     color = PastelPink
                 )
-                
+
                 CatStatItem(
                     icon = Icons.Default.Favorite,
                     label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_stat_happiness_label),
                     value = cat.happiness,
                     color = PastelMint
                 )
-                
+
                 CatStatItem(
                     icon = Icons.Default.BatteryChargingFull,
                     label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.cat_stat_energy_label),
@@ -185,20 +185,20 @@ private fun CatStatItem(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = label,
                 tint = color,
                 modifier = Modifier.size(28.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Text(
             text = "$value%",
             style = MaterialTheme.typography.titleSmall,
@@ -244,9 +244,9 @@ fun LevelProgressCard(
                     color = Color.White
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -263,9 +263,9 @@ fun LevelProgressCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 XpProgressBar(
                     progress = cat.levelProgress,
                     modifier = Modifier.fillMaxWidth()
@@ -286,11 +286,11 @@ private fun XpProgressBar(
         animationSpec = tween(durationMillis = 1000),
         label = "xp_progress"
     )
-    
+
     LaunchedEffect(progress) {
         animatedProgress = progress
     }
-    
+
     Box(
         modifier = modifier
             .height(12.dp)

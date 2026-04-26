@@ -11,7 +11,10 @@ import com.mert.paticat.R
 import com.mert.paticat.data.local.preferences.UserPreferencesRepository
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.InteractionRepository
+import com.mert.paticat.domain.repository.MissionRepository
 import com.mert.paticat.domain.repository.ShopRepository
+import com.mert.paticat.domain.model.EconomyConfig
+import com.mert.paticat.domain.model.EconomySource
 import com.mert.paticat.domain.model.InteractionType
 import com.mert.paticat.domain.model.ShopItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +39,7 @@ class CatViewModel @Inject constructor(
     private val catRepository: CatRepository,
     private val shopRepository: ShopRepository,
     private val interactionRepository: InteractionRepository,
+    private val missionRepository: MissionRepository,
     private val adManager: com.mert.paticat.data.ads.AdManager,
     private val userPreferencesRepository: UserPreferencesRepository,
     @ApplicationContext private val context: Context
@@ -50,6 +54,7 @@ class CatViewModel @Inject constructor(
         scope = viewModelScope,
         catRepository = catRepository,
         interactionRepository = interactionRepository,
+        missionRepository = missionRepository,
         context = context,
         onMessage = ::setMessage
     )
@@ -88,7 +93,11 @@ class CatViewModel @Inject constructor(
         val catTutorialDone = prefs.getBoolean("tutorial_completed_v5_cat", false)
         if (!catTutorialDone) return
         viewModelScope.launch {
-            catRepository.addCoins(50)
+            catRepository.addCoins(
+                amount = 50,
+                source = EconomySource.TUTORIAL_REWARD,
+                note = "gold_tutorial"
+            )
             _uiState.update { it.copy(showGoldTutorial = true) }
         }
     }
@@ -105,11 +114,30 @@ class CatViewModel @Inject constructor(
         val storedDate = prefs.getString(KEY_GOLD_AD_DATE, "") ?: ""
         if (storedDate != today) {
             prefs.edit().putInt(KEY_GOLD_AD_COUNT, 0).putString(KEY_GOLD_AD_DATE, today).apply()
-            _uiState.update { it.copy(dailyGoldAdsRemaining = ShopItem.MAX_GOLD_ADS_PER_DAY) }
+            _uiState.update { it.copy(dailyGoldAdsRemaining = EconomyConfig.DAILY_GOLD_AD_LIMIT) }
         } else {
             val usedToday = prefs.getInt(KEY_GOLD_AD_COUNT, 0)
-            _uiState.update { it.copy(dailyGoldAdsRemaining = (ShopItem.MAX_GOLD_ADS_PER_DAY - usedToday).coerceAtLeast(0)) }
+            _uiState.update { it.copy(dailyGoldAdsRemaining = (EconomyConfig.DAILY_GOLD_AD_LIMIT - usedToday).coerceAtLeast(0)) }
         }
+    }
+
+    private fun getTodayGoldAdCount(): Int {
+        val today = java.time.LocalDate.now().toString()
+        val storedDate = prefs.getString(KEY_GOLD_AD_DATE, "") ?: ""
+        if (storedDate != today) {
+            prefs.edit().putInt(KEY_GOLD_AD_COUNT, 0).putString(KEY_GOLD_AD_DATE, today).apply()
+            return 0
+        }
+        return prefs.getInt(KEY_GOLD_AD_COUNT, 0)
+    }
+
+    private fun canClaimDailyGoldAd(): Boolean {
+        return getTodayGoldAdCount() < EconomyConfig.DAILY_GOLD_AD_LIMIT
+    }
+
+    private fun canUseSleepAd(): Boolean {
+        val used = prefs.getInt(KEY_SLEEP_AD_COUNT, 0)
+        return isCatSleeping() && used < EconomyConfig.MAX_SLEEP_ADS_PER_SLEEP
     }
 
     private fun observeAds() {
@@ -193,7 +221,7 @@ class CatViewModel @Inject constructor(
 
     data class BoosterInfo(val name: String, val expiresAt: Long, val emoji: String)
 
-    fun getActiveBooters(): List<BoosterInfo> {
+    fun getActiveBoosters(): List<BoosterInfo> {
         val state = _uiState.value
         val now = System.currentTimeMillis()
         val boosters = mutableListOf<BoosterInfo>()
@@ -275,6 +303,10 @@ class CatViewModel @Inject constructor(
 
     fun reduceSleepTime() {
         if (!isCatSleeping()) return
+        if (!canUseSleepAd()) {
+            setMessage(context.getString(R.string.cat_ad_limit_reached))
+            return
+        }
         val cat = _uiState.value.cat
         val boostedEnergy = (cat.energy + 25).coerceAtMost(100)
         val neededEnergy = 100 - boostedEnergy
@@ -298,7 +330,27 @@ class CatViewModel @Inject constructor(
 
     // ===== Game delegation =====
 
-    fun startGame(type: GameType) = gameDelegate.startGame(type, _uiState.value.cat.energy, _uiState.value.cat.level, isCatSleeping(), getSleepRemainingTime())
+    private val _devLevelsUnlocked = MutableStateFlow(false)
+    val devLevelsUnlocked: StateFlow<Boolean> = _devLevelsUnlocked.asStateFlow()
+
+    fun toggleDevLevelUnlock() { _devLevelsUnlocked.value = !_devLevelsUnlocked.value }
+
+    private fun effectiveLevel(ignoreLevelLock: Boolean = false): Int =
+        if (ignoreLevelLock || _devLevelsUnlocked.value) Int.MAX_VALUE else _uiState.value.cat.level
+
+    fun startGame(
+        type: GameType,
+        ignoreLevelLock: Boolean = false,
+        ignoreEnergyLimit: Boolean = false
+    ) =
+        gameDelegate.startGame(
+            type = type,
+            catEnergy = _uiState.value.cat.energy,
+            catLevel = effectiveLevel(ignoreLevelLock),
+            isSleeping = isCatSleeping(),
+            sleepTimeStr = getSleepRemainingTime(),
+            ignoreEnergyLimit = ignoreEnergyLimit
+        )
     fun closeMiniGame() = gameDelegate.closeMiniGame()
     fun playRPS(choice: RockPaperScissors) = gameDelegate.playRPS(choice)
     fun spinSlots() = gameDelegate.spinSlots()
@@ -314,18 +366,27 @@ class CatViewModel @Inject constructor(
 
     fun addGoldForAd() {
         viewModelScope.launch {
-            catRepository.addCoins(ShopItem.GOLD_PER_AD)
+            if (!canClaimDailyGoldAd()) {
+                refreshDailyAdCount()
+                setMessage(context.getString(R.string.cat_ad_limit_reached))
+                return@launch
+            }
+            catRepository.addCoins(
+                amount = EconomyConfig.GOLD_PER_AD,
+                source = EconomySource.AD_REWARD,
+                note = "rewarded_ad_gold"
+            )
             val today = java.time.LocalDate.now().toString()
-            val storedDate = prefs.getString(KEY_GOLD_AD_DATE, "") ?: ""
-            val currentCount = if (storedDate == today) prefs.getInt(KEY_GOLD_AD_COUNT, 0) else 0
+            val currentCount = getTodayGoldAdCount()
             val newCount = currentCount + 1
             prefs.edit().putInt(KEY_GOLD_AD_COUNT, newCount).putString(KEY_GOLD_AD_DATE, today).apply()
-            _uiState.update { it.copy(dailyGoldAdsRemaining = (ShopItem.MAX_GOLD_ADS_PER_DAY - newCount).coerceAtLeast(0)) }
-            setMessage(context.getString(R.string.cat_msg_gold_added, ShopItem.GOLD_PER_AD))
+            _uiState.update { it.copy(dailyGoldAdsRemaining = (EconomyConfig.DAILY_GOLD_AD_LIMIT - newCount).coerceAtLeast(0)) }
+            setMessage(context.getString(R.string.cat_msg_gold_added, EconomyConfig.GOLD_PER_AD))
         }
     }
 
     fun loadFoodAd() {
+        if (!canClaimDailyGoldAd()) return
         val currentState = _uiState.value.foodAdState
         if (currentState is AdState.Loading || currentState is AdState.Loaded) return
         _uiState.update { it.copy(foodAdState = AdState.Loading) }
@@ -337,12 +398,18 @@ class CatViewModel @Inject constructor(
 
     fun showFoodAd(activity: Activity) {
         val state = _uiState.value.foodAdState
+        if (!canClaimDailyGoldAd()) {
+            setMessage(context.getString(R.string.cat_ad_limit_reached))
+            _uiState.update { it.copy(foodAdState = AdState.Idle) }
+            return
+        }
         if (state is AdState.Loaded) {
             state.ad.show(activity) { _ -> addGoldForAd(); _uiState.update { it.copy(foodAdState = AdState.Idle) } }
         }
     }
 
     fun loadSleepAd() {
+        if (!canUseSleepAd()) return
         val currentState = _uiState.value.sleepAdState
         if (currentState is AdState.Loading || currentState is AdState.Loaded) return
         _uiState.update { it.copy(sleepAdState = AdState.Loading) }
@@ -354,6 +421,11 @@ class CatViewModel @Inject constructor(
 
     fun showSleepAd(activity: Activity) {
         val state = _uiState.value.sleepAdState
+        if (!canUseSleepAd()) {
+            setMessage(context.getString(R.string.cat_ad_limit_reached))
+            _uiState.update { it.copy(sleepAdState = AdState.Idle) }
+            return
+        }
         if (state is AdState.Loaded) {
             state.ad.show(activity) { _ -> reduceSleepTime(); _uiState.update { it.copy(sleepAdState = AdState.Idle) } }
         }
@@ -382,17 +454,26 @@ class CatViewModel @Inject constructor(
         )
         _uiState.value = _uiState.value.copy(isNetworkAvailable = isConnected)
 
-        networkCallback = object : ConnectivityManager.NetworkCallback() {
+        val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: android.net.Network) { _uiState.update { it.copy(isNetworkAvailable = true) } }
             override fun onLost(network: android.net.Network) { _uiState.update { it.copy(isNetworkAvailable = false) } }
         }
-        try { cm.registerDefaultNetworkCallback(networkCallback!!) } catch (e: Exception) { networkCallback = null }
+        try {
+            cm.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (e: Exception) {
+            // Silently fail if callback registration fails
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         networkCallback?.let {
-            (context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).unregisterNetworkCallback(it)
+            try {
+                (context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).unregisterNetworkCallback(it)
+            } catch (e: Exception) {
+                // Already unregistered or invalid
+            }
         }
     }
 }

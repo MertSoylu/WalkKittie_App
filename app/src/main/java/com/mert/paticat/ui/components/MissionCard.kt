@@ -17,7 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.mert.paticat.R
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,28 +42,29 @@ fun MissionCard(
         MissionType.WATER -> Icons.Default.LocalDrink to PremiumMint
         MissionType.CALORIES -> Icons.Default.LocalFireDepartment to PremiumPeach
         MissionType.STREAK -> Icons.Default.Star to AccentGold
+        MissionType.GAME -> Icons.Default.SportsEsports to PremiumPurple
     }
-    
+
     var animatedProgress by remember { mutableFloatStateOf(0f) }
     val progressAnimation by animateFloatAsState(
         targetValue = animatedProgress,
         animationSpec = tween(durationMillis = 800),
         label = "mission_progress"
     )
-    
+
     LaunchedEffect(mission.progress) {
         animatedProgress = mission.progress
     }
-    
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !mission.isCompleted) { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (mission.isCompleted) 
-                SuccessGreen.copy(alpha = 0.08f) 
-            else 
+            containerColor = if (mission.isCompleted)
+                SuccessGreen.copy(alpha = 0.08f)
+            else
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ),
         elevation = CardDefaults.cardElevation(
@@ -87,20 +90,20 @@ fun MissionCard(
             ) {
                 Icon(
                     imageVector = if (mission.isCompleted) Icons.Default.Check else icon,
-                    contentDescription = null,
+                    contentDescription = if (mission.isCompleted) stringResource(R.string.icon_close) else mission.title,
                     tint = if (mission.isCompleted) SuccessGreen else color,
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             // Content Section
             Column(modifier = Modifier.weight(1f)) {
                 val context = androidx.compose.ui.platform.LocalContext.current
                 var titleText = mission.title
                 var descText = mission.description
-                
+
                 // Try to resolve title as resource
                 var titleResId = getMissionStringId(mission.title)
                 if (titleResId == 0) {
@@ -109,7 +112,7 @@ fun MissionCard(
                 if (titleResId != 0) {
                     titleText = context.getString(titleResId)
                 }
-                
+
                 // Try to resolve description as resource
                 var descResId = getMissionStringId(mission.description)
                 if (descResId == 0) {
@@ -129,21 +132,21 @@ fun MissionCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
                     textDecoration = if (mission.isCompleted) TextDecoration.LineThrough else null,
-                    color = if (mission.isCompleted) 
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) 
-                    else 
+                    color = if (mission.isCompleted)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    else
                         MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 Text(
                     text = descText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
-                
+
                 Spacer(modifier = Modifier.height(10.dp))
-                
+
                 // Progress Bar or Completion Status
                 if (!mission.isCompleted) {
                     Column {
@@ -157,9 +160,9 @@ fun MissionCard(
                             trackColor = color.copy(alpha = 0.15f),
                             strokeCap = StrokeCap.Round
                         )
-                        
+
                         Spacer(modifier = Modifier.height(6.dp))
-                        
+
                         Text(
                             text = "${mission.currentValue} / ${mission.targetValue}",
                             style = MaterialTheme.typography.labelSmall,
@@ -168,23 +171,35 @@ fun MissionCard(
                         )
                     }
                 } else {
-                    Text(
-                        text = "Tamamlandı! 🎉",
-                        color = SuccessGreen,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Black
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = stringResource(R.string.icon_close),
+                            tint = SuccessGreen,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = androidx.compose.ui.platform.LocalContext.current
+                                .getString(com.mert.paticat.R.string.mission_completed),
+                            color = SuccessGreen,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             // Reward Section
             Column(horizontalAlignment = Alignment.End) {
-                if (mission.foodPointReward > 0) {
+                if (mission.coinReward > 0) {
                     RewardBadge(
-                        text = "+${mission.foodPointReward} 🪙",
-                        color = PremiumPink
+                        text = "+${mission.coinReward} 🪙",
+                        color = AccentGold
                     )
                 }
                 if (mission.xpReward > 0) {
@@ -198,7 +213,6 @@ fun MissionCard(
         }
     }
 }
-
 @Composable
 private fun RewardBadge(
     text: String,
@@ -216,19 +230,5 @@ private fun RewardBadge(
             fontWeight = FontWeight.Black,
             color = color
         )
-    }
-}
-
-private fun getMissionStringId(key: String): Int {
-    return when(key) {
-        "mission_steps_tier1_title" -> com.mert.paticat.R.string.mission_steps_tier1_title
-        "mission_steps_tier1_desc" -> com.mert.paticat.R.string.mission_steps_tier1_desc
-        "mission_steps_tier2_title" -> com.mert.paticat.R.string.mission_steps_tier2_title
-        "mission_steps_tier2_desc" -> com.mert.paticat.R.string.mission_steps_tier2_desc
-        "mission_steps_tier3_title" -> com.mert.paticat.R.string.mission_steps_tier3_title
-        "mission_steps_tier3_desc" -> com.mert.paticat.R.string.mission_steps_tier3_desc
-        "mission_steps_tier4_title" -> com.mert.paticat.R.string.mission_steps_tier4_title
-        "mission_steps_tier4_desc" -> com.mert.paticat.R.string.mission_steps_tier4_desc
-        else -> 0
     }
 }

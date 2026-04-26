@@ -26,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import com.mert.paticat.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -48,7 +50,7 @@ fun WaterIntakeCard(
 ) {
     val progress = (currentWaterMl.toFloat() / goalMl).coerceIn(0f, 1f)
     val glasses = currentWaterMl / 250
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -75,14 +77,14 @@ fun WaterIntakeCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocalDrink,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.icon_water),
                         tint = PastelBlue,
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.water_tracking_title),
@@ -101,12 +103,12 @@ fun WaterIntakeCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // Undo button - round arrow
                 if (canUndo) {
                     FilledIconButton(
                         onClick = onUndoWater,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(48.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = PastelBlue.copy(alpha = 0.2f),
                             contentColor = PastelBlue
@@ -120,9 +122,9 @@ fun WaterIntakeCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Water glasses visualization
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -143,9 +145,9 @@ fun WaterIntakeCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Add water buttons
             Row(
                 modifier = Modifier.fillMaxWidth()
@@ -155,17 +157,17 @@ fun WaterIntakeCard(
                     onClick = { onAddWater(250) },
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 WaterButton(
                     text = "+500ml",
                     onClick = { onAddWater(500) },
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 WaterButton(
                     text = "+1L",
                     onClick = { onAddWater(1000) },

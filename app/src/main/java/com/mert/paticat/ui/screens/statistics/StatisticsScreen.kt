@@ -299,10 +299,19 @@ fun ActivityContent(uiState: StatisticsUiState, numberFormat: NumberFormat) {
                         goalValue = uiState.stepGoal
                     )
                 } else {
-                    Text(
-                        stringResource(R.string.stats_chart_no_data),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("📊", fontSize = 40.sp)
+                        Text(
+                            stringResource(R.string.stats_chart_no_data),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -648,11 +657,11 @@ fun CatCareContent(uiState: StatisticsUiState, viewModel: StatisticsViewModel) {
 @Composable
 fun CareScoreCard(score: Int, accentColor: Color) {
     val ratingText = when {
-        score >= 80 -> "🌟 Mükemmel!"
-        score >= 60 -> "😊 Çok İyi!"
-        score >= 40 -> "👍 İyi"
-        score >= 20 -> "💪 Gelişiyor"
-        else -> "🐾 Başlangıç"
+        score >= 80 -> stringResource(R.string.stats_care_rating_excellent)
+        score >= 60 -> stringResource(R.string.stats_care_rating_very_good)
+        score >= 40 -> stringResource(R.string.stats_care_rating_good)
+        score >= 20 -> stringResource(R.string.stats_care_rating_improving)
+        else -> stringResource(R.string.stats_care_rating_beginner)
     }
 
     Box(
@@ -745,14 +754,14 @@ fun CareInteractionSummaryGrid(summary: InteractionSummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CareStatMiniCard(
-                emoji = "🍖",
+                icon = Icons.Filled.Fastfood,
                 label = stringResource(R.string.stats_care_feed_count),
                 count = summary.feedCount,
                 color = primary,
                 modifier = Modifier.weight(1f)
             )
             CareStatMiniCard(
-                emoji = "🎮",
+                icon = Icons.Filled.SportsEsports,
                 label = stringResource(R.string.stats_care_game_count),
                 count = summary.totalGames,
                 color = secondary,
@@ -761,14 +770,14 @@ fun CareInteractionSummaryGrid(summary: InteractionSummary) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CareStatMiniCard(
-                emoji = "😴",
+                icon = Icons.Filled.Bedtime,
                 label = stringResource(R.string.stats_care_sleep_count),
                 count = summary.sleepCount,
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.weight(1f)
             )
             CareStatMiniCard(
-                emoji = "💖",
+                icon = Icons.Filled.Favorite,
                 label = stringResource(R.string.stats_care_pet_count),
                 count = summary.petCount,
                 color = PremiumPink,
@@ -780,7 +789,7 @@ fun CareInteractionSummaryGrid(summary: InteractionSummary) {
 
 @Composable
 fun CareStatMiniCard(
-    emoji: String,
+    icon: ImageVector,
     label: String,
     count: Int,
     color: Color,
@@ -807,7 +816,7 @@ fun CareStatMiniCard(
                     .background(color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(emoji, fontSize = 26.sp)
+                Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp), tint = color)
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
@@ -854,7 +863,8 @@ fun GameBreakdownCard(summary: InteractionSummary) {
                 Triple("✊", stringResource(R.string.stats_game_rps), summary.gameRpsCount),
                 Triple("🎰", stringResource(R.string.stats_game_slots), summary.gameSlotsCount),
                 Triple("🧠", stringResource(R.string.stats_game_memory), summary.gameMemoryCount),
-                Triple("⚡", stringResource(R.string.stats_game_reflex), summary.gameReflexCount)
+                Triple("⚡", stringResource(R.string.stats_game_reflex), summary.gameReflexCount),
+                Triple("🧺", stringResource(R.string.stats_game_catch), summary.gameCatchCount)
             ).filter { it.third > 0 }
 
             val maxCount = gameItems.maxOfOrNull { it.third } ?: 1

@@ -35,13 +35,13 @@ fun LevelInfoScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_system_title), 
+                        androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_system_title),
                         fontWeight = FontWeight.Black
                     )
                 },
@@ -74,7 +74,7 @@ fun LevelInfoScreen(
                         modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("🏆", fontSize = 48.sp)
+                        Icon(Icons.Filled.EmojiEvents, contentDescription = null, modifier = Modifier.size(48.dp), tint = AccentGold)
                         Spacer(modifier = Modifier.height(12.dp))
                         val levelTitleStr = androidx.compose.ui.res.stringResource(
                             com.mert.paticat.domain.model.Cat.getLevelTitleResId(uiState.level)
@@ -86,7 +86,7 @@ fun LevelInfoScreen(
                             color = AccentGold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         LinearProgressIndicator(
                             progress = { uiState.levelProgress },
                             modifier = Modifier
@@ -96,15 +96,15 @@ fun LevelInfoScreen(
                             color = AccentGold,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Text(
                             "${uiState.xpInCurrentLevel} / ${uiState.xpNeededForNextLevel} XP",
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         Text(
                             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_next_label, uiState.xpNeededForNextLevel - uiState.xpInCurrentLevel),
                             fontSize = 12.sp,
@@ -113,7 +113,7 @@ fun LevelInfoScreen(
                     }
                 }
             }
-            
+
             // How to Earn XP Section
             EntranceAnimation(delay = 100) {
                 Column {
@@ -123,9 +123,9 @@ fun LevelInfoScreen(
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     XpSourceCard(
                         icon = Icons.Default.SportsEsports,
                         title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_games),
@@ -133,12 +133,12 @@ fun LevelInfoScreen(
                         xp = "+20~40 XP",
                         color = PremiumPink
                     )
-                    
+
                     // Spacer and cards for Feed/Sleep/Missions
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     XpSourceCard(
                         icon = Icons.Default.Restaurant,
                         title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_feed),
@@ -146,9 +146,9 @@ fun LevelInfoScreen(
                         xp = "+2 XP",
                         color = PremiumPeach
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     XpSourceCard(
                         icon = Icons.Default.Bedtime,
                         title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_sleep),
@@ -156,9 +156,9 @@ fun LevelInfoScreen(
                         xp = "+5 XP",
                         color = PremiumPurple
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     XpSourceCard(
                         icon = Icons.Default.Task,
                         title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_mission),
@@ -168,7 +168,7 @@ fun LevelInfoScreen(
                     )
                 }
             }
-            
+
             // Level Requirements Table
             EntranceAnimation(delay = 200) {
                 Card(
@@ -183,9 +183,9 @@ fun LevelInfoScreen(
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Show level requirements
                         listOf(
                             2 to 200,
@@ -210,7 +210,7 @@ fun LevelInfoScreen(
                     }
                 }
             }
-            
+
             // Tips Section
             EntranceAnimation(delay = 300) {
                 Card(
@@ -229,9 +229,9 @@ fun LevelInfoScreen(
                                 color = PremiumMint
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         Text(
                             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_tips_content),
                             style = MaterialTheme.typography.bodyMedium,
@@ -241,7 +241,7 @@ fun LevelInfoScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
@@ -272,9 +272,9 @@ fun XpSourceCard(
             ) {
                 Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title,
@@ -287,7 +287,7 @@ fun XpSourceCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             Surface(
                 color = color,
                 shape = RoundedCornerShape(8.dp)
@@ -341,9 +341,9 @@ fun LevelRequirementRow(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             val levelTitleStr = androidx.compose.ui.res.stringResource(
                 com.mert.paticat.domain.model.Cat.getLevelTitleResId(level)
@@ -354,7 +354,7 @@ fun LevelRequirementRow(
                 color = if (isCurrentLevel) AccentGold else MaterialTheme.colorScheme.onSurface
             )
         }
-        
+
         Text(
             "${xpRequired} XP",
             fontWeight = FontWeight.Bold,

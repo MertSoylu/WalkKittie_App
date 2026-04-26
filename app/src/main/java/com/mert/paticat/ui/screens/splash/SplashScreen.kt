@@ -48,7 +48,7 @@ fun SplashScreen(
                 animationSpec = tween(800)
             )
         }
-        
+
         delay(1200) // Reduced from 2000ms for faster load
         animationFinished = true
     }
@@ -88,7 +88,7 @@ fun SplashScreen(
             }
             Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "PatiCat",
+                text = "WalkKittie",
                 style = MaterialTheme.typography.displayMedium, // Larger Title
                 fontWeight = FontWeight.Black,
                 color = PremiumPink,

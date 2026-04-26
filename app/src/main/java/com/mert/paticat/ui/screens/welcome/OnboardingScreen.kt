@@ -17,10 +17,16 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,7 +52,7 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
-    
+
     // Background gradient - Made slightly simpler for better text contrast
     Box(
         modifier = Modifier
@@ -65,7 +71,7 @@ fun OnboardingScreen(
             ) { page ->
                 OnboardingPage(page = page)
             }
-            
+
             // Pager Indicator
             Row(
                 modifier = Modifier
@@ -78,7 +84,7 @@ fun OnboardingScreen(
                     val isSelected = pagerState.currentPage == iteration
                     val color = if (isSelected) PremiumPink else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     val width by animateDpAsState(if (isSelected) 24.dp else 8.dp)
-                    
+
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
@@ -88,9 +94,9 @@ fun OnboardingScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             // Bottom Button
             Button(
                 onClick = {
@@ -106,7 +112,7 @@ fun OnboardingScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp, vertical = 32.dp)
                     .height(56.dp)
-                    .bounceClick { 
+                    .bounceClick {
                         if (pagerState.currentPage < 2) {
                             scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                         } else {
@@ -134,17 +140,17 @@ fun OnboardingPage(page: Int) {
         0 -> Triple(
             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page1_title),
             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page1_desc),
-            "😺"
+            Icons.Filled.Pets as ImageVector
         )
         1 -> Triple(
              androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page2_title),
              androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page2_desc),
-            "📊"
+            Icons.Filled.BarChart as ImageVector
         )
         else -> Triple(
              androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page3_title),
              androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page3_desc),
-            "🏆"
+            Icons.Filled.EmojiEvents as ImageVector
         )
     }
 
@@ -170,7 +176,12 @@ fun OnboardingPage(page: Int) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = pageContent.third, fontSize = 100.sp)
+                Icon(
+                    imageVector = pageContent.third,
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp),
+                    tint = when (page) { 0 -> PremiumPink; 1 -> PremiumBlue; else -> PremiumMint }
+                )
             }
         }
 
@@ -183,15 +194,15 @@ fun OnboardingPage(page: Int) {
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
-                    color = Color.Black // Explicitly Black for max contrast
+                    color = MaterialTheme.colorScheme.onBackground
                 )
-    
+
                 Spacer(modifier = Modifier.height(16.dp))
-    
+
                 Text(
                     text = pageContent.second,
                     style = MaterialTheme.typography.titleMedium, // Larger size
-                    color = Color.DarkGray, // Darker gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Medium,
                     lineHeight = 28.sp

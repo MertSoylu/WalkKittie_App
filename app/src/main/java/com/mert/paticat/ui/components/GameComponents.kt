@@ -34,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mert.paticat.R
 import com.mert.paticat.ui.theme.AccentGold
 import com.mert.paticat.ui.theme.PastelMint
 import com.mert.paticat.ui.theme.PastelPink
@@ -75,7 +77,7 @@ fun StreakDisplayCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Whatshot,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.icon_star),
                         tint = AccentGold,
                         modifier = Modifier.size(28.dp)
                     )
@@ -88,12 +90,12 @@ fun StreakDisplayCard(
                     color = AccentGold
                 )
                 Text(
-                    text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.streak_current),
+                    text = stringResource(com.mert.paticat.R.string.streak_current),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             // Divider
             Box(
                 modifier = Modifier
@@ -101,7 +103,7 @@ fun StreakDisplayCard(
                     .height(60.dp)
                     .background(AccentGold.copy(alpha = 0.3f))
             )
-            
+
             // Longest Streak
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
@@ -113,7 +115,7 @@ fun StreakDisplayCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.icon_trophy),
                         tint = AccentGold,
                         modifier = Modifier.size(28.dp)
                     )
@@ -126,7 +128,7 @@ fun StreakDisplayCard(
                     color = AccentGold
                 )
                 Text(
-                    text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.streak_longest),
+                    text = stringResource(com.mert.paticat.R.string.streak_longest),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -150,7 +152,7 @@ fun AchievementBadge(
         animationSpec = tween(500),
         label = "badge_color"
     )
-    
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -171,9 +173,9 @@ fun AchievementBadge(
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isUnlocked) 
-                MaterialTheme.colorScheme.onSurface 
-            else 
+            color = if (isUnlocked)
+                MaterialTheme.colorScheme.onSurface
+            else
                 MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -195,11 +197,11 @@ fun AnimatedCounter(
         animationSpec = tween(durationMillis = 1500),
         label = "counter"
     )
-    
+
     LaunchedEffect(targetValue) {
         animatedValue = targetValue.toFloat()
     }
-    
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier

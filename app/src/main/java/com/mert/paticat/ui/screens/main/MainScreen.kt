@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.mert.paticat.MainViewModel
 import com.mert.paticat.ui.navigation.PatiCatNavHost
@@ -22,9 +22,9 @@ fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
-    val startDestination by viewModel.startDestination.collectAsState()
-    val levelUpEvent by viewModel.levelUpEvent.collectAsState()
-    
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+    val levelUpEvent by viewModel.levelUpEvent.collectAsStateWithLifecycle()
+
     // Don't render until we have a start destination
     if (startDestination == null) {
         return
@@ -35,7 +35,7 @@ fun MainScreen(
         .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
     ) {
         PatiCatBackground(modifier = Modifier.fillMaxSize())
-        
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent
@@ -48,14 +48,14 @@ fun MainScreen(
                 )
             }
         }
-        
+
         // App-Level Overlay Notification
-        val rewardNotification by viewModel.rewardNotificationData.collectAsState()
+        val rewardNotification by viewModel.rewardNotificationData.collectAsStateWithLifecycle()
         com.mert.paticat.ui.components.RewardNotificationArea(
             rewardData = rewardNotification,
             onDismiss = { viewModel.clearRewardNotification() }
         )
-        
+
         // Level Up Celebration Overlay
         levelUpEvent?.let { newLevel ->
             com.mert.paticat.ui.components.LevelUpDialog(

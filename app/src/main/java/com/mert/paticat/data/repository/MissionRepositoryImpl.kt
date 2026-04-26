@@ -5,6 +5,8 @@ import com.mert.paticat.data.local.dao.UserProfileDao
 import com.mert.paticat.data.local.toDomain
 import com.mert.paticat.data.local.toDbString
 import com.mert.paticat.data.local.toEntity
+import com.mert.paticat.domain.model.EconomyConfig
+import com.mert.paticat.domain.model.EconomySource
 import com.mert.paticat.domain.model.Mission
 import com.mert.paticat.domain.model.MissionType
 import com.mert.paticat.domain.repository.CatRepository
@@ -12,7 +14,6 @@ import com.mert.paticat.domain.repository.MissionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
@@ -27,32 +28,32 @@ class MissionRepositoryImpl @Inject constructor(
     private val catRepository: CatRepository,
     private val userProfileDao: UserProfileDao
 ) : MissionRepository {
-    
+
     private val today: String get() = LocalDate.now().toDbString()
-    
+
     override fun getTodayMissions(): Flow<List<Mission>> {
         return missionDao.getMissionsForDate(today).map { list ->
             list.map { it.toDomain() }
         }
     }
-    
+
     override fun getActiveMissions(): Flow<List<Mission>> {
         return missionDao.getActiveMissionsForDate(today).map { list ->
             list.map { it.toDomain() }
         }
     }
-    
+
     override fun getCompletedMissions(): Flow<List<Mission>> {
         return missionDao.getCompletedMissionsForDate(today).map { list ->
             list.map { it.toDomain() }
         }
     }
-    
+
     override suspend fun generateDailyMissions() {
         // Load User Profile for Goals
         val profile = userProfileDao.getUserProfileOnce()
         val stepGoal = profile?.dailyStepGoal ?: 10000
-        
+
         // Calculate milestones based on user goals: 25%, 50%, 75%, 100%
         val stepMilestone1 = (stepGoal * 0.25).roundToInt()
         val stepMilestone2 = (stepGoal * 0.50).roundToInt()
@@ -61,14 +62,14 @@ class MissionRepositoryImpl @Inject constructor(
 
         // Check if missions already exist for today
         val existingMissions = missionDao.getMissionsForDateOnce(today)
-        
-        // Once all 4 missions are generated for today, lock them.
+
+        // Once all 5 missions are generated for today, lock them.
         // Goal changes mid-day will NOT regenerate missions (anti-exploit).
         // The new goal takes effect when missions are generated for the next day.
-        if (existingMissions.size >= 4) {
+        if (existingMissions.size >= 5) {
             return
         }
-        
+
         // Generate missions dynamically
         val missions = listOf(
             // --- Step Missions ---
@@ -78,7 +79,7 @@ class MissionRepositoryImpl @Inject constructor(
                 description = "mission_steps_tier1_desc", // "$stepMilestone1 adım at"
                 targetValue = stepMilestone1,
                 xpReward = 10,
-                foodPointReward = 10,
+                coinReward = EconomyConfig.MissionCoinRewards.STEPS_TIER_1,
                 type = MissionType.STEPS
             ),
             Mission(
@@ -87,44 +88,53 @@ class MissionRepositoryImpl @Inject constructor(
                 description = "mission_steps_tier2_desc",
                 targetValue = stepMilestone2,
                 xpReward = 20,
-                foodPointReward = 20,
+                coinReward = EconomyConfig.MissionCoinRewards.STEPS_TIER_2,
                 type = MissionType.STEPS
             ),
             Mission(
                 id = "steps_tier3_${today}",
                 title = "mission_steps_tier3_title", // "Adım Hedefi %75"
-                description = "mission_steps_tier3_desc", 
+                description = "mission_steps_tier3_desc",
                 targetValue = stepMilestone3,
                 xpReward = 30,
-                foodPointReward = 30,
+                coinReward = EconomyConfig.MissionCoinRewards.STEPS_TIER_3,
                 type = MissionType.STEPS
             ),
             Mission(
                 id = "steps_tier4_${today}",
                 title = "mission_steps_tier4_title", // "Adım Hedefi %100"
-                description = "mission_steps_tier4_desc", 
+                description = "mission_steps_tier4_desc",
                 targetValue = stepMilestone4,
                 xpReward = 50,
-                foodPointReward = 50,
+                coinReward = EconomyConfig.MissionCoinRewards.STEPS_TIER_4,
                 type = MissionType.STEPS
+            ),
+            Mission(
+                id = "games_tier1_${today}",
+                title = "mission_game_tier1_title",
+                description = "mission_game_tier1_desc",
+                targetValue = 3,
+                xpReward = 25,
+                coinReward = EconomyConfig.MissionCoinRewards.GAME_TIER_1,
+                type = MissionType.GAME
             )
         )
-        
+
         // Map to entities AND preserve current progress if missions existed
         val missionEntities = missions.map { newMission ->
             val oldMission = existingMissions.find { it.id == newMission.id }
             val currentVal = oldMission?.currentValue ?: 0
             // Re-check completion because targetValue might have changed
             val isCompleted = currentVal >= newMission.targetValue
-            
+
             newMission.copy(
                 currentValue = currentVal,
                 isCompleted = isCompleted
             ).toEntity()
         }
-        
+
         missionDao.insertMissions(missionEntities)
-        
+
         // Clean up old missions (older than 7 days)
         val weekAgo = LocalDate.now().minusDays(7).toDbString()
         try {
@@ -133,53 +143,72 @@ class MissionRepositoryImpl @Inject constructor(
             // Ignore clean up errors
         }
     }
-    
+
     override suspend fun updateMissionProgress(missionId: String, progress: Int) {
         val mission = missionDao.getMissionById(missionId) ?: return
         if (!mission.isCompleted) {
             missionDao.updateMissionProgress(missionId, progress)
-            
+
             // Check if mission is now complete
             if (progress >= mission.targetValue) {
                 completeMission(missionId)
             }
         }
     }
-    
+
     override suspend fun completeMission(missionId: String) {
         val mission = missionDao.getMissionById(missionId) ?: return
         if (!mission.isCompleted) {
             missionDao.completeMission(missionId)
-            
+
             // Award rewards
             catRepository.addXp(mission.xpReward)
             if (mission.foodPointReward > 0) {
-                catRepository.addCoins(mission.foodPointReward)
+                catRepository.addCoins(
+                    amount = mission.foodPointReward,
+                    source = EconomySource.MISSION_REWARD,
+                    note = mission.id
+                )
             }
             if (mission.coinReward > 0) {
-                catRepository.addCoins(mission.coinReward)
+                catRepository.addCoins(
+                    amount = mission.coinReward,
+                    source = EconomySource.MISSION_REWARD,
+                    note = mission.id
+                )
             }
-            
+
             // Increase cat happiness significantly for completing goals
             val missionType = try { MissionType.valueOf(mission.type) } catch (e: Exception) { null }
-            val happinessBoost = if (missionType == MissionType.STEPS) 10 else 5
+            val happinessBoost = when (missionType) {
+                MissionType.STEPS -> 10
+                MissionType.GAME -> 8
+                else -> 5
+            }
             // NOTE: mission.type is a String from entity; comparison is correct.
             catRepository.updateHappiness(happinessBoost)
         }
     }
-    
-    override suspend fun checkAndCompleteMissions(steps: Int?, waterMl: Int?) {
+
+    override suspend fun checkAndCompleteMissions(steps: Int?, waterMl: Int?, gameCount: Int?) {
         val missionList = missionDao.getMissionsForDateOnce(today)
-        
+
         missionList.forEach { mission ->
             if (!mission.isCompleted) {
                 var currentProgress = mission.currentValue
-                when (MissionType.valueOf(mission.type)) {
+                val missionType = try {
+                    MissionType.valueOf(mission.type)
+                } catch (e: Exception) {
+                    null
+                }
+
+                when (missionType) {
                     MissionType.STEPS -> if (steps != null) currentProgress = steps
                     MissionType.WATER -> if (waterMl != null) currentProgress = waterMl
+                    MissionType.GAME -> if (gameCount != null) currentProgress = gameCount
                     else -> {}
                 }
-                
+
                 if (currentProgress != mission.currentValue) {
                     updateMissionProgress(mission.id, currentProgress)
                 }

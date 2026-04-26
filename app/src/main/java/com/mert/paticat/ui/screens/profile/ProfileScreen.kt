@@ -43,8 +43,8 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val currentThemeName by viewModel.currentThemeColor.collectAsState(initial = "Pink")
-    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
+    val currentThemeName by viewModel.currentThemeColor.collectAsStateWithLifecycle(initialValue = "Pink")
+    val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle(initialValue = false)
 
     var showNameDialog by remember { mutableStateOf(false) }
     var showStepGoalDialog by remember { mutableStateOf(false) }
@@ -620,7 +620,7 @@ fun ProfileScreen(
             value = currentEditingWaterGoal,
             step = 250,
             maxValue = 10000,
-            unit = "ml",
+            unit = stringResource(R.string.unit_ml),
             color = PremiumBlue,
             onValueChange = { currentEditingWaterGoal = it },
             onConfirm = {

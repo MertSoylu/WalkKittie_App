@@ -20,6 +20,20 @@ class InteractionRepositoryImpl @Inject constructor(
     private val catInteractionDao: CatInteractionDao
 ) : InteractionRepository {
 
+    override suspend fun getTodayGameCount(): Int {
+        val todayStr = LocalDate.now().toDbString()
+        val gameTypes = listOf(
+            InteractionType.GAME_RPS,
+            InteractionType.GAME_SLOTS,
+            InteractionType.GAME_MEMORY,
+            InteractionType.GAME_REFLEX,
+            InteractionType.GAME_CATCH
+        )
+        return gameTypes.sumOf { type ->
+            catInteractionDao.getCountByTypeForDate(todayStr, type.name)
+        }
+    }
+
     override suspend fun logInteraction(
         type: InteractionType,
         foodItemId: String?,
@@ -84,6 +98,7 @@ class InteractionRepositoryImpl @Inject constructor(
         var gameSlotsCount = 0
         var gameMemoryCount = 0
         var gameReflexCount = 0
+        var gameCatchCount = 0
 
         for (entity in entities) {
             when (entity.type) {
@@ -94,6 +109,7 @@ class InteractionRepositoryImpl @Inject constructor(
                 InteractionType.GAME_SLOTS.name -> gameSlotsCount++
                 InteractionType.GAME_MEMORY.name -> gameMemoryCount++
                 InteractionType.GAME_REFLEX.name -> gameReflexCount++
+                InteractionType.GAME_CATCH.name -> gameCatchCount++
             }
         }
 
@@ -104,7 +120,8 @@ class InteractionRepositoryImpl @Inject constructor(
             gameRpsCount = gameRpsCount,
             gameSlotsCount = gameSlotsCount,
             gameMemoryCount = gameMemoryCount,
-            gameReflexCount = gameReflexCount
+            gameReflexCount = gameReflexCount,
+            gameCatchCount = gameCatchCount
         )
     }
 

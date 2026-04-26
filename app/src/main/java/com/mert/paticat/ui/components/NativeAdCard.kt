@@ -16,9 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -30,8 +30,6 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.mert.paticat.R
-import com.mert.paticat.ui.theme.PremiumBlue
-import com.mert.paticat.ui.theme.PremiumPink
 
 /**
  * A beautiful Native Ad card that blends into the app's UI.
@@ -42,6 +40,14 @@ fun NativeAdCard(
     modifier: Modifier = Modifier
 ) {
     if (nativeAd != null) {
+        val loadedAd = nativeAd
+        val label = stringResource(R.string.ad_label)
+        val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+        val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+        val ctaColor = MaterialTheme.colorScheme.primary.toArgb()
+        val ctaTextColor = MaterialTheme.colorScheme.onPrimary.toArgb()
+        val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
+
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -60,7 +66,7 @@ fun NativeAdCard(
                     modifier = Modifier.padding(bottom = 4.dp)
                 ) {
                     Text(
-                        "Reklam",
+                        label,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
@@ -72,11 +78,27 @@ fun NativeAdCard(
                     modifier = Modifier.fillMaxWidth(),
                     factory = { ctx ->
                         val adView = LayoutInflater.from(ctx).inflate(R.layout.ad_unified_home, null) as NativeAdView
-                        populateNativeAdView(nativeAd!!, adView)
+                        populateNativeAdView(
+                            nativeAd = loadedAd,
+                            adView = adView,
+                            textColor = textColor,
+                            secondaryTextColor = secondaryTextColor,
+                            ctaColor = ctaColor,
+                            ctaTextColor = ctaTextColor,
+                            surfaceColor = surfaceColor
+                        )
                         adView
                     },
                     update = { adView ->
-                        populateNativeAdView(nativeAd!!, adView)
+                        populateNativeAdView(
+                            nativeAd = loadedAd,
+                            adView = adView,
+                            textColor = textColor,
+                            secondaryTextColor = secondaryTextColor,
+                            ctaColor = ctaColor,
+                            ctaTextColor = ctaTextColor,
+                            surfaceColor = surfaceColor
+                        )
                     }
                 )
             }
@@ -84,7 +106,17 @@ fun NativeAdCard(
     }
 }
 
-private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
+private fun populateNativeAdView(
+    nativeAd: NativeAd,
+    adView: NativeAdView,
+    textColor: Int,
+    secondaryTextColor: Int,
+    ctaColor: Int,
+    ctaTextColor: Int,
+    surfaceColor: Int
+) {
+    adView.setBackgroundColor(surfaceColor)
+
     // Set the media view.
     adView.mediaView = adView.findViewById(R.id.ad_media)
 
@@ -97,7 +129,10 @@ private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
     adView.advertiserView = adView.findViewById(R.id.ad_advertiser)
 
     // The headline and mediaContent are guaranteed to be in every NativeAd.
-    (adView.headlineView as TextView).text = nativeAd.headline
+    (adView.headlineView as TextView).apply {
+        text = nativeAd.headline
+        setTextColor(textColor)
+    }
     nativeAd.mediaContent?.let { adView.mediaView?.setMediaContent(it) }
 
     // These assets aren't guaranteed to be in every NativeAd, so it's important to
@@ -106,14 +141,21 @@ private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
         adView.bodyView?.visibility = View.INVISIBLE
     } else {
         adView.bodyView?.visibility = View.VISIBLE
-        (adView.bodyView as TextView).text = nativeAd.body
+        (adView.bodyView as TextView).apply {
+            text = nativeAd.body
+            setTextColor(secondaryTextColor)
+        }
     }
 
     if (nativeAd.callToAction == null) {
         adView.callToActionView?.visibility = View.INVISIBLE
     } else {
         adView.callToActionView?.visibility = View.VISIBLE
-        (adView.callToActionView as Button).text = nativeAd.callToAction
+        (adView.callToActionView as Button).apply {
+            text = nativeAd.callToAction
+            setTextColor(ctaTextColor)
+            setBackgroundColor(ctaColor)
+        }
     }
 
     if (nativeAd.icon == null) {
@@ -128,7 +170,10 @@ private fun populateNativeAdView(nativeAd: NativeAd, adView: NativeAdView) {
     if (nativeAd.advertiser == null) {
         adView.advertiserView?.visibility = View.INVISIBLE
     } else {
-        (adView.advertiserView as TextView).text = nativeAd.advertiser
+        (adView.advertiserView as TextView).apply {
+            text = nativeAd.advertiser
+            setTextColor(secondaryTextColor)
+        }
         adView.advertiserView?.visibility = View.VISIBLE
     }
 

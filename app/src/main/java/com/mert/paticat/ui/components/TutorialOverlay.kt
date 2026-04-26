@@ -10,13 +10,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.stringResource
+import com.mert.paticat.R
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -25,14 +33,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mert.paticat.ui.theme.*
+import com.mert.paticat.utils.UiText
 
 /**
  * Tutorial step data class - simplified without targeting specific screen areas
  */
 data class TutorialTarget(
     val index: Int,
-    val title: String,
-    val description: String,
+    val title: UiText,
+    val description: UiText,
     val targetRect: Rect? = null // Not used in new design
 )
 
@@ -50,9 +59,9 @@ fun TutorialOverlay(
     onSkip: () -> Unit
 ) {
     if (!show || currentStep >= targets.size) return
-    
+
     val target = targets[currentStep]
-    
+
     // Animation for card entrance
     val animatedProgress by animateFloatAsState(
         targetValue = if (show) 1f else 0f,
@@ -62,9 +71,9 @@ fun TutorialOverlay(
         ),
         label = "tutorial_anim"
     )
-    
-    
-    
+
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -94,8 +103,7 @@ fun TutorialOverlay(
                     horizontalArrangement = Arrangement.End
                 ) {
                     IconButton(
-                        onClick = onSkip,
-                        modifier = Modifier.size(32.dp)
+                        onClick = onSkip
                     ) {
                         Icon(
                             Icons.Default.Close,
@@ -105,7 +113,7 @@ fun TutorialOverlay(
                         )
                     }
                 }
-                
+
                 // Step Indicator
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -114,7 +122,7 @@ fun TutorialOverlay(
                     targets.forEachIndexed { index, _ ->
                         val isActive = index == currentStep
                         val isPast = index < currentStep
-                        
+
                         Box(
                             modifier = Modifier
                                 .padding(horizontal = 4.dp)
@@ -130,47 +138,61 @@ fun TutorialOverlay(
                         )
                     }
                 }
-                
-                // Emoji Icon based on content
-                val emoji = when {
-                    target.title.contains("Enerji") || target.title.contains("Adım") -> "⚡"
-                    target.title.contains("Kedi") -> "🐱"
-                    target.title.contains("Sağlık") || target.title.contains("Durum") -> "❤️"
-                    target.title.contains("Oyun") -> "🎮"
-                    target.title.contains("İstatistik") || target.title.contains("Aktivite") -> "📊"
-                    target.title.contains("Regl") || target.title.contains("Döngü") -> "🌸"
-                    target.title.contains("Profil") -> "👤"
-                    else -> "✨"
+
+                // Cache title string down to avoid repeatedly calling asString()
+                val targetTitleStr = target.title.asString()
+
+                // Icon based on content
+                val tutorialIcon: ImageVector? = when {
+                    targetTitleStr.contains("Enerji") || targetTitleStr.contains("Adım") -> Icons.Filled.Bolt
+                    targetTitleStr.contains("Sağlık") || targetTitleStr.contains("Durum") -> Icons.Filled.Favorite
+                    targetTitleStr.contains("Oyun") -> Icons.Filled.SportsEsports
+                    targetTitleStr.contains("İstatistik") || targetTitleStr.contains("Aktivite") -> Icons.Filled.BarChart
+                    targetTitleStr.contains("Profil") -> Icons.Filled.Person
+                    else -> null
                 }
-                
-                Text(
-                    text = emoji,
-                    fontSize = 56.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
+
+                if (tutorialIcon != null) {
+                    Icon(
+                        imageVector = tutorialIcon,
+                        contentDescription = stringResource(R.string.icon_star),
+                        modifier = Modifier.padding(bottom = 16.dp).size(56.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Text(
+                        text = when {
+                            targetTitleStr.contains("Kedi") -> "🐱"
+                            targetTitleStr.contains("Regl") || targetTitleStr.contains("Döngü") -> "🌸"
+                            else -> "✨"
+                        },
+                        fontSize = 56.sp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
                 // Title
                 Text(
-                    text = target.title.replace(Regex("[⚡🐱❤️🎮📊🌸👤✨]"), "").trim(),
+                    text = targetTitleStr.replace(Regex("[⚡🐱❤️🎮📊🌸👤✨]"), "").trim(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
-                
+
                 // Description
                 Text(
-                    text = target.description,
+                    text = target.description.asString(),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Action Button
                 Button(
                     onClick = onNext,
@@ -187,9 +209,9 @@ fun TutorialOverlay(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = if (currentStep == targets.size - 1) 
-                                androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.tutorial_btn_finish) 
-                            else 
+                            text = if (currentStep == targets.size - 1)
+                                androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.tutorial_btn_finish)
+                            else
                                 androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.tutorial_btn_next),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -198,13 +220,13 @@ fun TutorialOverlay(
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 Icons.Default.ArrowForward,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.icon_star),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
-                
+
                 // Skip text for non-last steps
                 if (currentStep < targets.size - 1) {
                     TextButton(
@@ -218,7 +240,7 @@ fun TutorialOverlay(
                         )
                     }
                 }
-                
+
                 // Progress text
                 Text(
                     text = "${currentStep + 1} / ${targets.size}",

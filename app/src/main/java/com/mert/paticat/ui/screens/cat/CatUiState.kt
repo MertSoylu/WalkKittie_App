@@ -2,6 +2,7 @@ package com.mert.paticat.ui.screens.cat
 
 import com.mert.paticat.domain.model.Cat
 import com.mert.paticat.domain.model.CatMood
+import com.mert.paticat.domain.model.EconomyConfig
 import com.mert.paticat.domain.model.ShopItem
 import com.google.android.gms.ads.rewarded.RewardedAd
 
@@ -36,10 +37,13 @@ data class CatUiState(
 ) {
     val currentMood: CatMood
         get() = cat.mood
-    
+
     val canFeed: Boolean
         get() = inventory.any { it.value > 0 } && cat.hunger < 95
-    
+
+    val sleepAdsRemaining: Int
+        get() = (EconomyConfig.MAX_SLEEP_ADS_PER_SLEEP - sleepAdCount).coerceAtLeast(0)
+
     val moodEmoji: String
         get() = when (currentMood) {
             CatMood.IDLE -> "😸"
@@ -48,7 +52,7 @@ data class CatUiState(
             CatMood.SLEEPING -> "😴"
             CatMood.EXCITED -> "✨"
         }
-    
+
     val moodTextResId: Int
         get() = when (currentMood) {
             CatMood.HAPPY -> com.mert.paticat.R.string.cat_stat_happiness_label
@@ -73,6 +77,7 @@ data class GameUiState(
     val memoryFlippedIndices: List<Int> = emptyList(),
     val memoryMatchedPairs: Int = 0,
     val memoryMoves: Int = 0,
+    val memoryMismatchIndices: List<Int> = emptyList(),
     // Reflex
     val reflexTargets: List<ReflexTarget> = emptyList(),
     val reflexScore: Int = 0,
@@ -97,7 +102,7 @@ enum class MiniGameState {
 // Rock Paper Scissors
 enum class RockPaperScissors {
     ROCK, PAPER, SCISSORS;
-    
+
     fun beats(other: RockPaperScissors): Boolean {
         return (this == ROCK && other == SCISSORS) ||
                (this == PAPER && other == ROCK) ||

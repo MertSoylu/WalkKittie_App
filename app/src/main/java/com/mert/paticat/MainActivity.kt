@@ -6,8 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import com.mert.paticat.ui.theme.WalkkittieTheme
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 val savedLanguage = userPreferencesRepository.localeLanguage.first()
                 val currentAppLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
                 val currentLang = if (!currentAppLocales.isEmpty) currentAppLocales.get(0)?.language else null
-                
+
                 if (savedLanguage != currentLang) {
                         val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLanguage)
                         androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
@@ -77,14 +77,14 @@ class MainActivity : AppCompatActivity() {
 
         // Request necessary permissions on start
         checkPermissions()
-        
+
         // GDPR Consent (UMP) — ad initialization handled by AdManager.initialize() in Application class
         requestConsentInfoUpdate()
 
         setContent {
-            val isDarkMode by viewModel.isDarkMode.collectAsState()
-            val currentThemeColor by viewModel.currentThemeColor.collectAsState()
-            
+            val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
+            val currentThemeColor by viewModel.currentThemeColor.collectAsStateWithLifecycle()
+
             WalkkittieTheme(darkTheme = isDarkMode, themeColor = currentThemeColor) {
                 MainScreen()
             }
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
             stepCounterManager.initStepCounting()
         }
     }
-    
+
     private fun requestConsentInfoUpdate() {
         val params = ConsentRequestParameters.Builder().build()
         val consentInformation = UserMessagingPlatform.getConsentInformation(this)

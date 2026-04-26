@@ -11,6 +11,7 @@ enum class InteractionType {
     GAME_SLOTS,
     GAME_MEMORY,
     GAME_REFLEX,
+    GAME_CATCH,
     SLEEP,
     PET
 }
@@ -37,9 +38,11 @@ data class InteractionSummary(
     val gameRpsCount: Int = 0,
     val gameSlotsCount: Int = 0,
     val gameMemoryCount: Int = 0,
-    val gameReflexCount: Int = 0
+    val gameReflexCount: Int = 0,
+    val gameCatchCount: Int = 0
 ) {
-    val totalGames: Int get() = gameRpsCount + gameSlotsCount + gameMemoryCount + gameReflexCount
+    val totalGames: Int
+        get() = gameRpsCount + gameSlotsCount + gameMemoryCount + gameReflexCount + gameCatchCount
     val totalInteractions: Int get() = feedCount + petCount + sleepCount + totalGames
 
     /**

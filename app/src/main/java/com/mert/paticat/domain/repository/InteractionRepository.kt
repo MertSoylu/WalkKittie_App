@@ -36,5 +36,9 @@ interface InteractionRepository {
      * Get all interactions for a specific date.
      */
     fun getInteractionsForDate(date: LocalDate): Flow<List<CatInteraction>>
-}
 
+    /**
+     * Get total number of game interactions logged for today.
+     */
+    suspend fun getTodayGameCount(): Int
+}

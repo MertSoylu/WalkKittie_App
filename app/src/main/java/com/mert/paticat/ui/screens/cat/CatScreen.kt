@@ -58,6 +58,23 @@ import com.mert.paticat.domain.model.ShopItem
 import com.mert.paticat.ui.components.*
 import com.mert.paticat.ui.theme.*
 import com.mert.paticat.utils.SoundManager
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Backpack
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.OndemandVideo
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -68,6 +85,7 @@ fun CatScreen(
     viewModel: CatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val motionEnabled = rememberMotionEnabled()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
@@ -131,8 +149,8 @@ fun CatScreen(
             viewModel.loadFoodAd()
         }
     }
-    LaunchedEffect(uiState.cat.energy, isSleeping, uiState.isNetworkAvailable, uiState.sleepAdState) {
-        if ((isSleeping || uiState.cat.energy < 30) && uiState.isNetworkAvailable && uiState.sleepAdState is AdState.Idle) {
+    LaunchedEffect(isSleeping, uiState.isNetworkAvailable, uiState.sleepAdState, uiState.sleepAdsRemaining) {
+        if (isSleeping && uiState.sleepAdsRemaining > 0 && uiState.isNetworkAvailable && uiState.sleepAdState is AdState.Idle) {
             viewModel.loadSleepAd()
         }
     }
@@ -205,9 +223,9 @@ fun CatScreen(
                                         color = Color.White,
                                         strokeWidth = 2.dp
                                     )
-                                    AdState.Error -> Text("⚠️", fontSize = 11.sp)
+                                    AdState.Error -> Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.icon_warning), modifier = Modifier.size(12.dp), tint = Color.White)
                                     else -> {
-                                        Text("📺", fontSize = 11.sp)
+                                        Icon(Icons.Filled.OndemandVideo, contentDescription = stringResource(R.string.icon_video), modifier = Modifier.size(12.dp), tint = Color.White)
                                         Spacer(modifier = Modifier.width(2.dp))
                                         Text(
                                             "+${ShopItem.GOLD_PER_AD} 🪙 ($adsRemaining)",
@@ -258,101 +276,140 @@ fun CatScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ==================== CAT VISUAL AREA ====================
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(260.dp),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = RoundedCornerShape(32.dp),
+                            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            shape = RoundedCornerShape(32.dp)
+                        ),
+                    shape = RoundedCornerShape(32.dp),
+                    color = MaterialTheme.colorScheme.surface
                 ) {
-                    // Radial gradient background
                     Box(
                         modifier = Modifier
-                            .size(280.dp)
-                            .clip(CircleShape)
+                            .fillMaxSize()
                             .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                        Color.Transparent
+                                Brush.verticalGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
                                     )
                                 )
-                            )
-                    )
-
-                    val catSleeping = viewModel.isCatSleeping()
-                    val currentImageRes = getCatImageResource(uiState.cat, catSleeping)
-
-                    Crossfade(
-                        targetState = currentImageRes,
-                        animationSpec = tween(600),
-                        label = "catMood"
-                    ) { resId ->
-                        Image(
-                            painter = painterResource(id = resId),
-                            contentDescription = null,
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Radial stage glow
+                        Box(
                             modifier = Modifier
-                                .size(260.dp)
-                                .onGloballyPositioned { coords ->
-                                    val bounds = coords.boundsInWindow()
-                                    catCenter = Offset(bounds.center.x, bounds.center.y)
-                                }
-                                .clickable(enabled = !catSleeping) {
-                                    val now = System.currentTimeMillis()
-                                    if (now - lastClickTime < 500) catClicks++ else catClicks = 1
-                                    lastClickTime = now
-                                    if (catClicks > 3) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        catClicks = 0
-                                    } else {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        soundManager.playPurr()
-                                    }
-                                    viewModel.petCat()
-                                },
-                            contentScale = ContentScale.Fit
+                                .size(280.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                            Color.Transparent
+                                        )
+                                    )
+                                )
                         )
-                    }
 
-                    // Floating Heart
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = showHeart,
-                        enter = fadeIn(tween(200)),
-                        exit = fadeOut(tween(600)) + slideOutVertically(tween(600)) { -it },
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    ) {
-                        Text("❤️", fontSize = 48.sp, modifier = Modifier.padding(bottom = 16.dp))
-                    }
+                        val catSleeping = viewModel.isCatSleeping()
+                        val currentImageRes = getCatImageResource(uiState.cat, catSleeping)
 
-                    // Booster & Shop FABs
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 8.dp, end = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val activeBooters = viewModel.getActiveBooters()
-                        boosterRefreshTick // Force recompose for timer update
-                        // Booster button (only show if there's an active booster)
-                        if (activeBooters.isNotEmpty()) {
-                            Surface(
+                        Crossfade(
+                            targetState = currentImageRes,
+                            animationSpec = tween(if (motionEnabled) 600 else 0),
+                            label = "catMood"
+                        ) { resId ->
+                            Image(
+                                painter = painterResource(id = resId),
+                                contentDescription = stringResource(R.string.cat_image_description, uiState.cat.name),
                                 modifier = Modifier
-                                    .bounceClick { showBoosterDialog = true },
-                                shape = RoundedCornerShape(50),
-                                color = PremiumBlue.copy(alpha = 0.25f),
-                                shadowElevation = 2.dp
-                            ) {
-                                Text(activeBooters.first().emoji, fontSize = 22.sp, modifier = Modifier.padding(10.dp))
-                            }
+                                    .size(268.dp)
+                                    .onGloballyPositioned { coords ->
+                                        val bounds = coords.boundsInWindow()
+                                        catCenter = Offset(bounds.center.x, bounds.center.y)
+                                    }
+                                    .clickable(enabled = !catSleeping) {
+                                        val now = System.currentTimeMillis()
+                                        if (now - lastClickTime < 500) catClicks++ else catClicks = 1
+                                        lastClickTime = now
+                                        if (catClicks > 3) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            catClicks = 0
+                                        } else {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            soundManager.playPurr()
+                                        }
+                                        viewModel.petCat()
+                                    },
+                                contentScale = ContentScale.Fit
+                            )
                         }
 
-                        // Shop FAB
-                        Surface(
-                            modifier = Modifier
-                                .bounceClick { showShop = true },
-                            shape = RoundedCornerShape(50),
-                            color = AccentGold.copy(alpha = 0.20f),
-                            shadowElevation = 2.dp
+                        // Floating Heart
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = showHeart,
+                            enter = fadeIn(tween(if (motionEnabled) 200 else 0)),
+                            exit = fadeOut(tween(if (motionEnabled) 600 else 0)) + slideOutVertically(tween(if (motionEnabled) 600 else 0)) { -it },
+                            modifier = Modifier.align(Alignment.TopCenter)
                         ) {
-                            Text("🛒", fontSize = 22.sp, modifier = Modifier.padding(10.dp))
+                            Icon(Icons.Filled.Favorite, contentDescription = stringResource(R.string.icon_favorite), modifier = Modifier.padding(bottom = 16.dp).size(48.dp), tint = PremiumPink)
+                        }
+
+                        // Booster & Shop FABs
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 12.dp, end = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val activeBooters = viewModel.getActiveBoosters()
+                            boosterRefreshTick // Force recompose for timer update
+                            // Booster button (only show if there's an active booster)
+                            if (activeBooters.isNotEmpty()) {
+                                Surface(
+                                    modifier = Modifier
+                                        .sizeIn(minWidth = Dimensions.touchTargetMin, minHeight = Dimensions.touchTargetMin)
+                                        .bounceClick { showBoosterDialog = true },
+                                    shape = RoundedCornerShape(50),
+                                    color = PremiumBlue.copy(alpha = 0.25f),
+                                    shadowElevation = 2.dp
+                                ) {
+                                    Icon(
+                                        imageVector = when (activeBooters.first().emoji) {
+                                            "👟" -> Icons.Filled.DirectionsRun
+                                            "⭐" -> Icons.Filled.Star
+                                            else -> Icons.Filled.AutoAwesome
+                                        },
+                                        contentDescription = stringResource(R.string.booster_title),
+                                        modifier = Modifier.padding(10.dp).size(22.dp),
+                                        tint = PremiumBlue
+                                    )
+                                }
+                            }
+
+                            // Shop FAB
+                            Surface(
+                                modifier = Modifier
+                                    .sizeIn(minWidth = Dimensions.touchTargetMin, minHeight = Dimensions.touchTargetMin)
+                                    .bounceClick { showShop = true },
+                                shape = RoundedCornerShape(50),
+                                color = AccentGold.copy(alpha = 0.20f),
+                                shadowElevation = 2.dp
+                            ) {
+                                Icon(Icons.Filled.ShoppingCart, contentDescription = stringResource(R.string.icon_shopping_cart), modifier = Modifier.padding(10.dp).size(22.dp), tint = AccentGold)
+                            }
                         }
                     }
                 }
@@ -392,19 +449,19 @@ fun CatScreen(
                                 val animatedHappy by animateIntAsState(targetValue = uiState.cat.happiness, label = "happiness")
 
                                 CircularStatItem(
-                                    emoji = "🍖",
+                                    icon = Icons.Filled.Fastfood,
                                     label = stringResource(R.string.cat_stat_hunger),
                                     value = animatedHunger,
                                     color = PremiumPeach
                                 )
                                 CircularStatItem(
-                                    emoji = "⚡",
+                                    icon = Icons.Filled.Bolt,
                                     label = stringResource(R.string.cat_stat_energy),
                                     value = animatedEnergy,
                                     color = PremiumBlue
                                 )
                                 CircularStatItem(
-                                    emoji = "💖",
+                                    icon = Icons.Filled.Favorite,
                                     label = stringResource(R.string.cat_stat_happiness),
                                     value = animatedHappy,
                                     color = PremiumPink
@@ -419,7 +476,7 @@ fun CatScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text("⭐", fontSize = 14.sp)
+                                Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.icon_xp), modifier = Modifier.size(14.dp), tint = AccentGold)
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -506,6 +563,28 @@ fun CatScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
+            // Loading state overlay — fades out once data is ready
+            AnimatedVisibility(
+                visible = uiState.isLoading,
+                enter = fadeIn(),
+                exit = fadeOut(animationSpec = tween(400))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text("🐱", fontSize = 64.sp)
+                        CircularProgressIndicator(modifier = Modifier.size(36.dp))
+                    }
+                }
+            }
+
             // Shop overlay
             AnimatedVisibility(
                 visible = showShop,
@@ -526,7 +605,7 @@ fun CatScreen(
 
 @Composable
 private fun CircularStatItem(
-    emoji: String,
+    icon: ImageVector,
     label: String,
     value: Int,
     color: Color
@@ -538,7 +617,7 @@ private fun CircularStatItem(
             size = 68.dp,
             strokeWidth = 6.dp
         ) {
-            Text(emoji, fontSize = 22.sp)
+            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp), tint = color)
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -581,7 +660,7 @@ private fun MyCatTabContent(
         ) {
             ActionPillButton(
                 modifier = Modifier.weight(1f),
-                emoji = "🎮",
+                icon = Icons.Filled.SportsEsports,
                 label = stringResource(R.string.cat_action_play),
                 accentColor = MaterialTheme.colorScheme.primary,
                 enabled = canPlay,
@@ -592,7 +671,7 @@ private fun MyCatTabContent(
             )
             ActionPillButton(
                 modifier = Modifier.weight(1f),
-                emoji = "💤",
+                icon = Icons.Filled.Bedtime,
                 label = stringResource(R.string.cat_action_sleep),
                 accentColor = PremiumBlue,
                 enabled = sleepEnabled,
@@ -612,7 +691,7 @@ private fun MyCatTabContent(
 @Composable
 private fun ActionPillButton(
     modifier: Modifier = Modifier,
-    emoji: String,
+    icon: ImageVector,
     label: String,
     accentColor: Color,
     enabled: Boolean,
@@ -620,31 +699,36 @@ private fun ActionPillButton(
 ) {
     Surface(
         modifier = modifier
-            .height(72.dp)
-            .bounceClick { if (enabled) onClick() },
-        shape = RoundedCornerShape(20.dp),
-        color = if (enabled) accentColor.copy(alpha = 0.18f)
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        shadowElevation = if (enabled) 4.dp else 0.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.5.dp,
-            color = if (enabled) accentColor.copy(alpha = 0.5f)
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-        )
+            .height(84.dp)
+            .bounceClick { if (enabled) onClick() }
+            .shadow(
+                elevation = if (enabled) 12.dp else 4.dp,
+                shape = RoundedCornerShape(32.dp),
+                spotColor = accentColor.copy(alpha = 0.5f),
+                ambientColor = accentColor.copy(alpha = 0.2f)
+            )
+            .border(
+                width = 2.dp,
+                color = if (enabled) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(32.dp)
+            ),
+        shape = RoundedCornerShape(32.dp),
+        color = if (enabled) accentColor.copy(alpha = 0.15f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(emoji, fontSize = 26.sp)
-            Spacer(modifier = Modifier.height(4.dp))
+            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(28.dp), tint = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
                 color = if (enabled) accentColor
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -663,71 +747,98 @@ private fun ActionCard(
 ) {
     val displayAlpha = if (enabled) 1f else 0.5f
 
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        accentColor.copy(alpha = if (enabled) 0.15f else 0.05f),
-                        accentColor.copy(alpha = if (enabled) 0.04f else 0.01f)
-                    )
-                )
-            )
             .bounceClick { if (enabled) onClick() }
+            .shadow(
+                elevation = if (enabled) 12.dp else 4.dp,
+                shape = RoundedCornerShape(32.dp),
+                spotColor = accentColor.copy(alpha = 0.4f),
+                ambientColor = accentColor.copy(alpha = 0.1f)
+            )
+            .border(
+                width = 2.dp,
+                color = if (enabled) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(32.dp)
+            ),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = if (enabled) 0.18f else 0.08f),
+                            accentColor.copy(alpha = if (enabled) 0.05f else 0.02f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    )
+                )
         ) {
-            // Gradient emoji circle
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            listOf(
-                                accentColor.copy(alpha = if (enabled) 0.30f else 0.10f),
-                                accentColor.copy(alpha = if (enabled) 0.10f else 0.03f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    emoji,
-                    fontSize = 28.sp,
-                    color = if (enabled) Color.Unspecified else Color.White.copy(alpha = 0.4f)
-                )
+                // Gradient emoji circle
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    accentColor.copy(alpha = if (enabled) 0.35f else 0.15f),
+                                    accentColor.copy(alpha = if (enabled) 0.10f else 0.03f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        emoji,
+                        fontSize = 32.sp,
+                        color = if (enabled) Color.Unspecified else Color.White.copy(alpha = 0.4f)
+                    )
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        title,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 20.sp,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (enabled) accentColor.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                // Arrow indicator
+                Surface(
+                    shape = CircleShape,
+                    color = accentColor.copy(alpha = if (enabled) 0.15f else 0.05f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "›",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor.copy(alpha = displayAlpha)
+                        )
+                    }
+                }
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (enabled) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            // Arrow indicator
-            Text(
-                "›",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Light,
-                color = accentColor.copy(alpha = displayAlpha)
-            )
         }
     }
 }
@@ -741,65 +852,84 @@ private fun SleepingStateCard(
     tick: Int,
     context: android.content.Context
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Sleep countdown card — soft blue gradient
-        Box(
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Sleep countdown card — Claymorphism
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(32.dp),
+                    spotColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                    ambientColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                )
+                .border(
+                    width = 2.dp,
+                    color = Color.White.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(32.dp)
+                ),
+            shape = RoundedCornerShape(32.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.20f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+                            )
                         )
                     )
-                )
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(28.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Moon icon in gradient circle
-                Box(
+                Column(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.30f),
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
+                        .padding(32.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("💤", fontSize = 26.sp)
+                    // Moon icon in gradient circle
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .shadow(8.dp, CircleShape, spotColor = MaterialTheme.colorScheme.secondary)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.40f),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Bedtime, contentDescription = stringResource(R.string.cat_action_sleep), modifier = Modifier.size(34.dp), tint = MaterialTheme.colorScheme.secondary)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        stringResource(R.string.cat_sleeping_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val remainingTime = remember(tick) { viewModel.getSleepRemainingTime() }
+                    Text(
+                        remainingTime,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    stringResource(R.string.cat_sleeping_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                val remainingTime = remember(tick) { viewModel.getSleepRemainingTime() }
-                Text(
-                    remainingTime,
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
 
         // Watch ad button — gradient pill
         val sleepAdState = uiState.sleepAdState
-        val adReady = sleepAdState is AdState.Loaded && uiState.isNetworkAvailable
+        val sleepAdsRemaining = uiState.sleepAdsRemaining
+        val adReady = sleepAdState is AdState.Loaded && uiState.isNetworkAvailable && sleepAdsRemaining > 0
 
         Box(
             modifier = Modifier
@@ -823,10 +953,10 @@ private fun SleepingStateCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("📺", fontSize = 24.sp)
+                Icon(Icons.Filled.OndemandVideo, contentDescription = stringResource(R.string.icon_video), modifier = Modifier.size(24.dp), tint = if (adReady) Color.White else Color.White.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    stringResource(R.string.cat_ad_reduce_sleep),
+                    "${stringResource(R.string.cat_ad_reduce_sleep)} ($sleepAdsRemaining)",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (adReady) Color.White else Color.White.copy(alpha = 0.5f)
@@ -837,6 +967,7 @@ private fun SleepingStateCard(
         // Status text
         val statusText = when {
             !uiState.isNetworkAvailable -> stringResource(R.string.cat_no_internet)
+            sleepAdsRemaining <= 0 -> stringResource(R.string.cat_ad_limit_reached)
             sleepAdState is AdState.Loading -> stringResource(R.string.cat_ad_loading)
             sleepAdState is AdState.Error -> stringResource(R.string.cat_ad_error)
             else -> null
@@ -888,7 +1019,7 @@ private fun ShopTabContent(
                         )
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("🎒", fontSize = 15.sp) }
+            ) { Icon(Icons.Filled.Backpack, contentDescription = null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary) }
             Text(
                 stringResource(R.string.inventory_section_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -904,13 +1035,19 @@ private fun ShopTabContent(
                     .clip(RoundedCornerShape(20.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
             ) {
-                Text(
-                    stringResource(R.string.inventory_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(20.dp),
-                    textAlign = TextAlign.Center
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("📦", fontSize = 36.sp)
+                    Text(
+                        stringResource(R.string.inventory_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         } else {
             LazyRow(
@@ -957,7 +1094,7 @@ private fun ShopTabContent(
                         )
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("🛒", fontSize = 15.sp) }
+            ) { Icon(Icons.Filled.ShoppingCart, contentDescription = null, modifier = Modifier.size(15.dp), tint = AccentGold) }
             Text(
                 stringResource(R.string.shop_section_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -1071,7 +1208,7 @@ private fun InventorySection(
                         )
                     ),
                 contentAlignment = Alignment.Center
-            ) { Text("🎒", fontSize = 15.sp) }
+            ) { Icon(Icons.Filled.Backpack, contentDescription = null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary) }
             Text(
                 stringResource(R.string.inventory_section_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -1196,7 +1333,7 @@ private fun ShopOverlay(
                                 .background(Color.White.copy(alpha = 0.10f))
                                 .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
                             contentAlignment = Alignment.Center
-                        ) { Text("🛒", fontSize = 15.sp) }
+                        ) { Icon(Icons.Filled.ShoppingCart, contentDescription = null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurface) }
                         Text(
                             stringResource(R.string.shop_section_title),
                             style = MaterialTheme.typography.titleMedium,
@@ -1204,7 +1341,7 @@ private fun ShopOverlay(
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Text("✕", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Filled.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -1309,34 +1446,73 @@ private fun BoostItemCard(
         stringResource(R.string.shop_boost_active, timeStr)
     } else null
 
-    val boostShape = RoundedCornerShape(20.dp)
-    Box(
+    val cardShape = RoundedCornerShape(32.dp)
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(boostShape)
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(1.dp, Color.White.copy(alpha = 0.10f), boostShape)
+            .shadow(
+                elevation = if (!isActive && gold >= item.price) 8.dp else 2.dp,
+                shape = cardShape,
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            )
+            .border(2.dp, Color.White.copy(alpha = 0.3f), cardShape),
+        shape = cardShape,
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color.White.copy(alpha = 0.3f), Color.White.copy(alpha = 0.05f))
+                    )
+                )
         ) {
-            Text(item.emoji, fontSize = 32.sp)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(item.nameResId), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(stringResource(item.descResId), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (remainingText != null) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(remainingText, style = MaterialTheme.typography.labelSmall, color = AccentGold, fontWeight = FontWeight.SemiBold)
-                }
-            }
-            Button(
-                onClick = onBuy,
-                enabled = !isActive && gold >= item.price,
-                shape = RoundedCornerShape(12.dp)
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("⚡ ${item.price}", style = MaterialTheme.typography.labelMedium)
+                // Bento emoji box
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(item.emoji, fontSize = 36.sp)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(stringResource(item.nameResId), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(item.descResId), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                    if (remainingText != null) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(remainingText, style = MaterialTheme.typography.labelSmall, color = AccentGold, fontWeight = FontWeight.Black)
+                    }
+                }
+                // Bento Buy Button
+                Box(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .padding(start = 8.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (!isActive && gold >= item.price) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primary.copy(alpha=0.8f)))
+                            else Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha=0.3f), MaterialTheme.colorScheme.primary.copy(alpha=0.1f)))
+                        )
+                        .then(if (!isActive && gold >= item.price) Modifier.bounceClick { onBuy() } else Modifier),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "⚡ ${item.price}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
             }
         }
     }
@@ -1408,15 +1584,15 @@ private fun InventoryChipCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .height(Dimensions.touchTargetMin)
+                    .clip(RoundedCornerShape(14.dp))
                     .background(
                         if (canFeed && quantity > 0)
                             Brush.horizontalGradient(listOf(primary, primary.copy(alpha = 0.7f)))
                         else
                             Brush.horizontalGradient(listOf(primary.copy(alpha = 0.3f), primary.copy(alpha = 0.15f)))
                     )
-                    .then(if (canFeed && quantity > 0) Modifier.clickable { onFeed() } else Modifier),
+                    .then(if (canFeed && quantity > 0) Modifier.bounceClick { onFeed() } else Modifier),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -1443,84 +1619,96 @@ private fun ShopItemCard(
     val inventoryFull = ownedQty >= ShopItem.MAX_INVENTORY_PER_ITEM
     val canBuy = canAfford && !inventoryFull
 
-    val cardShape = RoundedCornerShape(24.dp)
-    Box(
+    val cardShape = RoundedCornerShape(32.dp)
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(cardShape)
-            .background(
-                Brush.verticalGradient(
-                    if (canBuy)
-                        listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.06f))
-                    else
-                        listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f))
-                )
+            .shadow(
+                elevation = if (canBuy) 8.dp else 2.dp,
+                shape = cardShape,
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )
-            .border(1.dp, Color.White.copy(alpha = 0.12f), cardShape)
+            .border(2.dp, Color.White.copy(alpha = 0.2f), cardShape),
+        shape = cardShape,
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // Emoji in glass circle
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(item.emoji, fontSize = 28.sp)
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                stringResource(item.nameResId),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-            val statText = if (item.category == ShopCategory.ENERGY)
-                "+${item.energyBoost} ⚡ +${item.hungerRestore} 🍖"
-            else
-                "+${item.hungerRestore} 🍖 +${item.happinessBoost} 😊"
-            Text(
-                statText,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (inventoryFull) {
-                Text(
-                    stringResource(R.string.shop_inventory_full_label, ownedQty, ShopItem.MAX_INVENTORY_PER_ITEM),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        if (canBuy)
+                            listOf(Color.White.copy(alpha = 0.4f), Color.White.copy(alpha = 0.1f))
+                        else
+                            listOf(Color.White.copy(alpha = 0.1f), Color.White.copy(alpha = 0.05f))
+                    )
                 )
-            } else {
-                // Gradient buy button
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Emoji in larger bento circle
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(32.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (canAfford)
-                                Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.85f), AccentGold.copy(alpha = 0.55f)))
-                            else
-                                Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.20f), AccentGold.copy(alpha = 0.10f)))
-                        )
-                        .then(if (canAfford) Modifier.clickable { onBuy() } else Modifier),
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
+                    Text(item.emoji, fontSize = 34.sp)
+                }
+                Text(
+                    stringResource(item.nameResId),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+                val statText = if (item.category == ShopCategory.ENERGY)
+                    "+${item.energyBoost} ⚡ +${item.hungerRestore} 🍖"
+                else
+                    "+${item.hungerRestore} 🍖 +${item.happinessBoost} 😊"
+                Text(
+                    statText,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (inventoryFull) {
                     Text(
-                        "${item.price} 🪙",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (canAfford) Color.White else Color.White.copy(alpha = 0.5f)
+                        stringResource(R.string.shop_inventory_full_label, ownedQty, ShopItem.MAX_INVENTORY_PER_ITEM),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Black
                     )
+                } else {
+                    // Gradient buy button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (canAfford)
+                                    Brush.horizontalGradient(listOf(AccentGold, AccentGold.copy(alpha = 0.7f)))
+                                else
+                                    Brush.horizontalGradient(listOf(AccentGold.copy(alpha = 0.3f), AccentGold.copy(alpha = 0.15f)))
+                            )
+                            .then(if (canAfford) Modifier.bounceClick { onBuy() } else Modifier),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "${item.price} 🪙",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Black,
+                            color = if (canAfford) Color.White else Color.White.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
         }
@@ -1565,10 +1753,11 @@ fun GameChoiceBtn(emoji: String, choice: RockPaperScissors, onClick: (RockPaperS
 @Composable
 fun GoldTutorialDialog(onDismiss: () -> Unit) {
     val pages = listOf(
-        Triple(stringResource(R.string.gold_tutorial_title_1), stringResource(R.string.gold_tutorial_desc_1), "🪙"),
-        Triple(stringResource(R.string.gold_tutorial_title_2), stringResource(R.string.gold_tutorial_desc_2), "📺"),
-        Triple(stringResource(R.string.gold_tutorial_title_3), stringResource(R.string.gold_tutorial_desc_3), "🛒")
+        Pair(stringResource(R.string.gold_tutorial_title_1), stringResource(R.string.gold_tutorial_desc_1)),
+        Pair(stringResource(R.string.gold_tutorial_title_2), stringResource(R.string.gold_tutorial_desc_2)),
+        Pair(stringResource(R.string.gold_tutorial_title_3), stringResource(R.string.gold_tutorial_desc_3))
     )
+    val pageIcons = listOf(Icons.Filled.MonetizationOn, Icons.Filled.OndemandVideo, Icons.Filled.ShoppingCart)
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
@@ -1629,7 +1818,12 @@ fun GoldTutorialDialog(onDismiss: () -> Unit) {
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(pages[page].third, fontSize = 52.sp)
+                            Icon(
+                                imageVector = pageIcons[page],
+                                contentDescription = null,
+                                modifier = Modifier.size(52.dp),
+                                tint = when (page) { 0 -> AccentGold; 1 -> PremiumMint; else -> PremiumBlue }
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
@@ -1713,7 +1907,7 @@ fun BoosterDialog(
     onDismiss: () -> Unit
 ) {
     tick // Use tick to trigger recomposition for timer updates
-    val activeBooters = viewModel.getActiveBooters()
+    val activeBooters = viewModel.getActiveBoosters()
 
     if (activeBooters.isEmpty()) {
         onDismiss()
@@ -1767,7 +1961,16 @@ fun BoosterDialog(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Text(booster.emoji, fontSize = 24.sp)
+                                    Icon(
+                                        imageVector = when (booster.emoji) {
+                                            "👟" -> Icons.Filled.DirectionsRun
+                                            "⭐" -> Icons.Filled.Star
+                                            else -> Icons.Filled.AutoAwesome
+                                        },
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = PremiumBlue
+                                    )
                                     Column {
                                         Text(
                                             text = booster.name,

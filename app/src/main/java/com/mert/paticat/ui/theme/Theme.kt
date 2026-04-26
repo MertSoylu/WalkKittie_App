@@ -33,7 +33,7 @@ fun WalkkittieTheme(
         ThemeColor.Purple -> PremiumPurple
         ThemeColor.Orange -> PremiumPeach
     }
-    
+
     val secondaryColor = when(themeColor) {
         ThemeColor.Pink -> PremiumBlue
         ThemeColor.Blue -> PremiumPink
@@ -49,12 +49,15 @@ fun WalkkittieTheme(
             primaryContainer = primaryColor.copy(alpha = 0.7f), // Increased opacity for better text contrast
             secondary = secondaryColor,
             onSecondary = Color.White,
+            tertiary = AccentGold,
+            onTertiary = Color(0xFF2E2100),
             background = BackgroundDark,
             onBackground = Color.White,
             surface = SurfaceDark,
             onSurface = Color.White,
             surfaceVariant = Color(0x40252525), // ~25% opaque — glassmorphism
-            onSurfaceVariant = Color.LightGray
+            onSurfaceVariant = Color.LightGray,
+            outlineVariant = Color.White.copy(alpha = 0.14f)
         )
     } else {
         lightColorScheme(
@@ -64,10 +67,15 @@ fun WalkkittieTheme(
             onPrimaryContainer = Color.Black,
             secondary = secondaryColor,
             onSecondary = Color.White,
+            tertiary = AccentGold,
+            onTertiary = Color(0xFF2E2100),
             background = BackgroundLight,
+            onBackground = TextHighEmphasis,
             surface = SurfaceLight,
             surfaceVariant = Color.White,
-            onSurfaceVariant = TextMediumEmphasis
+            onSurface = TextHighEmphasis,
+            onSurfaceVariant = TextMediumEmphasis,
+            outlineVariant = Color.Black.copy(alpha = 0.08f)
         )
     }
 
@@ -77,7 +85,7 @@ fun WalkkittieTheme(
             val window = (view.context as Activity).window
             window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()
-            
+
             WindowCompat.getInsetsController(window, view).apply {
                  isAppearanceLightStatusBars = !darkTheme
                  isAppearanceLightNavigationBars = !darkTheme

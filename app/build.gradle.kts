@@ -17,7 +17,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 10
-        versionName = "1.2.0"
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -34,7 +34,7 @@ android {
         val sleepAdId = localProperties.getProperty("SLEEP_AD_ID") ?: ""
 
         manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
-        
+
         buildConfigField("String", "NATIVE_AD_ID", "\"$nativeAdId\"")
         buildConfigField("String", "FOOD_AD_ID", "\"$foodAdId\"")
         buildConfigField("String", "SLEEP_AD_ID", "\"$sleepAdId\"")
@@ -50,12 +50,12 @@ android {
             )
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    
+
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -88,31 +88,33 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-    
+
     // Lottie
     implementation(libs.lottie.compose)
-    
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // WorkManager for reminders
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
     ksp("androidx.hilt:hilt-compiler:1.2.0")
-    
+
     // Testing
     testImplementation(libs.junit)
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -121,9 +123,13 @@ dependencies {
     // AdMob & UMP (GDPR)
     implementation(libs.play.services.ads)
     implementation("com.google.android.ump:user-messaging-platform:3.0.0")
-    
+
     // In-App Update
     implementation(libs.play.app.update)
     implementation(libs.play.app.update.ktx)
     implementation(libs.androidx.compose.ui.text.google.fonts)
+
+    // Glance App Widget
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
 }

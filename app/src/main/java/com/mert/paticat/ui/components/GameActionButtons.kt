@@ -35,7 +35,7 @@ fun GameActionButtons(
             shape = RoundedCornerShape(16.dp),
             contentPadding = PaddingValues(horizontal = 8.dp)
         ) {
-            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.icon_refresh), modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.btn_play_again),
@@ -50,7 +50,7 @@ fun GameActionButtons(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             contentPadding = PaddingValues(horizontal = 8.dp)
         ) {
-            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.icon_close), modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.btn_close),

@@ -2,9 +2,12 @@ package com.mert.paticat.ui.screens.cat
 
 import android.content.Context
 import com.mert.paticat.R
+import com.mert.paticat.domain.model.EconomyConfig
+import com.mert.paticat.domain.model.EconomySource
 import com.mert.paticat.domain.model.InteractionType
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.InteractionRepository
+import com.mert.paticat.domain.repository.MissionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,6 +29,7 @@ class GameDelegate(
     private val scope: CoroutineScope,
     private val catRepository: CatRepository,
     private val interactionRepository: InteractionRepository,
+    private val missionRepository: MissionRepository,
     private val context: Context,
     private val onMessage: (String) -> Unit
 ) {
@@ -40,13 +44,20 @@ class GameDelegate(
 
     // ===== Game entry =====
 
-    fun startGame(type: GameType, catEnergy: Int, catLevel: Int, isSleeping: Boolean, sleepTimeStr: String) {
+    fun startGame(
+        type: GameType,
+        catEnergy: Int,
+        catLevel: Int,
+        isSleeping: Boolean,
+        sleepTimeStr: String,
+        ignoreEnergyLimit: Boolean = false
+    ) {
         if (catLevel < type.minLevel) return
         if (isSleeping) {
             onMessage(context.getString(R.string.cat_msg_sleeping, sleepTimeStr))
             return
         }
-        if (catEnergy < type.energyCost) {
+        if (!ignoreEnergyLimit && catEnergy < type.energyCost) {
             onMessage(context.getString(R.string.cat_msg_too_tired, type.energyCost))
             return
         }
@@ -96,8 +107,8 @@ class GameDelegate(
                 win = choice.beats(opponentChoice), draw = choice == opponentChoice,
                 lose = opponentChoice.beats(choice), energyCost = GameType.RPS.energyCost,
                 gameType = GameType.RPS,
-                winRewards = MiniGameReward(gold = 8, happy = 12, xp = 20),
-                drawRewards = MiniGameReward(gold = 4, happy = 4, xp = 10),
+                winRewards = MiniGameReward(gold = EconomyConfig.MiniGameRewards.RPS_WIN_GOLD, happy = 12, xp = 20),
+                drawRewards = MiniGameReward(gold = EconomyConfig.MiniGameRewards.RPS_DRAW_GOLD, happy = 4, xp = 10),
                 loseRewards = MiniGameReward(gold = 0, happy = 4, xp = 5)
             )
         }
@@ -133,12 +144,12 @@ class GameDelegate(
                 allMatch -> {
                     onMessage(context.getString(R.string.game_msg_jackpot))
                     processGameResult(true, false, false, GameType.SLOTS.energyCost, GameType.SLOTS,
-                        MiniGameReward(gold = 24, happy = 16, xp = 40), MiniGameReward(), MiniGameReward())
+                        MiniGameReward(gold = EconomyConfig.MiniGameRewards.SLOTS_JACKPOT_GOLD, happy = 16, xp = 40), MiniGameReward(), MiniGameReward())
                 }
                 twoMatch -> {
                     onMessage(context.getString(R.string.game_msg_match_two))
                     processGameResult(true, false, false, GameType.SLOTS.energyCost, GameType.SLOTS,
-                        MiniGameReward(gold = 8, happy = 8, xp = 15), MiniGameReward(), MiniGameReward())
+                        MiniGameReward(gold = EconomyConfig.MiniGameRewards.SLOTS_MATCH_TWO_GOLD, happy = 8, xp = 15), MiniGameReward(), MiniGameReward())
                 }
                 else -> {
                     onMessage(context.getString(R.string.game_msg_unlucky))
@@ -188,15 +199,17 @@ class GameDelegate(
                 delay(500)
                 val moves = _gameUiState.value.memoryMoves
                 val reward = when {
-                    moves <= 14 -> MiniGameReward(gold = 8, happy = 8, xp = 10)
-                    moves <= 20 -> MiniGameReward(gold = 4, happy = 4, xp = 5)
-                    else -> MiniGameReward(gold = 2, happy = 2, xp = 2)
+                    moves <= 14 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.MEMORY_FAST_GOLD, happy = 8, xp = 10)
+                    moves <= 20 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.MEMORY_MEDIUM_GOLD, happy = 4, xp = 5)
+                    else -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.MEMORY_SLOW_GOLD, happy = 2, xp = 2)
                 }
                 processGameResult(true, false, false, GameType.MEMORY.energyCost, GameType.MEMORY, reward, MiniGameReward(), MiniGameReward())
             }
         } else {
+            _gameUiState.update { it.copy(memoryMismatchIndices = listOf(idx1, idx2)) }
+            delay(400)
             cards[idx1] = cards[idx1].copy(isFlipped = false); cards[idx2] = cards[idx2].copy(isFlipped = false)
-            _gameUiState.update { it.copy(memoryCards = cards, memoryFlippedIndices = emptyList()) }
+            _gameUiState.update { it.copy(memoryCards = cards, memoryFlippedIndices = emptyList(), memoryMismatchIndices = emptyList()) }
         }
     }
 
@@ -258,9 +271,9 @@ class GameDelegate(
     private fun finishReflexGame() {
         val score = _gameUiState.value.reflexScore
         val reward = when {
-            score >= 15 -> MiniGameReward(gold = 8, happy = 8, xp = 10)
-            score >= 10 -> MiniGameReward(gold = 4, happy = 4, xp = 5)
-            score >= 5 -> MiniGameReward(gold = 2, happy = 2, xp = 2)
+            score >= 15 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.REFLEX_HIGH_GOLD, happy = 8, xp = 10)
+            score >= 10 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.REFLEX_MEDIUM_GOLD, happy = 4, xp = 5)
+            score >= 5 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.REFLEX_LOW_GOLD, happy = 2, xp = 2)
             else -> MiniGameReward(gold = 0, happy = 1, xp = 1)
         }
         val isWin = score >= 8
@@ -276,10 +289,10 @@ class GameDelegate(
 
     fun finishCatchGame(score: Int) {
         val reward = when {
-            score >= 30 -> MiniGameReward(gold = 12, happy = 12, xp = 25)
-            score >= 20 -> MiniGameReward(gold = 8,  happy = 8,  xp = 15)
-            score >= 10 -> MiniGameReward(gold = 4,  happy = 5,  xp = 8)
-            else        -> MiniGameReward(gold = 1,  happy = 2,  xp = 3)
+            score >= 30 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.CATCH_HIGH_GOLD, happy = 12, xp = 25)
+            score >= 20 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.CATCH_MEDIUM_GOLD,  happy = 8,  xp = 15)
+            score >= 10 -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.CATCH_LOW_GOLD,  happy = 5,  xp = 8)
+            else        -> MiniGameReward(gold = EconomyConfig.MiniGameRewards.CATCH_MIN_GOLD,  happy = 2,  xp = 3)
         }
         val isWin = score >= 15
         scope.launch {
@@ -300,23 +313,41 @@ class GameDelegate(
         winRewards: MiniGameReward, drawRewards: MiniGameReward, loseRewards: MiniGameReward
     ) {
         val reward = when { win -> winRewards; lose -> loseRewards; else -> drawRewards }
+        val safeReward = sanitizeReward(reward)
         val gameState = when { win -> MiniGameState.RESULT_WIN; lose -> MiniGameState.RESULT_LOSE; else -> MiniGameState.RESULT_DRAW }
 
         catRepository.updateEnergy(-energyCost)
-        catRepository.updateHappiness(reward.happy)
-        catRepository.addCoins(reward.gold)
-        catRepository.addXp(reward.xp.toInt())
+        catRepository.updateHappiness(safeReward.happy)
+        catRepository.addCoins(
+            amount = safeReward.gold,
+            source = EconomySource.GAME_REWARD,
+            note = gameType.name
+        )
+        catRepository.addXp(safeReward.xp.toInt())
 
         val interactionType = when (gameType) {
             GameType.RPS    -> InteractionType.GAME_RPS
             GameType.SLOTS  -> InteractionType.GAME_SLOTS
             GameType.MEMORY -> InteractionType.GAME_MEMORY
             GameType.REFLEX -> InteractionType.GAME_REFLEX
-            GameType.CATCH  -> InteractionType.GAME_REFLEX
+            GameType.CATCH  -> InteractionType.GAME_CATCH
         }
         val result = when { win -> "WIN"; lose -> "LOSE"; else -> "DRAW" }
-        interactionRepository.logInteraction(type = interactionType, details = result)
+        runCatching {
+            interactionRepository.logInteraction(type = interactionType, details = result)
+            missionRepository.checkAndCompleteMissions(
+                gameCount = interactionRepository.getTodayGameCount()
+            )
+        }
 
-        _gameUiState.update { it.copy(miniGameState = gameState, lastReward = reward) }
+        _gameUiState.update { it.copy(miniGameState = gameState, lastReward = safeReward) }
+    }
+
+    private fun sanitizeReward(reward: MiniGameReward): MiniGameReward {
+        return reward.copy(
+            gold = reward.gold.coerceIn(0, 50),
+            happy = reward.happy.coerceIn(0, 20),
+            xp = reward.xp.coerceIn(0L, 100L)
+        )
     }
 }

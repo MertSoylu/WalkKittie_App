@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,11 +25,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mert.paticat.MainViewModel
-import com.mert.paticat.ui.components.TutorialOverlay
-import com.mert.paticat.ui.components.TutorialTarget
+import com.mert.paticat.ui.components.*
 import com.mert.paticat.ui.navigation.Screen
 import com.mert.paticat.ui.navigation.getBottomNavItems
 import com.mert.paticat.ui.screens.cat.CatScreen
@@ -36,8 +37,17 @@ import com.mert.paticat.ui.screens.home.HomeScreen
 import com.mert.paticat.ui.screens.profile.ProfileScreen
 import com.mert.paticat.ui.screens.statistics.StatisticsScreen
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
+import kotlin.math.PI
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -46,12 +56,12 @@ fun MainPagerScreen(
     onNavigateToLevelInfo: () -> Unit = {},
     viewModel: MainViewModel = hiltViewModel()
 ) {
-    val catName by viewModel.catName.collectAsState()
+    val catName by viewModel.catName.collectAsStateWithLifecycle()
     val bottomNavItems = getBottomNavItems()
-    
+
     val pagerState = rememberPagerState(pageCount = { bottomNavItems.size })
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Tutorial Logic
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("paticat_prefs", android.content.Context.MODE_PRIVATE) }
@@ -83,65 +93,65 @@ fun MainPagerScreen(
         if (!isTutorialEligible) return@LaunchedEffect
         val currentPage = bottomNavItems[pagerState.currentPage]
         val prefKey = "tutorial_completed_v5_${currentPage.route}"
-        
+
         if (!prefs.getBoolean(prefKey, false)) {
             val targets = when(currentPage) {
                 Screen.Home -> listOf(
                     TutorialTarget(
-                        0, 
-                        context.getString(com.mert.paticat.R.string.tutorial_home_welcome_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_home_welcome_desc)
+                        0,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_welcome_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_welcome_desc)
                     ),
                     TutorialTarget(
-                        1, 
-                        context.getString(com.mert.paticat.R.string.tutorial_home_cat_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_home_cat_desc, catName)
+                        1,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_cat_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_cat_desc, catName)
                     ),
                     TutorialTarget(
                         2,
-                        context.getString(com.mert.paticat.R.string.tutorial_home_goals_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_home_goals_desc)
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_goals_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_home_goals_desc)
                     )
                 )
                 Screen.Cat -> listOf(
                     TutorialTarget(
-                        0, 
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_care_title, catName),
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_care_desc, catName)
+                        0,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_care_title, catName),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_care_desc, catName)
                     ),
                     TutorialTarget(
-                        1, 
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_food_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_food_desc, catName)
+                        1,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_food_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_food_desc, catName)
                     ),
                     TutorialTarget(
-                        2, 
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_games_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_cat_games_desc, catName)
+                        2,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_games_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_cat_games_desc, catName)
                     )
                 )
                 Screen.Statistics -> listOf(
                     TutorialTarget(
-                        0, 
-                        context.getString(com.mert.paticat.R.string.tutorial_stats_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_stats_desc)
+                        0,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_stats_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_stats_desc)
                     ),
                     TutorialTarget(
-                        1, 
-                        context.getString(com.mert.paticat.R.string.tutorial_stats_water_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_stats_water_desc)
+                        1,
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_stats_water_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_stats_water_desc)
                     )
                 )
                 Screen.Profile -> listOf(
                     TutorialTarget(
                         0,
-                        context.getString(com.mert.paticat.R.string.tutorial_profile_title),
-                        context.getString(com.mert.paticat.R.string.tutorial_profile_desc)
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_profile_title),
+                        com.mert.paticat.utils.UiText.StringResource(com.mert.paticat.R.string.tutorial_profile_desc)
                     )
                 )
                 else -> emptyList()
             }
-            
+
             if (targets.isNotEmpty()) {
                 currentTargets = targets
                 if (!showTutorial) {
@@ -158,13 +168,13 @@ fun MainPagerScreen(
     ) {
         // 1. Animated Background
         AnimatedGradientBackground()
-        
+
         // 2. Content (Scaffold removed, handling padding manually/via content)
         // Adjust screen content to not be hidden by status/nav bars if transparent
-        
+
         // We use a Box to contain Pager, and floating bar on top.
         // Pager needs padding BOTTOM to not be obscured by Floating Bar
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -174,8 +184,20 @@ fun MainPagerScreen(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize()
             ) { page ->
+                val pageOffset = abs(
+                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                ).coerceIn(0f, 1f)
+
                 // İçerikleri barındıran Box
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            alpha = lerp(0.65f, 1f, 1f - pageOffset)
+                            scaleX = lerp(0.93f, 1f, 1f - pageOffset)
+                            scaleY = lerp(0.93f, 1f, 1f - pageOffset)
+                        }
+                ) {
                     when (bottomNavItems[page]) {
                         Screen.Home -> HomeScreen(
                             isVisible = (pagerState.currentPage == page),
@@ -198,7 +220,7 @@ fun MainPagerScreen(
                 }
             }
         }
-        
+
         // 3. Floating Navigation Bar
         Box(
             modifier = Modifier
@@ -210,9 +232,13 @@ fun MainPagerScreen(
             GlassFloatingBottomBar(
                 items = bottomNavItems,
                 selectedIndex = pagerState.currentPage,
+                pageOffset = pagerState.currentPageOffsetFraction,
                 onItemSelected = { index ->
                     coroutineScope.launch {
-                        pagerState.animateScrollToPage(index)
+                        pagerState.animateScrollToPage(
+                            index,
+                            animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                        )
                     }
                 }
             )
@@ -242,59 +268,140 @@ fun MainPagerScreen(
         }
     }
 }
-
 @Composable
 fun AnimatedGradientBackground() {
     // Background is now fully handled by AnimatedBackground in MainScreen.
     // This function is kept as a no-op to avoid breaking the call site.
 }
 
-
 @Composable
 fun GlassFloatingBottomBar(
     items: List<Screen>,
     selectedIndex: Int,
+    pageOffset: Float,
     onItemSelected: (Int) -> Unit
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .shadow(24.dp, RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp), spotColor = MaterialTheme.colorScheme.primary.copy(alpha=0.5f)),
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+            .height(88.dp)
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                spotColor = primaryColor.copy(alpha = 0.3f),
+                ambientColor = primaryColor.copy(alpha = 0.1f)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            ),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEachIndexed { index, screen ->
-                val isSelected = selectedIndex == index
-                val animatedScale by animateFloatAsState(if (isSelected) 1.15f else 1f)
-                val animatedColor by animateColorAsState(
-                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
+        // Sliding pill tracks swipe + tap
+        val smoothedOffset = selectedIndex + pageOffset
 
-                // Highlight pill background
-                val bgColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.5f) else Color.Transparent)
+        androidx.compose.foundation.layout.BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val barWidth = maxWidth
+            val itemWidth = barWidth / items.size
+            val pillPaddingH = 8.dp
 
-                IconButton(
-                    onClick = { onItemSelected(index) },
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = animatedScale
-                        scaleY = animatedScale
-                    }
-                    .clip(CircleShape)
-                    .background(bgColor)
-                    .size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                        contentDescription = androidx.compose.ui.res.stringResource(screen.titleResId),
-                        tint = animatedColor,
-                        modifier = Modifier.size(if(isSelected) 28.dp else 24.dp)
+            // Animate pill to snapped position on tap; swipe uses smoothedOffset live
+            val pillTargetDp by animateDpAsState(
+                targetValue = itemWidth * selectedIndex + pillPaddingH,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "pill_offset"
+            )
+            // During swipe use live offset, during tap use animated
+            val pillLiveDp = (itemWidth * smoothedOffset) + pillPaddingH
+            val isSwipingPrecisely = abs(pageOffset) > 0.01f
+            val pillOffsetDp = if (isSwipingPrecisely) pillLiveDp else pillTargetDp
+
+            // Pill background
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(itemWidth - pillPaddingH * 2)
+                    .offset(x = pillOffsetDp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(primaryColor.copy(alpha = 0.12f))
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEachIndexed { index, screen ->
+                    val isSelected = selectedIndex == index
+
+                    val animatedScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.15f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "icon_scale_$index"
                     )
+
+                    val animatedColor by animateColorAsState(
+                        targetValue = if (isSelected) primaryColor
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        animationSpec = tween(300),
+                        label = "icon_color_$index"
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null,
+                                onClick = { onItemSelected(index) }
+                            )
+                            .padding(vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
+                            contentDescription = androidx.compose.ui.res.stringResource(screen.titleResId),
+                            tint = animatedColor,
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = animatedScale
+                                    scaleY = animatedScale
+                                }
+                                .size(22.dp)
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = isSelected,
+                            enter = androidx.compose.animation.fadeIn(tween(200)) +
+                                androidx.compose.animation.slideInVertically(
+                                    initialOffsetY = { -it / 2 },
+                                    animationSpec = tween(200)
+                                ),
+                            exit = androidx.compose.animation.fadeOut(tween(150))
+                        ) {
+                            Text(
+                                text = androidx.compose.ui.res.stringResource(screen.titleResId),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = primaryColor,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             }
         }

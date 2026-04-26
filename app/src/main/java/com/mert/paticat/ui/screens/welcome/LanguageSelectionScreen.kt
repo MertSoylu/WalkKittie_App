@@ -3,7 +3,6 @@ package com.mert.paticat.ui.screens.welcome
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,9 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mert.paticat.R
 import androidx.core.os.LocaleListCompat
 import com.mert.paticat.ui.components.EntranceAnimation
 import com.mert.paticat.ui.components.bounceClick
@@ -28,7 +29,7 @@ fun LanguageSelectionScreen(
     onLanguageSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    
+
     // Check if locale is already set (e.g. after rotation or recreation due to setAppLocale)
     LaunchedEffect(Unit) {
         val currentAppLocales = AppCompatDelegate.getApplicationLocales()
@@ -54,37 +55,37 @@ fun LanguageSelectionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            
+
             EntranceAnimation {
                 Text(
-                    text = "Welcome / Hoşgeldiniz",
+                    text = stringResource(R.string.language_welcome_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             EntranceAnimation(delay = 100) {
                 Text(
-                    text = "Please select your language\nLütfen dilinizi seçin",
+                    text = stringResource(R.string.language_select_prompt),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // English Option
             EntranceAnimation(delay = 200) {
                 LanguageOptionCard(
-                    language = "English",
+                    language = stringResource(R.string.language_english_name),
                     flagEmoji = "🇬🇧",
-                    nativeName = "English",
+                    nativeName = stringResource(R.string.language_english_native),
                     color = PremiumBlue,
-                    isSelected = false, 
+                    isSelected = false,
                     onClick = {
                         // Just set locale, Activity will recreate.
                         // On recreation, the LaunchedEffect above will trigger onLanguageSelected.
@@ -92,15 +93,15 @@ fun LanguageSelectionScreen(
                     }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Turkish Option
             EntranceAnimation(delay = 300) {
                 LanguageOptionCard(
-                    language = "Türkçe",
+                    language = stringResource(R.string.language_turkish_name),
                     flagEmoji = "🇹🇷",
-                    nativeName = "Turkish",
+                    nativeName = stringResource(R.string.language_turkish_native),
                     color = PremiumPink,
                     isSelected = false,
                     onClick = {
@@ -134,7 +135,6 @@ fun LanguageOptionCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable { onClick() }
                 .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start

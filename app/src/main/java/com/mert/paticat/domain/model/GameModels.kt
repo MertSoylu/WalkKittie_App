@@ -29,7 +29,8 @@ enum class MissionType {
     STEPS,
     WATER,
     CALORIES,
-    STREAK
+    STREAK,
+    GAME
 }
 
 /**
@@ -56,7 +57,7 @@ data class DailyStats(
      */
     val estimatedCaloriesFromSteps: Int
         get() = (steps * 0.04).toInt()
-        
+
     /**
      * Net calorie balance (Consumed - Burned)
      */

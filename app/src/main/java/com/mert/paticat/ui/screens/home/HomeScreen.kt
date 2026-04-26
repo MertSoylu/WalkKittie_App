@@ -133,6 +133,15 @@ fun HomeScreen(
                 // 1. Cat Hero Card
                 item {
                     val isSleeping = uiState.cat.isSleeping
+                    val catImageRes = when {
+                        isSleeping -> R.drawable.cat_sleep
+                        uiState.cat.hunger < 25 -> R.drawable.cat_hungry
+                        uiState.cat.energy < 25 && uiState.cat.happiness >= 45 -> R.drawable.cat_tired_happy
+                        uiState.cat.energy < 25 -> R.drawable.cat_tired_sad
+                        uiState.cat.happiness >= 80 -> R.drawable.cat_excited
+                        uiState.cat.happiness >= 45 -> R.drawable.cat_happy
+                        else -> R.drawable.cat_sad
+                    }
                     GlassCatHeroCard(
                         catName = uiState.cat.name,
                         level = uiState.cat.level,
@@ -150,6 +159,7 @@ fun HomeScreen(
                         onBoxClick = {
                             onNavigate(com.mert.paticat.ui.navigation.Screen.Cat.route)
                         },
+                        catImageRes = catImageRes,
                         onPositioned = { coordinates ->
                             val bounds = coordinates.boundsInWindow()
                             particleTarget = Offset(bounds.center.x, bounds.center.y)
@@ -165,6 +175,11 @@ fun HomeScreen(
                     ) {
                         // Streak Card
                         EntranceAnimation(delay = 60) {
+                            val animatedStreak by animateIntAsState(
+                                targetValue = uiState.currentStreak,
+                                animationSpec = tween(600, easing = FastOutSlowInEasing),
+                                label = "streak_anim"
+                            )
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 color = PremiumPeach.copy(alpha = 0.12f),
@@ -182,10 +197,15 @@ fun HomeScreen(
                                             .background(PremiumPeach.copy(alpha = 0.15f)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("🔥", fontSize = 20.sp)
+                                        Icon(
+                                            imageVector = Icons.Default.LocalFireDepartment,
+                                            contentDescription = null,
+                                            tint = PremiumPeach,
+                                            modifier = Modifier.size(22.dp)
+                                        )
                                     }
                                     Text(
-                                        "${uiState.currentStreak}",
+                                        "$animatedStreak",
                                         fontWeight = FontWeight.ExtraBold,
                                         fontSize = 26.sp,
                                         color = PremiumPeach
@@ -200,6 +220,11 @@ fun HomeScreen(
                         }
                         // Distance Card
                         EntranceAnimation(delay = 120) {
+                            val animatedDistance by animateFloatAsState(
+                                targetValue = uiState.todayStats.distanceKm.toFloat(),
+                                animationSpec = tween(800, easing = FastOutSlowInEasing),
+                                label = "distance_anim"
+                            )
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
@@ -217,10 +242,15 @@ fun HomeScreen(
                                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("📍", fontSize = 20.sp)
+                                        Icon(
+                                            imageVector = Icons.Default.LocationOn,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
                                     }
                                     Text(
-                                        String.format("%.2f km", uiState.todayStats.distanceKm),
+                                        String.format("%.2f km", animatedDistance),
                                         fontWeight = FontWeight.ExtraBold,
                                         fontSize = 26.sp,
                                         color = MaterialTheme.colorScheme.primary
@@ -301,6 +331,7 @@ fun HomeScreen(
                                         val isCompleted = when (clickedMission.type) {
                                             com.mert.paticat.domain.model.MissionType.STEPS -> kotlin.math.max(clickedMission.currentValue, uiState.todayStats.steps) >= clickedMission.targetValue
                                             com.mert.paticat.domain.model.MissionType.WATER -> kotlin.math.max(clickedMission.currentValue, uiState.todayStats.waterMl) >= clickedMission.targetValue
+                                            com.mert.paticat.domain.model.MissionType.GAME -> clickedMission.currentValue >= clickedMission.targetValue
                                             else -> clickedMission.isCompleted
                                         }
                                         val msg = if (isCompleted)
@@ -353,380 +384,29 @@ fun HomeScreen(
                 isVisible = isVisible,
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
             )
-        } // End of outer Box
-    }
-}
 
-// --- NEW COMPONENTS ---
-
-@Composable
-fun GlassCatHeroCard(
-    catName: String,
-    level: Int,
-    hunger: Int,
-    happiness: Int,
-    energy: Int,
-    onFeedClick: () -> Unit,
-    onCatClick: () -> Unit = {},
-    onBoxClick: () -> Unit = {},
-    isSleeping: Boolean = false,
-    onPositioned: (androidx.compose.ui.layout.LayoutCoordinates) -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onBoxClick() }
-            .onGloballyPositioned(onPositioned),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Stats
-            Column(
-                modifier = Modifier.weight(1.5f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Loading state overlay — fades out once data is ready
+            AnimatedVisibility(
+                visible = uiState.isLoading,
+                enter = fadeIn(),
+                exit = fadeOut(animationSpec = tween(400))
             ) {
-                val levelTitleStr = androidx.compose.ui.res.stringResource(
-                    com.mert.paticat.domain.model.Cat.getLevelTitleResId(level)
-                )
-                Text(
-                    text = catName,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = "Lvl $level · $levelTitleStr",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Status Bars
-                StatusBarMini(icon = "🍖", value = hunger, color = PremiumPeach)
-                StatusBarMini(icon = "⚡", value = energy, color = PremiumBlue)
-                StatusBarMini(icon = "❤️", value = happiness, color = PremiumPink)
-            }
-
-            // Avatar Emoji with soft circle platform
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                // Background circle — no clip on outer Box so emoji is never cut off
                 Box(
                     modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.07f))
-                )
-                val emojiRes = when {
-                    isSleeping -> "😴"
-                    hunger < 30 -> "😿"
-                    energy < 30 -> if (happiness > 50) "😻" else "😿"
-                    happiness >= 80 -> "😻"
-                    happiness < 40 -> "😿"
-                    else -> "😸"
-                }
-                Text(
-                    text = emojiRes,
-                    fontSize = 72.sp,
-                    modifier = Modifier
-                        .pulsate()
-                        .clickable(enabled = !isSleeping) { onCatClick() }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StatusBarMini(icon: String, value: Int, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, fontSize = 14.sp)
-        Spacer(modifier = Modifier.width(4.dp))
-        val animatedProgress by animateFloatAsState(
-            targetValue = value / 100f,
-            animationSpec = tween(durationMillis = 1000)
-        )
-        LinearProgressIndicator(
-            progress = { animatedProgress },
-            modifier = Modifier.weight(1f).height(6.dp).clip(CircleShape),
-            color = color,
-            trackColor = color.copy(alpha = 0.2f),
-            strokeCap = StrokeCap.Round
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = "%$value",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
-    }
-}
-
-@Composable
-fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0, onMissionClick: (Mission) -> Unit = {}) {
-    val displayValue = when (mission.type) {
-        com.mert.paticat.domain.model.MissionType.STEPS -> kotlin.math.max(mission.currentValue, liveSteps)
-        com.mert.paticat.domain.model.MissionType.WATER -> kotlin.math.max(mission.currentValue, liveWater)
-        else -> mission.currentValue
-    }
-    val isCompleted = displayValue >= mission.targetValue
-    val itemAlpha = if (isCompleted) 0.6f else 1f
-
-    val iconColor = when (mission.type) {
-        com.mert.paticat.domain.model.MissionType.STEPS -> PremiumBlue
-        com.mert.paticat.domain.model.MissionType.WATER -> PremiumBlue
-        else -> PremiumPink
-    }
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    // Resolve Title
-    var titleResId = getMissionStringId(mission.title)
-    if (titleResId == 0) {
-        titleResId = context.resources.getIdentifier(mission.title, "string", context.packageName)
-    }
-    val displayTitle = if (titleResId != 0) context.getString(titleResId) else mission.title
-
-    // Resolve and Format Description
-    var descResId = getMissionStringId(mission.description)
-    if (descResId == 0) {
-        descResId = context.resources.getIdentifier(mission.description, "string", context.packageName)
-    }
-    val displayDesc = if (descResId != 0) {
-        try {
-            context.getString(descResId, mission.targetValue)
-        } catch (e: Exception) {
-            context.getString(descResId)
-        }
-    } else mission.description
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(itemAlpha)
-            .clickable { onMissionClick(mission) },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted)
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isCompleted) 0.dp else 2.dp
-        )
-    ) {
-        Row {
-            // Left colored strip
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .fillMaxHeight()
-                    .background(
-                        color = if (isCompleted) SuccessGreen.copy(alpha = 0.4f) else iconColor,
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp)
-                    )
-            )
-
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icon Badge
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isCompleted) SuccessGreen.copy(alpha = 0.1f)
-                            else iconColor.copy(alpha = 0.1f)
-                        ),
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isCompleted) {
-                        Icon(Icons.Default.Check, null, tint = SuccessGreen)
-                    } else {
-                        val icon = when (mission.type) {
-                            com.mert.paticat.domain.model.MissionType.STEPS -> Icons.Default.DirectionsWalk
-                            com.mert.paticat.domain.model.MissionType.WATER -> Icons.Default.LocalDrink
-                            else -> Icons.Default.Star
-                        }
-                        Icon(icon, null, tint = iconColor)
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        displayTitle,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        textDecoration = if (isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
-                    )
-
-                    Text(
-                        displayDesc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Normal
-                    )
-
-                    if (!isCompleted) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LinearProgressIndicator(
-                            progress = { (displayValue.toFloat() / mission.targetValue).coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                            color = iconColor,
-                            trackColor = iconColor.copy(alpha = 0.1f),
-                            strokeCap = StrokeCap.Round
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "$displayValue / ${mission.targetValue}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Reward Badges
-                Column(horizontalAlignment = Alignment.End) {
-                    if (!isCompleted) {
-                        Surface(
-                            color = AccentGold.copy(alpha = 0.15f),
-                            shape = CircleShape
-                        ) {
-                            Text(
-                                "+${mission.xpReward} XP",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Black,
-                                color = AccentGold
-                            )
-                        }
-                        if (mission.foodPointReward > 0) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Surface(
-                                color = PremiumPink.copy(alpha = 0.15f),
-                                shape = CircleShape
-                            ) {
-                                Text(
-                                    "+${mission.foodPointReward} 🪙",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = PremiumPink
-                                )
-                            }
-                        }
-                    } else {
-                        Icon(Icons.Default.DoneAll, null, tint = SuccessGreen.copy(alpha = 0.5f))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text("🐱", fontSize = 64.sp)
+                        CircularProgressIndicator(modifier = Modifier.size(36.dp))
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun SummaryDashboard(steps: Int, stepGoal: Int, calories: Int, calorieGoal: Int, water: Int, waterGoal: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Steps
-            DashboardStatItem(
-                label = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.stats_steps),
-                value = NumberFormat.getNumberInstance(Locale.getDefault()).format(steps),
-                progress = (steps.toFloat() / stepGoal).coerceIn(0f, 1f),
-                color = MaterialTheme.colorScheme.primary,
-                icon = Icons.Default.DirectionsWalk
-            )
-
-            // Calories
-            DashboardStatItem(
-                label = "kcal",
-                value = "$calories",
-                progress = (calories.toFloat() / calorieGoal).coerceIn(0f, 1f),
-                color = PremiumPeach,
-                icon = Icons.Default.LocalFireDepartment
-            )
-
-            // Water
-            DashboardStatItem(
-                label = "ml",
-                value = "$water",
-                progress = (water.toFloat() / waterGoal).coerceIn(0f, 1f),
-                color = PremiumBlue,
-                icon = Icons.Default.LocalDrink
-            )
-        }
-    }
-}
-
-@Composable
-fun DashboardStatItem(label: String, value: String, progress: Float, color: Color, icon: ImageVector) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
-        Box(contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                progress = { 1f },
-                modifier = Modifier.size(80.dp),
-                color = color.copy(alpha = 0.1f),
-                strokeWidth = 8.dp,
-                strokeCap = StrokeCap.Round
-            )
-            CircularProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.size(80.dp),
-                color = color,
-                strokeWidth = 8.dp,
-                strokeCap = StrokeCap.Round
-            )
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    value,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 18.sp,
-                    lineHeight = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    label,
-                    fontSize = 9.sp,
-                    lineHeight = 9.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        } // End of outer Box
     }
 }
 
@@ -763,7 +443,7 @@ fun WaterTrackingCard(
                     if (canUndo) {
                         FilledIconButton(
                             onClick = onUndo,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(44.dp),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = PremiumBlue.copy(alpha = 0.15f),
                                 contentColor = PremiumBlue
@@ -810,7 +490,7 @@ fun WaterTrackingCard(
                 // Text over wave
                 Text(
                     text = "${current}ml / ${goal}ml",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     color = if (animatedProgress > 0.3f) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Center),
                     fontWeight = FontWeight.Bold
@@ -822,7 +502,9 @@ fun WaterTrackingCard(
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = PremiumBlue.copy(alpha = 0.15f),
-                        modifier = Modifier.bounceClick { onAdd(amount) }
+                        modifier = Modifier
+                            .heightIn(min = Dimensions.touchTargetMin)
+                            .bounceClick { onAdd(amount) }
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -835,8 +517,8 @@ fun WaterTrackingCard(
                                 color = PremiumBlueDark
                             )
                             Text(
-                                "ml",
-                                fontSize = 9.sp,
+                                androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.unit_ml),
+                                fontSize = 11.sp,
                                 color = PremiumBlue.copy(alpha = 0.7f)
                             )
                         }
@@ -885,7 +567,12 @@ fun EmptyMissionState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("🎉", fontSize = 32.sp)
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.mission_completed),
+            tint = SuccessGreen,
+            modifier = Modifier.size(48.dp)
+        )
         Text(
             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.home_all_missions_completed),
             style = MaterialTheme.typography.bodyMedium,
@@ -973,23 +660,3 @@ fun WaterWaveAnimation(progress: Float, color: Color, isVisible: Boolean = true)
         }
     }
 }
-
-private fun getMissionStringId(key: String): Int {
-    return when(key) {
-        "mission_steps_tier1_title" -> com.mert.paticat.R.string.mission_steps_tier1_title
-        "mission_steps_tier1_desc" -> com.mert.paticat.R.string.mission_steps_tier1_desc
-        "mission_steps_tier2_title" -> com.mert.paticat.R.string.mission_steps_tier2_title
-        "mission_steps_tier2_desc" -> com.mert.paticat.R.string.mission_steps_tier2_desc
-        "mission_steps_tier3_title" -> com.mert.paticat.R.string.mission_steps_tier3_title
-        "mission_steps_tier3_desc" -> com.mert.paticat.R.string.mission_steps_tier3_desc
-        "mission_steps_tier4_title" -> com.mert.paticat.R.string.mission_steps_tier4_title
-        "mission_steps_tier4_desc" -> com.mert.paticat.R.string.mission_steps_tier4_desc
-        "mission_water_tier1_title" -> com.mert.paticat.R.string.mission_water_tier1_title
-        "mission_water_tier1_desc" -> com.mert.paticat.R.string.mission_water_tier1_desc
-        "mission_water_tier2_title" -> com.mert.paticat.R.string.mission_water_tier2_title
-        "mission_water_tier2_desc" -> com.mert.paticat.R.string.mission_water_tier2_desc
-        else -> 0
-    }
-}
-
-

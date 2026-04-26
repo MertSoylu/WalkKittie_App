@@ -55,12 +55,12 @@ fun SetupProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.setup_title), 
+                        text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.setup_title),
                         fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface 
-                    ) 
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
@@ -83,9 +83,9 @@ fun SetupProfileScreen(
                         textAlign = TextAlign.Center
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 // Name Input Section
                 EntranceAnimation(delay = 100) {
                     Column(modifier = Modifier.fillMaxWidth()) {
@@ -108,9 +108,9 @@ fun SetupProfileScreen(
                                 cursorColor = PremiumPink
                             )
                         )
-                        
+
                         Spacer(modifier = Modifier.height(20.dp))
-                        
+
                         Text(
                             text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.setup_label_cat_name),
                             style = MaterialTheme.typography.labelLarge,
@@ -132,9 +132,9 @@ fun SetupProfileScreen(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Goals List
                 EntranceAnimation(delay = 300) {
                     Column(
@@ -147,7 +147,7 @@ fun SetupProfileScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        
+
                         SetupGoalItem(
                             title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.goal_steps_title),
                             value = stepGoal,
@@ -156,18 +156,18 @@ fun SetupProfileScreen(
                             color = PremiumPink,
                             onValueChange = { stepGoal = it }
                         )
-                        
+
                         SetupGoalItem(
                             title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.goal_water_title),
                             value = waterGoal,
-                            unit = "ml",
+                            unit = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.unit_ml),
                             step = 250,
                             color = PremiumBlue,
                             onValueChange = { waterGoal = it }
                         )
                     }
                 }
-                
+
                 if (errorMessage != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -177,9 +177,9 @@ fun SetupProfileScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(48.dp))
-                
+
                 // Finish Button
                 EntranceAnimation(delay = 400) {
                     Button(
@@ -223,7 +223,7 @@ fun SetupProfileScreen(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
@@ -271,7 +271,7 @@ fun SetupGoalItem(
                     )
                 }
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = { if (value > step) onValueChange(value - step) },
@@ -281,11 +281,11 @@ fun SetupGoalItem(
                         .background(MaterialTheme.colorScheme.surface)
                         .bounceClick { if (value > step) onValueChange(value - step) }
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = null, tint = color)
+                    Icon(Icons.Default.Remove, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_decrease), tint = color)
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 IconButton(
                     onClick = { onValueChange(value + step) },
                     modifier = Modifier
@@ -294,7 +294,7 @@ fun SetupGoalItem(
                         .background(MaterialTheme.colorScheme.surface)
                         .bounceClick { onValueChange(value + step) }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = color)
+                    Icon(Icons.Default.Add, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_increase), tint = color)
                 }
             }
         }

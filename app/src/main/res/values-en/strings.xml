@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Walkkittie</string>
+    <string name="app_name">WalkKittie</string>
     <!-- Welcome Screen -->
     <string name="welcome_page1_title">Meet Your Cat! 🐱</string>
     <string name="welcome_page1_desc">Adopt a virtual cat companion. Walk, drink water, and complete daily goals to keep it happy and healthy!</string>
@@ -10,7 +10,7 @@
     <string name="welcome_page3_desc">Play mini-games like RPS, Memory, Reflex, and Slots. Earn XP, unlock new titles, and become a legendary cat owner!</string>
     <string name="welcome_btn_next">Next</string>
     <string name="welcome_btn_start">Let\'s Start 🚀</string>
-    
+
     <!-- Setup Screen -->
     <string name="setup_title">Create Profile 📝</string>
     <string name="setup_subtitle">Let\'s get to know you and your buddy! ✨</string>
@@ -25,7 +25,7 @@
     <string name="setup_error_cat_name">Please give your cat a name! 🐾</string>
     <string name="setup_error_gender">Please select a gender.</string>
     <string name="setup_btn_start">Start Adventure! 🐱✨</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_cat">My Cat</string>
@@ -110,7 +110,7 @@
     <string name="stats_calories_input">Calories (kcal)</string>
     <string name="stats_save">Save</string>
     <string name="stats_cancel">Cancel</string>
-    
+
     <string name="meal_breakfast">Breakfast</string>
     <string name="meal_lunch">Lunch</string>
     <string name="meal_dinner">Dinner</string>
@@ -165,14 +165,14 @@
     <string name="btn_start_game">Start! 🚀</string>
     <string name="game_rps_countdown">Rock... Paper... Scissors...</string>
     <string name="game_slots_instruction">Match emojis to win prizes!</string>
-    
+
     <!-- Memory Game -->
     <string name="game_memory_title">Memory Paw</string>
     <string name="game_memory_desc">Flip cards, find pairs! Test your memory. 🧠</string>
     <string name="game_memory_header">Memory Paw 🧠</string>
     <string name="game_memory_moves">Moves: %d</string>
     <string name="game_memory_pairs">Pairs: %d/6</string>
-    
+
     <!-- Reflex Game -->
     <string name="game_reflex_title">Cat Reflex</string>
     <string name="game_reflex_desc">Catch the paw prints! Be fast, they disappear! ⚡</string>
@@ -181,6 +181,34 @@
     <string name="game_reflex_round">Round: %1$d / %2$d</string>
     <string name="game_reflex_tap">Catch!</string>
     <string name="game_reflex_ready">Ready...</string>
+
+    <!-- Catch Game -->
+    <string name="game_catch_title">Catch!</string>
+    <string name="game_catch_desc">Slide the basket, collect good stuff, dodge the bombs!</string>
+    <string name="game_catch_pre_title">Catch! 🧺</string>
+    <string name="game_catch_instruction">Drag the basket to catch good things!\n💣 Dodge the bombs!</string>
+    <string name="game_catch_tip">3 lives • ~30 sec • Score 15+ = 🏆</string>
+    <string name="game_catch_score">⭐ %d pts</string>
+    <string name="game_catch_hint">Slide the basket horizontally to move it!</string>
+
+    <!-- PreGame Overlay -->
+    <string name="btn_play_game">🎮 Play!</string>
+    <string name="btn_dismiss">Dismiss</string>
+    <string name="game_pregame_locked">🔒 Level %d required</string>
+    <string name="game_pregame_low_energy">⚡ Not enough energy (%1$d/%2$d)</string>
+    <string name="game_choice_rock">Rock</string>
+    <string name="game_choice_paper">Paper</string>
+    <string name="game_choice_scissors">Scissors</string>
+    <string name="game_countdown_go">GO!</string>
+    <string name="game_preview_rps_desc">Face off with your cat!\nPick rock, paper, or scissors and win.</string>
+    <string name="game_preview_slots_desc">Match 3 symbols!\nJackpot means a big reward.</string>
+    <string name="game_preview_memory_desc">Flip 12 cards and find pairs!\nFinish in fewer moves for more rewards.</string>
+    <string name="game_preview_reflex_desc">Tap the paw targets fast!\nDifficulty increases every round.</string>
+    <string name="game_reward_rps">8 gold • 20 XP</string>
+    <string name="game_reward_slots">24 gold • 40 XP</string>
+    <string name="game_reward_memory">8 gold • 20 XP</string>
+    <string name="game_reward_reflex">10 gold • 25 XP</string>
+    <string name="game_reward_catch">12 gold • 30 XP</string>
 
     <!-- Shop Screen -->
     <string name="shop_title">Shop</string>
@@ -216,7 +244,7 @@
     <string name="stat_best_streak">Best</string>
     <string name="unit_day">Days</string>
     <string name="unit_steps">Steps</string>
-    
+
     <string name="unit_food_points">Food Points</string>
     <string name="unit_gold">Gold</string>
 
@@ -235,7 +263,7 @@
     <string name="btn_save">Save</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_confirm">Confirm</string>
-    
+
     <!-- Dialogs -->
 
     <!-- Missions -->
@@ -292,13 +320,15 @@
     <string name="mission_water_tier1_desc">Drink %d ml water</string>
     <string name="mission_water_tier2_title">Hydrated Day</string>
     <string name="mission_water_tier2_desc">Drink %d ml water</string>
-    
+    <string name="mission_game_tier1_title">Game Time</string>
+    <string name="mission_game_tier1_desc">Complete %d mini games</string>
+
     <!-- Level Info -->
     <string name="level_system_title">Level System ⭐</string>
     <string name="level_label_with_title">Level %1$d (%2$s)</string>
     <string name="level_label">Level %d</string>
     <string name="level_next_label">%d XP left for next level</string>
-    
+
     <!-- Level Titles -->
     <string name="level_title_kitten">Kitten</string>
     <string name="level_title_junior">Junior Cat</string>
@@ -333,13 +363,13 @@
     <string name="chart_day_fri">Fri</string>
     <string name="chart_day_sat">Sat</string>
     <string name="chart_day_sun">Sun</string>
-    
+
     <!-- Shop -->
     <string name="shop_error_no_coin">Not enough gold! 🪙</string>
     <string name="shop_error_no_food_points">Not enough food points!</string>
     <string name="shop_error_no_stock">No food in inventory! 📦</string>
     <string name="shop_error_inventory_full">Inventory full! (Max %d) Feed first.</string>
-    <string name="shop_inventory_full_label">Full (%d/%d)</string>
+    <string name="shop_inventory_full_label">Full (%1$d/%2$d)</string>
     <string name="shop_msg_purchased">%1$s purchased! %2$s</string>
     <string name="shop_error_purchase_failed">Purchase failed: %s</string>
     <string name="shop_item_dry_food">Dry Food</string>
@@ -365,9 +395,9 @@
     <string name="shop_item_tuna_desc">Cat favorite</string>
     <string name="shop_item_premium_feast">Premium Feast</string>
     <string name="shop_item_premium_feast_desc">Best value! Big feast</string>
-    
+
     <!-- Notifications -->
-    <string name="notif_channel_steps_name">Walkkittie Step Counter</string>
+    <string name="notif_channel_steps_name">WalkKittie Step Counter</string>
     <string name="notif_steps_content">%1$d steps • %2$d kcal</string>
     <string name="notif_channel_goals_name">Goals</string>
     <string name="notif_channel_goals_desc">Sends a notification when daily goal is reached</string>
@@ -392,11 +422,11 @@
 
     <!-- Settings -->
     <string name="settings_privacy_policy">Privacy Policy</string>
-    <string name="privacy_policy_content">Walkkittie Privacy Policy\n\nThis app allows users to track their physical activities to care for a virtual pet. Your privacy is important to us:\n\n1. Activity Tracking: Our app uses your device\'s sensors to count your steps. This data is only used for in-game mechanics.\n\n2. Health Connect: Optionally, we can integrate with Health Connect. This data is processed only on your device and not transferred to external servers.\n\n3. Ads: Our app uses AdMob ads. These services may use device identifiers to show personalized ads.\n\n4. Data Storage: Your personal data is not stored on our servers; all progress is kept locally on your device.\n\nFor more information, you can check Google\'s Privacy Policy:</string>
+    <string name="privacy_policy_content">WalkKittie Privacy Policy\n\nThis app allows users to track their physical activities to care for a virtual pet. Your privacy is important to us:\n\n1. Activity Tracking: Our app uses your device\'s sensors to count your steps. This data is only used for in-game mechanics.\n\n2. Health Connect: Optionally, we can integrate with Health Connect. This data is processed only on your device and not transferred to external servers.\n\n3. Ads: Our app uses AdMob ads. These services may use device identifiers to show personalized ads.\n\n4. Data Storage: Your personal data is not stored on our servers; all progress is kept locally on your device.\n\nFor more information, you can check Google\'s Privacy Policy:</string>
     <string name="url_google_privacy_policy">https://policies.google.com/privacy</string>
 
     <!-- Tutorial -->
-    <string name="tutorial_home_welcome_title">Welcome to Walkkittie! 🐱</string>
+    <string name="tutorial_home_welcome_title">Welcome to WalkKittie! 🐱</string>
     <string name="tutorial_home_welcome_desc">With this app, you\'ll take care of your virtual cat while tracking your walks. Your steps turn into energy and make your cat happy!</string>
     <string name="tutorial_home_cat_title">Meet Your Cat 😺</string>
     <string name="tutorial_home_cat_desc">The center card shows your cat. Your cat\'s name is %1$s! Tap it to go to the cat page, feed, and play with it.</string>
@@ -423,6 +453,42 @@
     <string name="tutorial_btn_close">Close</string>
 
     <!-- Hardcoded string fixes -->
+    <string name="ad_label">Ad</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="language_welcome_title">Welcome / Hoş geldiniz</string>
+    <string name="language_select_prompt">Please select your language\nLütfen dilinizi seçin</string>
+    <string name="language_english_name">English</string>
+    <string name="language_english_native">English</string>
+    <string name="language_turkish_name">Türkçe</string>
+    <string name="language_turkish_native">Turkish</string>
+    <string name="cat_hero_level_prefix">Lv.</string>
+    <string name="cat_image_description">%1$s cat</string>
+    <string name="stats_care_rating_excellent">🌟 Excellent!</string>
+    <string name="stats_care_rating_very_good">😊 Very Good!</string>
+    <string name="stats_care_rating_good">👍 Good</string>
+    <string name="stats_care_rating_improving">💪 Improving</string>
+    <string name="stats_care_rating_beginner">🐾 Beginner</string>
+    <string name="shop_buy_button_price">%1$d 🪙</string>
+    <string name="level_up_title">🎉 CONGRATS! 🎉</string>
+    <string name="level_up_message">Your bond with your cat grew stronger!\nWear your new title proudly.</string>
+    <string name="level_up_button">Amazing!</string>
+    <string name="level_up_badge_icon">Level badge</string>
+    <string name="icon_heart">Heart</string>
+    <string name="icon_favorite">Favorite</string>
+    <string name="icon_warning">Warning</string>
+    <string name="icon_video">Watch video</string>
+    <string name="icon_shopping_cart">Shopping cart</string>
+    <string name="icon_refresh">Refresh</string>
+    <string name="icon_close">Close</string>
+    <string name="icon_trophy">Trophy</string>
+    <string name="icon_star">Star</string>
+    <string name="icon_coin">Gold</string>
+    <string name="icon_xp">XP</string>
+    <string name="icon_energy">Energy</string>
+    <string name="icon_happiness">Happiness</string>
+    <string name="icon_hunger">Hunger</string>
+    <string name="icon_water">Water</string>
     <string name="streak_current">Day Streak</string>
     <string name="streak_longest">Longest</string>
     <string name="cat_status_title">Cat Status</string>
@@ -434,10 +500,12 @@
     <string name="water_glasses_drunk">%d glasses drunk 💧</string>
     <string name="btn_undo">Undo</string>
     <string name="btn_back">Back</string>
+    <string name="btn_decrease">Decrease</string>
+    <string name="btn_increase">Increase</string>
     <string name="reward_title">New Rewards Earned!</string>
     <string name="notif_water_channel_name">Water Reminder</string>
     <string name="notif_water_channel_desc">Daily water drinking reminders</string>
-    <string name="notif_water_app_title">Walkkittie 🐱</string>
+    <string name="notif_water_app_title">WalkKittie 🐱</string>
     <string-array name="water_reminder_messages">
         <item>💧 Time to drink water! Make your cat happy!</item>
         <item>🐱 Your little friend wants to drink water with you!</item>
@@ -460,6 +528,7 @@
     <string name="stats_game_slots">Paw Wheel</string>
     <string name="stats_game_memory">Memory Paw</string>
     <string name="stats_game_reflex">Cat Reflex</string>
+    <string name="stats_game_catch">Catch!</string>
     <string name="stats_care_chart_title">Interaction Chart</string>
     <string name="stats_care_total_interactions">Total Interactions</string>
     <string name="stats_care_game_breakdown">Game Breakdown</string>

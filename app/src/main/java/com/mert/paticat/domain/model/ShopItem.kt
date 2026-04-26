@@ -23,13 +23,13 @@ data class ShopItem(
 ) {
     companion object {
         /** Maximum gold a player can hold */
-        const val MAX_GOLD = 200
+        const val MAX_GOLD = EconomyConfig.MAX_GOLD
         /** Maximum quantity of a single food item in inventory */
-        const val MAX_INVENTORY_PER_ITEM = 5
+        const val MAX_INVENTORY_PER_ITEM = EconomyConfig.MAX_INVENTORY_PER_ITEM
         /** Maximum gold ads per day */
-        const val MAX_GOLD_ADS_PER_DAY = 5
+        const val MAX_GOLD_ADS_PER_DAY = EconomyConfig.DAILY_GOLD_AD_LIMIT
         /** Gold earned per ad */
-        const val GOLD_PER_AD = 15
+        const val GOLD_PER_AD = EconomyConfig.GOLD_PER_AD
 
         // Boost IDs
         const val ID_STEP_MULTIPLIER = "step_multiplier"
@@ -40,7 +40,7 @@ data class ShopItem(
             id = "dry_food",
             nameResId = R.string.shop_item_dry_food,
             descResId = R.string.shop_item_dry_food_desc,
-            price = 10,
+            price = EconomyConfig.ShopPrices.DRY_FOOD,
             hungerRestore = 5,
             happinessBoost = 1,
             xpBoost = 1,
@@ -51,7 +51,7 @@ data class ShopItem(
             id = "canned_food",
             nameResId = R.string.shop_item_canned_food,
             descResId = R.string.shop_item_canned_food_desc,
-            price = 25,
+            price = EconomyConfig.ShopPrices.CANNED_FOOD,
             hungerRestore = 15,
             happinessBoost = 3,
             xpBoost = 2,
@@ -62,7 +62,7 @@ data class ShopItem(
             id = "tuna",
             nameResId = R.string.shop_item_tuna,
             descResId = R.string.shop_item_tuna_desc,
-            price = 40,
+            price = EconomyConfig.ShopPrices.TUNA,
             hungerRestore = 25,
             happinessBoost = 5,
             xpBoost = 3,
@@ -73,7 +73,7 @@ data class ShopItem(
             id = "premium_feast",
             nameResId = R.string.shop_item_premium_feast,
             descResId = R.string.shop_item_premium_feast_desc,
-            price = 60,
+            price = EconomyConfig.ShopPrices.PREMIUM_FEAST,
             hungerRestore = 40,
             happinessBoost = 10,
             xpBoost = 5,
@@ -84,7 +84,7 @@ data class ShopItem(
             id = "energy_bar",
             nameResId = R.string.shop_item_energy_bar,
             descResId = R.string.shop_item_energy_bar_desc,
-            price = 40,
+            price = EconomyConfig.ShopPrices.ENERGY_BAR,
             hungerRestore = 5,
             happinessBoost = 1,
             xpBoost = 1,
@@ -97,7 +97,7 @@ data class ShopItem(
             id = ID_STEP_MULTIPLIER,
             nameResId = R.string.shop_item_step_multiplier,
             descResId = R.string.shop_item_step_multiplier_desc,
-            price = 100,
+            price = EconomyConfig.ShopPrices.BOOST,
             hungerRestore = 0,
             happinessBoost = 0,
             xpBoost = 0,
@@ -110,7 +110,7 @@ data class ShopItem(
             id = ID_XP_MULTIPLIER,
             nameResId = R.string.shop_item_xp_multiplier,
             descResId = R.string.shop_item_xp_multiplier_desc,
-            price = 100,
+            price = EconomyConfig.ShopPrices.BOOST,
             hungerRestore = 0,
             happinessBoost = 0,
             xpBoost = 0,
@@ -123,7 +123,7 @@ data class ShopItem(
             id = ID_COMBO_MULTIPLIER,
             nameResId = R.string.shop_item_combo_multiplier,
             descResId = R.string.shop_item_combo_multiplier_desc,
-            price = 150,
+            price = EconomyConfig.ShopPrices.BOOST,
             hungerRestore = 0,
             happinessBoost = 0,
             xpBoost = 0,

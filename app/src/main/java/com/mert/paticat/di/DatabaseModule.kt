@@ -14,7 +14,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-    
+
     @Provides
     @Singleton
     fun provideDatabase(
@@ -25,43 +25,52 @@ object DatabaseModule {
             PatiCatDatabase::class.java,
             PatiCatDatabase.DATABASE_NAME
         )
-            .addMigrations(PatiCatDatabase.MIGRATION_8_9, PatiCatDatabase.MIGRATION_9_10, PatiCatDatabase.MIGRATION_10_11)
+            .addMigrations(
+                PatiCatDatabase.MIGRATION_8_9,
+                PatiCatDatabase.MIGRATION_9_10,
+                PatiCatDatabase.MIGRATION_10_11,
+                PatiCatDatabase.MIGRATION_11_12
+            )
             // Only allow destructive migration from versions before explicit migrations existed.
             // Versions 8+ are covered by explicit migrations — a missing migration will crash
             // instead of silently wiping user data.
             .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5, 6, 7)
             .build()
     }
-    
+
     @Provides
     @Singleton
     fun provideCatDao(database: PatiCatDatabase): CatDao = database.catDao()
-    
+
     @Provides
     @Singleton
     fun provideDailyStatsDao(database: PatiCatDatabase): DailyStatsDao = database.dailyStatsDao()
-    
+
     @Provides
     @Singleton
     fun provideMissionDao(database: PatiCatDatabase): MissionDao = database.missionDao()
-    
+
     @Provides
     @Singleton
     fun provideUserProfileDao(database: PatiCatDatabase): UserProfileDao = database.userProfileDao()
-    
+
     @Provides
     @Singleton
     fun provideReminderDao(database: PatiCatDatabase): ReminderDao = database.reminderDao()
-    
+
     @Provides
     @Singleton
     fun provideMealDao(database: PatiCatDatabase): MealDao = database.mealDao()
-    
+
     @Provides
     @Singleton
     fun provideInventoryDao(database: PatiCatDatabase): InventoryDao = database.inventoryDao()
-    
+
     @Provides
     @Singleton
     fun provideCatInteractionDao(database: PatiCatDatabase): CatInteractionDao = database.catInteractionDao()
+
+    @Provides
+    @Singleton
+    fun provideEconomyEventDao(database: PatiCatDatabase): EconomyEventDao = database.economyEventDao()
 }

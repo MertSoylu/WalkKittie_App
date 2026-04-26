@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,11 +52,17 @@ import com.mert.paticat.ui.components.NativeAdCard
 import com.mert.paticat.ui.components.bounceClick
 import com.mert.paticat.ui.components.pulsate
 import com.mert.paticat.ui.components.EntranceAnimation
+import com.mert.paticat.ui.components.glowPulse
+import com.mert.paticat.ui.components.shimmerEffect
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.launch
+
+private const val GAME_ROOM_LEVEL_LOCK_DISABLED = false
 
 // ════════════════════════════════════════════════════════════════════
 //  GAMES SCREEN – Main Entry
@@ -72,6 +79,9 @@ fun GamesScreen(
     val playerChoice by catViewModel.playerChoice.collectAsStateWithLifecycle()
     val catChoice by catViewModel.catChoice.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var previewGame by remember { mutableStateOf<GameType?>(null) }
+
+    val effectiveCatLevel = if (GAME_ROOM_LEVEL_LOCK_DISABLED) Int.MAX_VALUE else uiState.cat.level
 
     LaunchedEffect(uiState.userMessage) {
         uiState.userMessage?.let { msg ->
@@ -87,11 +97,11 @@ fun GamesScreen(
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             val dialogGradient = when (gameState.activeGame) {
-                GameType.RPS    -> Brush.verticalGradient(listOf(GamePastelPinkLight, Color.White))
-                GameType.SLOTS  -> Brush.verticalGradient(listOf(GamePastelPeachLight, Color.White))
-                GameType.MEMORY -> Brush.verticalGradient(listOf(GamePastelMintLight, Color.White))
-                GameType.REFLEX -> Brush.verticalGradient(listOf(GamePastelLavLight, Color.White))
-                GameType.CATCH  -> Brush.verticalGradient(listOf(Color(0xFFE3F2FD), Color.White))
+                GameType.RPS    -> Brush.verticalGradient(listOf(GameVibrantRPS.copy(alpha = 0.12f), Color.White))
+                GameType.SLOTS  -> Brush.verticalGradient(listOf(GameVibrantSlots.copy(alpha = 0.12f), Color.White))
+                GameType.MEMORY -> Brush.verticalGradient(listOf(GameVibrantMemory.copy(alpha = 0.12f), Color.White))
+                GameType.REFLEX -> Brush.verticalGradient(listOf(GameVibrantReflex.copy(alpha = 0.12f), Color.White))
+                GameType.CATCH  -> Brush.verticalGradient(listOf(GameVibrantCatch.copy(alpha = 0.12f), Color.White))
                 else            -> Brush.verticalGradient(listOf(Color.White, Color.White))
             }
             Card(
@@ -121,61 +131,33 @@ fun GamesScreen(
         }
     }
 
+    // Auto-close preview when a real game starts
+    LaunchedEffect(gameState.activeGame) {
+        if (gameState.activeGame != null) previewGame = null
+    }
+
+    // Pre-game overview overlay
+    previewGame?.let { game ->
+        PreGameOverlay(
+            gameType = game,
+            catLevel = effectiveCatLevel,
+            catEnergy = uiState.cat.energy,
+            onPlay = {
+                catViewModel.startGame(
+                    game,
+                    ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                    ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                )
+                previewGame = null
+            },
+            onDismiss = { previewGame = null }
+        )
+    }
+
     // ── Main Screen ──
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(bottom = 100.dp))
-        },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            stringResource(R.string.games_title),
-                            fontWeight = FontWeight.Black,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            stringResource(R.string.games_subtitle),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.btn_back),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                actions = {
-                    // Energy badge – pill shape
-                    Surface(
-                        color = GamePastelBlue.copy(alpha = 0.55f),
-                        shape = RoundedCornerShape(50.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("⚡", fontSize = 15.sp)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                "${uiState.cat.energy}",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 15.sp,
-                                color = Color(0xFF1565C0)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
         },
         containerColor = Color.Transparent
     ) { padding ->
@@ -187,8 +169,16 @@ fun GamesScreen(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp)
+            contentPadding = PaddingValues(top = 0.dp, bottom = 120.dp)
         ) {
+            // ── Arcade Header ──
+            item(span = { GridItemSpan(2) }) {
+                GamesScreenHeader(
+                    catEnergy = uiState.cat.energy,
+                    onBackClick = onBackClick
+                )
+            }
+
             // ── Game Cards ──
             item {
                 EntranceAnimation(delay = 0) {
@@ -198,12 +188,12 @@ fun GamesScreen(
                         description = stringResource(R.string.game_rps_desc),
                         energyCost = GameType.RPS.energyCost,
                         catEnergy = uiState.cat.energy,
-                        catLevel = uiState.cat.level,
+                        catLevel = effectiveCatLevel,
                         minLevel = GameType.RPS.minLevel,
-                        gradientColors = listOf(GamePastelPinkLight, GamePastelPink),
-                        accentColor = GamePastelPink,
-                        textColor = Color(0xFFB5294E),
-                        onClick = { catViewModel.startGame(GameType.RPS) }
+                        gradientColors = listOf(GameVibrantRPS, GameVibrantRPSLight),
+                        accentColor = GameVibrantRPS,
+                        textColor = Color.White,
+                        onClick = { previewGame = GameType.RPS }
                     )
                 }
             }
@@ -215,12 +205,12 @@ fun GamesScreen(
                         description = stringResource(R.string.game_slots_desc),
                         energyCost = GameType.SLOTS.energyCost,
                         catEnergy = uiState.cat.energy,
-                        catLevel = uiState.cat.level,
+                        catLevel = effectiveCatLevel,
                         minLevel = GameType.SLOTS.minLevel,
-                        gradientColors = listOf(GamePastelPeachLight, GamePastelPeach),
-                        accentColor = GamePastelPeach,
-                        textColor = Color(0xFFB5510B),
-                        onClick = { catViewModel.startGame(GameType.SLOTS) }
+                        gradientColors = listOf(GameVibrantSlots, GameVibrantSlotsLight),
+                        accentColor = GameVibrantSlots,
+                        textColor = Color.White,
+                        onClick = { previewGame = GameType.SLOTS }
                     )
                 }
             }
@@ -232,12 +222,12 @@ fun GamesScreen(
                         description = stringResource(R.string.game_memory_desc),
                         energyCost = GameType.MEMORY.energyCost,
                         catEnergy = uiState.cat.energy,
-                        catLevel = uiState.cat.level,
+                        catLevel = effectiveCatLevel,
                         minLevel = GameType.MEMORY.minLevel,
-                        gradientColors = listOf(GamePastelMintLight, GamePastelMint),
-                        accentColor = GamePastelMint,
-                        textColor = Color(0xFF1B6B3A),
-                        onClick = { catViewModel.startGame(GameType.MEMORY) }
+                        gradientColors = listOf(GameVibrantMemory, GameVibrantMemoryLight),
+                        accentColor = GameVibrantMemory,
+                        textColor = Color.White,
+                        onClick = { previewGame = GameType.MEMORY }
                     )
                 }
             }
@@ -249,12 +239,12 @@ fun GamesScreen(
                         description = stringResource(R.string.game_reflex_desc),
                         energyCost = GameType.REFLEX.energyCost,
                         catEnergy = uiState.cat.energy,
-                        catLevel = uiState.cat.level,
+                        catLevel = effectiveCatLevel,
                         minLevel = GameType.REFLEX.minLevel,
-                        gradientColors = listOf(GamePastelLavLight, GamePastelLavender),
-                        accentColor = GamePastelLavender,
-                        textColor = Color(0xFF5B2D8E),
-                        onClick = { catViewModel.startGame(GameType.REFLEX) }
+                        gradientColors = listOf(GameVibrantReflex, GameVibrantReflexLight),
+                        accentColor = GameVibrantReflex,
+                        textColor = Color.White,
+                        onClick = { previewGame = GameType.REFLEX }
                     )
                 }
             }
@@ -262,16 +252,16 @@ fun GamesScreen(
                 EntranceAnimation(delay = 320) {
                     GameCard(
                         emoji = "\uD83E\uDDF3",
-                        title = "Yakala!",
-                        description = "Sepeti kaydır, iyi şeyleri topla, bombalardan kaç!",
+                        title = stringResource(R.string.game_catch_title),
+                        description = stringResource(R.string.game_catch_desc),
                         energyCost = GameType.CATCH.energyCost,
                         catEnergy = uiState.cat.energy,
-                        catLevel = uiState.cat.level,
+                        catLevel = effectiveCatLevel,
                         minLevel = GameType.CATCH.minLevel,
-                        gradientColors = listOf(Color(0xFFE3F2FD), Color(0xFF90CAF9)),
-                        accentColor = Color(0xFF42A5F5),
-                        textColor = Color(0xFF0D47A1),
-                        onClick = { catViewModel.startGame(GameType.CATCH) }
+                        gradientColors = listOf(GameVibrantCatch, GameVibrantCatchLight),
+                        accentColor = GameVibrantCatch,
+                        textColor = Color.White,
+                        onClick = { previewGame = GameType.CATCH }
                     )
                 }
             }
@@ -288,7 +278,120 @@ fun GamesScreen(
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  GAME CARD  –  Pastel gradient + floating emoji
+//  GAMES SCREEN HEADER – Arcade lobby banner
+// ════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun GamesScreenHeader(
+    catEnergy: Int,
+    onBackClick: () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "header_float")
+    // Single shared phase — each particle derives its own offset from this
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "phase"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(top = 8.dp, bottom = 4.dp)
+    ) {
+        // Gradient banner background
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF3A1C8A), Color(0xFF1A0A4A))
+                    )
+                )
+        ) {
+            // Floating sparkle particles — each offset by different phase
+            val sparklePositions = listOf(
+                Triple(0.12f, 12.dp, 0f),
+                Triple(0.30f, 28.dp, 1.05f),
+                Triple(0.50f, 10.dp, 2.09f),
+                Triple(0.65f, 30.dp, 3.14f),
+                Triple(0.78f, 14.dp, 4.19f),
+                Triple(0.90f, 26.dp, 5.24f)
+            )
+            sparklePositions.forEachIndexed { i, (xFrac, topPad, phaseOffset) ->
+                val dy = kotlin.math.sin(phase + phaseOffset) * 7f
+                Text(
+                    "✨",
+                    fontSize = (10 + i % 3 * 3).sp,
+                    color = Color.White.copy(alpha = 0.55f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = (xFrac * 320).dp, top = topPad)
+                        .graphicsLayer { translationY = dy }
+                )
+            }
+        }
+
+        // Back button + title + energy badge overlaid
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.btn_back),
+                    tint = Color.White
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.games_title),
+                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White
+                )
+                Text(
+                    stringResource(R.string.games_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
+            Surface(
+                color = Color.White.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("⚡", fontSize = 15.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        "$catEnergy",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 15.sp,
+                        color = Color.White
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  GAME CARD  –  Arcade gradient + glow + shimmer
 // ════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -307,9 +410,14 @@ private fun GameCard(
 ) {
     val haptic = LocalHapticFeedback.current
     val isLocked = catLevel < minLevel
-    val isEnabled = !isLocked && catEnergy >= energyCost
+    val isEnabled = !isLocked && (GAME_ROOM_LEVEL_LOCK_DISABLED || catEnergy >= energyCost)
 
-    // Floating animation for the emoji icon
+    val difficultyStars = when {
+        energyCost <= 8  -> 1
+        energyCost <= 12 -> 2
+        else             -> 3
+    }
+
     val infiniteTransition = rememberInfiniteTransition(label = "float_$emoji")
     val floatOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -321,78 +429,125 @@ private fun GameCard(
         label = "emoji_float"
     )
 
+    val deepBottomColor = gradientColors.getOrElse(1) { gradientColors[0] }.darken(0.14f)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .graphicsLayer { alpha = if (isLocked) 0.45f else if (isEnabled) 1f else 0.55f }
+            .let { m -> if (isEnabled) m.glowPulse(accentColor, 0.25f, 0.55f) else m }
+            .graphicsLayer { alpha = if (isLocked) 1f else if (isEnabled) 1f else 0.6f }
             .bounceClick {
                 if (!isLocked) {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onClick()
                 }
             }
-            .shadow(elevation = if (isEnabled) 6.dp else 2.dp, shape = RoundedCornerShape(32.dp)),
-        shape = RoundedCornerShape(32.dp),
+            .shadow(
+                elevation = if (isEnabled) 12.dp else 2.dp,
+                shape = RoundedCornerShape(28.dp),
+                spotColor = accentColor.copy(alpha = 0.5f)
+            ),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 170.dp)
                 .background(
-                    brush = Brush.verticalGradient(gradientColors),
-                    shape = RoundedCornerShape(32.dp)
+                    brush = Brush.verticalGradient(listOf(gradientColors[0], deepBottomColor)),
+                    shape = RoundedCornerShape(28.dp)
                 )
         ) {
+            // Main content — blurred when locked
             Column(
-                modifier = Modifier.padding(18.dp),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .let { m -> if (isLocked) m.blur(2.dp) else m },
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Floating emoji in a pill container
-                Surface(
-                    modifier = Modifier.size(60.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.White.copy(alpha = 0.55f),
-                    shadowElevation = 2.dp
+                // Emoji box with shimmer
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(68.dp)
+                        .background(Color.White.copy(alpha = 0.25f), CircleShape)
+                        .shimmerEffect()
+                        .graphicsLayer { translationY = floatOffset }
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.graphicsLayer { translationY = floatOffset }
-                    ) {
-                        Text(if (isLocked) "🔒" else emoji, fontSize = 30.sp)
-                    }
+                    Text(emoji, fontSize = 34.sp)
                 }
 
                 Text(
                     title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = textColor
+                    color = textColor,
+                    lineHeight = 20.sp
                 )
 
-                Text(
-                    if (isLocked) "Seviye $minLevel'de Açılır" else description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = textColor.copy(alpha = 0.7f),
-                    lineHeight = 16.sp,
-                    maxLines = 2
-                )
-
-                // Cost badge – pill shape (invisible when locked to preserve card height)
                 Surface(
-                    modifier = Modifier.alpha(if (isLocked) 0f else 1f),
-                    color = if (isEnabled) Color.White.copy(alpha = 0.6f)
-                    else MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                    color = Color.White.copy(alpha = if (isEnabled) 0.30f else 0.18f),
                     shape = RoundedCornerShape(50.dp)
                 ) {
                     Text(
-                        if (isEnabled) "⚡ ${stringResource(R.string.cost_energy, energyCost)}"
-                        else "⚡ $catEnergy/$energyCost",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                        if (isEnabled) "⚡ $energyCost" else "⚡ $catEnergy/$energyCost",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isEnabled) textColor else MaterialTheme.colorScheme.error
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (!isEnabled) MaterialTheme.colorScheme.error else textColor
                     )
+                }
+            }
+
+            // Decorative corner highlight
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .align(Alignment.TopEnd)
+                    .background(
+                        Brush.radialGradient(listOf(Color.White.copy(alpha = 0.20f), Color.Transparent)),
+                        CircleShape
+                    )
+            )
+
+            // Star difficulty — top right
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 10.dp, end = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                repeat(3) { i ->
+                    Icon(
+                        Icons.Filled.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (i < difficultyStars) Color(0xFFFFD600) else Color.White.copy(alpha = 0.3f)
+                    )
+                }
+            }
+
+            // Locked overlay
+            if (isLocked) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Color.Black.copy(alpha = 0.52f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🔒", fontSize = 36.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "Sv. $minLevel",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -436,29 +591,65 @@ fun GameResultOverlay(gameState: MiniGameState, reward: com.mert.paticat.ui.scre
         else                      -> ""
     }
     val resultColor = when (gameState) {
-        MiniGameState.RESULT_WIN  -> GamePastelMint
-        MiniGameState.RESULT_LOSE -> GamePastelPink
-        else                      -> GamePastelBlue
+        MiniGameState.RESULT_WIN  -> GameVibrantMemory
+        MiniGameState.RESULT_LOSE -> GameVibrantRPS
+        else                      -> Color(0xFF1565C0)
     }
     val resultTextColor = when (gameState) {
-        MiniGameState.RESULT_WIN  -> Color(0xFF1B6B3A)
-        MiniGameState.RESULT_LOSE -> Color(0xFFB5294E)
-        else                      -> Color(0xFF1565C0)
+        MiniGameState.RESULT_WIN  -> Color(0xFF004D40)
+        MiniGameState.RESULT_LOSE -> Color(0xFF880E4F)
+        else                      -> Color(0xFF0D47A1)
     }
 
     // Bouncy entrance for the emoji
     var emojiVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { emojiVisible = true }
 
+    // Staggered bouncing stars for WIN
+    val starScales = remember { List(3) { Animatable(0f) } }
+    LaunchedEffect(gameState) {
+        if (gameState == MiniGameState.RESULT_WIN) {
+            val scope = this
+            starScales.forEachIndexed { i, anim ->
+                scope.launch {
+                    anim.snapTo(0f)
+                    kotlinx.coroutines.delay(i * 120L)
+                    anim.animateTo(1f, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow))
+                    anim.animateTo(0.85f, tween(300))
+                    anim.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+                }
+            }
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
+        // Bouncing stars on WIN
+        if (gameState == MiniGameState.RESULT_WIN) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                modifier = Modifier.padding(bottom = 4.dp)
+            ) {
+                starScales.forEach { scale ->
+                    Icon(
+                        Icons.Filled.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp).graphicsLayer {
+                            scaleX = scale.value
+                            scaleY = scale.value
+                        },
+                        tint = Color(0xFFFFD600)
+                    )
+                }
+            }
+        }
         AnimatedVisibility(
             visible = emojiVisible,
             enter = scaleIn(spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn()
         ) {
-            Text(resultEmoji, fontSize = 56.sp)
+            Text(resultEmoji, fontSize = 64.sp)
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -467,6 +658,14 @@ fun GameResultOverlay(gameState: MiniGameState, reward: com.mert.paticat.ui.scre
             color = resultTextColor,
             fontWeight = FontWeight.Black
         )
+        if (gameState == MiniGameState.RESULT_WIN) {
+            Text(
+                "Harika! 🎊",
+                style = MaterialTheme.typography.bodyLarge,
+                color = resultTextColor.copy(alpha = 0.75f),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         if (reward != null && (reward.gold > 0 || reward.happy > 0 || reward.xp > 0)) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -490,15 +689,15 @@ fun GameResultOverlay(gameState: MiniGameState, reward: com.mert.paticat.ui.scre
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         if (reward.gold > 0)
                             EntranceAnimation(delay = 100) {
-                                RewardPill("+${reward.gold} 🪙", GamePastelYellow, Color(0xFF7A5C00))
+                                RewardPill("+${reward.gold} 🪙", Color(0xFFFFD600), Color(0xFF4E342E))
                             }
                         if (reward.happy > 0)
                             EntranceAnimation(delay = 200) {
-                                RewardPill("+${reward.happy} 💖", GamePastelPink, Color(0xFFB5294E))
+                                RewardPill("+${reward.happy} 💖", GameVibrantRPS, Color.White)
                             }
                         if (reward.xp > 0)
                             EntranceAnimation(delay = 300) {
-                                RewardPill("+${reward.xp} ⭐", GamePastelBlue, Color(0xFF1565C0))
+                                RewardPill("+${reward.xp} ⭐", GameVibrantCatch, Color.White)
                             }
                     }
                 }
@@ -510,7 +709,7 @@ fun GameResultOverlay(gameState: MiniGameState, reward: com.mert.paticat.ui.scre
 @Composable
 private fun RewardPill(text: String, bgColor: Color, textColor: Color) {
     Surface(
-        color = bgColor.copy(alpha = 0.45f),
+        color = bgColor.copy(alpha = 0.88f),
         shape = RoundedCornerShape(50.dp),
         border = BorderStroke(1.5.dp, bgColor)
     ) {
@@ -532,46 +731,60 @@ fun GameActionButtons(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Button(
-            onClick = onPlayAgain,
-            colors = ButtonDefaults.buttonColors(containerColor = accentColor),
+        // Play Again — gradient pill
+        Box(
             modifier = Modifier
-                .weight(1.3f)
-                .height(52.dp)
-                .bounceClick { onPlayAgain() },
-            shape = RoundedCornerShape(50.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp)
+                .weight(1.6f)
+                .height(56.dp)
+                .shadow(8.dp, RoundedCornerShape(50.dp), spotColor = accentColor.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(50.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(accentColor, accentColor.darken(0.18f))
+                    )
+                )
+                .bounceClick {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onPlayAgain()
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.btn_play_again),
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null,
+                    modifier = Modifier.size(20.dp), tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.btn_play_again),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 15.sp,
+                    color = Color.White,
+                    maxLines = 1
+                )
+            }
         }
-        OutlinedButton(
-            onClick = onClose,
+        // Close — outlined icon pill
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .height(52.dp)
-                .bounceClick { onClose() },
-            shape = RoundedCornerShape(50.dp),
-            border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.5f)),
-            contentPadding = PaddingValues(horizontal = 8.dp)
+                .height(56.dp)
+                .width(56.dp)
+                .clip(CircleShape)
+                .background(accentColor.copy(alpha = 0.12f))
+                .bounceClick {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClose()
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp), tint = accentColor)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.btn_close),
-                fontWeight = FontWeight.Bold,
-                color = accentColor,
-                maxLines = 1
-            )
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.btn_close),
+                modifier = Modifier.size(22.dp), tint = accentColor)
         }
     }
 }
@@ -597,9 +810,11 @@ fun RockPaperScissorsGame(
 ) {
     val isCountingDown = playerChoice != null && gameState.miniGameState == MiniGameState.PLAYING
     val shakeOffset = remember { Animatable(0f) }
+    var countdownNum by remember { mutableStateOf(3) }
 
     LaunchedEffect(isCountingDown) {
         if (isCountingDown) {
+            countdownNum = 3
             repeat(3) {
                 shakeOffset.animateTo(18f, tween(120, easing = FastOutSlowInEasing))
                 shakeOffset.animateTo(-18f, tween(120, easing = FastOutSlowInEasing))
@@ -607,6 +822,13 @@ fun RockPaperScissorsGame(
             shakeOffset.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
         } else {
             shakeOffset.snapTo(0f)
+        }
+    }
+
+    LaunchedEffect(isCountingDown, countdownNum) {
+        if (isCountingDown && countdownNum > 0) {
+            kotlinx.coroutines.delay(180)
+            countdownNum = (countdownNum - 1).coerceAtLeast(0)
         }
     }
 
@@ -705,7 +927,13 @@ fun RockPaperScissorsGame(
             Spacer(modifier = Modifier.height(16.dp))
             GameActionButtons(
                 accentColor = GamePastelPink,
-                onPlayAgain = { viewModel.startGame(GameType.RPS) },
+                onPlayAgain = {
+                    viewModel.startGame(
+                        GameType.RPS,
+                        ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                        ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                    )
+                },
                 onClose = { viewModel.closeMiniGame() }
             )
         } else if (!isCountingDown) {
@@ -718,15 +946,30 @@ fun RockPaperScissorsGame(
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                RPSChoiceCard("🪨", RockPaperScissors.ROCK,     Modifier.weight(1f)) { viewModel.playRPS(it) }
-                RPSChoiceCard("📄", RockPaperScissors.PAPER,    Modifier.weight(1f)) { viewModel.playRPS(it) }
-                RPSChoiceCard("✂️", RockPaperScissors.SCISSORS, Modifier.weight(1f)) { viewModel.playRPS(it) }
+                RPSChoiceCard("🪨", stringResource(R.string.game_choice_rock), RockPaperScissors.ROCK,     Modifier.weight(1f)) { viewModel.playRPS(it) }
+                RPSChoiceCard("📄", stringResource(R.string.game_choice_paper), RockPaperScissors.PAPER,    Modifier.weight(1f)) { viewModel.playRPS(it) }
+                RPSChoiceCard("✂️", stringResource(R.string.game_choice_scissors), RockPaperScissors.SCISSORS, Modifier.weight(1f)) { viewModel.playRPS(it) }
             }
         } else {
+            // Animated 3-2-1 countdown
             Box(contentAlignment = Alignment.Center, modifier = Modifier.height(80.dp)) {
-                Text("...", style = MaterialTheme.typography.displaySmall, color = GamePastelPink)
+                androidx.compose.animation.AnimatedContent(
+                    targetState = countdownNum,
+                    transitionSpec = {
+                        (scaleIn(spring(dampingRatio = Spring.DampingRatioLowBouncy)) + fadeIn(tween(80))) with
+                            (scaleOut(tween(120)) + fadeOut(tween(80)))
+                    },
+                    label = "countdown"
+                ) { num ->
+                    Text(
+                        if (num <= 0) stringResource(R.string.game_countdown_go) else num.toString(),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
+                        color = GameVibrantRPS
+                    )
+                }
             }
         }
     }
@@ -767,29 +1010,51 @@ private fun BattleAvatar(
 @Composable
 private fun RPSChoiceCard(
     emoji: String,
+    label: String,
     choice: RockPaperScissors,
     modifier: Modifier = Modifier,
     onClick: (RockPaperScissors) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    Surface(
-        modifier = modifier
-            .aspectRatio(1f)
-            .bounceClick {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onClick(choice)
-            },
-        shape = RoundedCornerShape(28.dp),
-        color = GamePastelPinkLight,
-        border = BorderStroke(2.dp, GamePastelPink.copy(alpha = 0.5f)),
-        shadowElevation = 5.dp
+    val gradientColor = when (choice) {
+        RockPaperScissors.ROCK     -> Color(0xFFFF6B6B)
+        RockPaperScissors.PAPER    -> Color(0xFF4ECDC4)
+        RockPaperScissors.SCISSORS -> Color(0xFFFFE66D)
+    }
+    val textCol = when (choice) {
+        RockPaperScissors.SCISSORS -> Color(0xFF7A5800)
+        else -> Color.White
+    }
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .shadow(10.dp, RoundedCornerShape(24.dp), spotColor = gradientColor.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(gradientColor, gradientColor.darken(0.2f))
+                    )
+                )
+                .bounceClick {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick(choice)
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Text(emoji, fontSize = 38.sp)
+            Text(emoji, fontSize = 36.sp)
         }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFFB5294E)
+        )
     }
 }
 
@@ -835,11 +1100,17 @@ fun SlotsGame(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val isJackpot = !uiState.isSpinning &&
+                        uiState.slotResults.size == 3 &&
+                        uiState.slotResults.all { it == uiState.slotResults[0] } &&
+                        uiState.miniGameState == MiniGameState.PLAYING
+
                     uiState.slotResults.forEachIndexed { index, emoji ->
                         SpinningReel(
                             targetEmoji = emoji,
                             isSpinning = uiState.isSpinning,
                             delayMillis = index * 120,
+                            isJackpot = isJackpot,
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
@@ -850,23 +1121,59 @@ fun SlotsGame(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 if (uiState.miniGameState == MiniGameState.PLAYING) {
-                    Button(
-                        onClick = { viewModel.spinSlots() },
-                        enabled = !uiState.isSpinning,
-                        colors = ButtonDefaults.buttonColors(containerColor = GamePastelPeach),
+                    val isIdle = !uiState.isSpinning
+                    val pulseScale = remember { Animatable(1f) }
+                    LaunchedEffect(isIdle) {
+                        if (isIdle) {
+                            while (true) {
+                                pulseScale.animateTo(1.04f, tween(700, easing = FastOutSlowInEasing))
+                                pulseScale.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
+                            }
+                        } else {
+                            pulseScale.snapTo(1f)
+                        }
+                    }
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp)
-                            .bounceClick { viewModel.spinSlots() },
-                        shape = RoundedCornerShape(50.dp)
+                            .height(56.dp)
+                            .graphicsLayer { scaleX = pulseScale.value; scaleY = pulseScale.value }
+                            .shadow(10.dp, RoundedCornerShape(50.dp), spotColor = GameVibrantSlots.copy(alpha = 0.5f))
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(
+                                if (isIdle)
+                                    Brush.horizontalGradient(listOf(GameVibrantSlots, Color(0xFFFF9800)))
+                                else
+                                    Brush.horizontalGradient(listOf(GameVibrantSlotsLight, GameVibrantSlotsLight))
+                            )
+                            .bounceClick { if (isIdle) viewModel.spinSlots() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            if (uiState.isSpinning) stringResource(R.string.game_slots_spinning)
-                            else stringResource(R.string.btn_spin),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 16.sp,
-                            color = Color(0xFFB5510B)
-                        )
+                        if (uiState.isSpinning) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.5.dp,
+                                    color = Color(0xFFB5510B)
+                                )
+                                Text(
+                                    stringResource(R.string.game_slots_spinning),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFFB5510B)
+                                )
+                            }
+                        } else {
+                            Text(
+                                stringResource(R.string.btn_spin),
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -878,7 +1185,13 @@ fun SlotsGame(
             Spacer(modifier = Modifier.height(16.dp))
             GameActionButtons(
                 accentColor = GamePastelPeach,
-                onPlayAgain = { viewModel.startGame(GameType.SLOTS) },
+                onPlayAgain = {
+                    viewModel.startGame(
+                        GameType.SLOTS,
+                        ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                        ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                    )
+                },
                 onClose = { viewModel.closeMiniGame() }
             )
         }
@@ -891,6 +1204,7 @@ fun SpinningReel(
     targetEmoji: String,
     isSpinning: Boolean,
     delayMillis: Int,
+    isJackpot: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val emojis = listOf("🍒", "🍋", "🍉", "🍇", "💎", "7️⃣", "🔔", "⭐")
@@ -913,13 +1227,16 @@ fun SpinningReel(
 
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = if (internalIsSpinning) GamePastelPeach.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.85f),
-        modifier = modifier,
+        color = if (internalIsSpinning) GameVibrantSlots.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.92f),
+        modifier = modifier
+            .let { m -> if (isJackpot) m.glowPulse(GamePastelYellow, 0.4f, 0.85f) else m },
         border = BorderStroke(
-            2.dp,
-            if (internalIsSpinning) GamePastelPeach else GamePastelPeach.copy(alpha = 0.3f)
+            2.5.dp,
+            if (isJackpot) GamePastelYellow
+            else if (internalIsSpinning) GameVibrantSlots
+            else GameVibrantSlotsLight.copy(alpha = 0.5f)
         ),
-        shadowElevation = if (internalIsSpinning) 8.dp else 3.dp
+        shadowElevation = if (internalIsSpinning) 12.dp else if (isJackpot) 16.dp else 4.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
             androidx.compose.animation.AnimatedContent(
@@ -1040,6 +1357,7 @@ fun MemoryGame(
                         val card = uiState.memoryCards[index]
                         FlipCard(
                             card = card,
+                            isWrong = index in uiState.memoryMismatchIndices,
                             onClick = {
                                 if (!card.isFlipped && !card.isMatched && uiState.memoryFlippedIndices.size < 2) {
                                     viewModel.flipMemoryCard(index)
@@ -1048,13 +1366,36 @@ fun MemoryGame(
                         )
                     }
                 }
+                // Pairs progress bar
+                val totalPairs = uiState.memoryCards.size / 2
+                val matchedProgress by animateFloatAsState(
+                    targetValue = if (totalPairs > 0) uiState.memoryMatchedPairs.toFloat() / totalPairs else 0f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "pairs_progress"
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                LinearProgressIndicator(
+                    progress = { matchedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(7.dp)
+                        .clip(RoundedCornerShape(50.dp)),
+                    color = GameVibrantMemory,
+                    trackColor = GamePastelMintLight.copy(alpha = 0.5f)
+                )
             }
             else -> {
                 EntranceAnimation { GameResultOverlay(uiState.miniGameState, uiState.lastReward) }
                 Spacer(modifier = Modifier.height(16.dp))
                 GameActionButtons(
                     accentColor = GamePastelMint,
-                    onPlayAgain = { viewModel.startGame(GameType.MEMORY) },
+                    onPlayAgain = {
+                        viewModel.startGame(
+                            GameType.MEMORY,
+                            ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                            ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                        )
+                    },
                     onClose = { viewModel.closeMiniGame() }
                 )
             }
@@ -1065,6 +1406,7 @@ fun MemoryGame(
 @Composable
 fun FlipCard(
     card: com.mert.paticat.ui.screens.cat.MemoryCard,
+    isWrong: Boolean = false,
     onClick: () -> Unit
 ) {
     val rotation by animateFloatAsState(
@@ -1091,11 +1433,20 @@ fun FlipCard(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(18.dp),
-                color = GamePastelMint.copy(alpha = 0.4f),
-                border = BorderStroke(2.dp, GamePastelMint.copy(alpha = 0.7f))
+                color = Color.Transparent
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("🐾", fontSize = 22.sp, modifier = Modifier.alpha(0.65f))
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(GamePastelMint, GameVibrantMemory.copy(alpha = 0.7f))
+                            ),
+                            RoundedCornerShape(18.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🐾", fontSize = 24.sp, modifier = Modifier.pulsate(scaleRange = 0.92f..1.08f, duration = 1200))
                 }
             }
         } else {
@@ -1106,11 +1457,16 @@ fun FlipCard(
                 shape = RoundedCornerShape(18.dp),
                 color = when {
                     card.isMatched -> GamePastelMint.copy(alpha = 0.4f)
+                    isWrong        -> Color(0xFFFFCDD2)
                     else           -> Color.White.copy(alpha = 0.85f)
                 },
                 border = BorderStroke(
                     2.dp,
-                    if (card.isMatched) GamePastelMint else GamePastelMintLight
+                    when {
+                        card.isMatched -> GamePastelMint
+                        isWrong        -> Color(0xFFE57373)
+                        else           -> GamePastelMintLight
+                    }
                 ),
                 shadowElevation = if (card.isMatched) 0.dp else 3.dp
             ) {
@@ -1143,6 +1499,16 @@ fun ReflexGame(
     uiState: GameUiState,
     viewModel: CatViewModel
 ) {
+    val roundTimerProgress = remember { Animatable(1f) }
+
+    LaunchedEffect(uiState.reflexRound, uiState.reflexIsWaiting) {
+        roundTimerProgress.snapTo(1f)
+        if (uiState.miniGameState == MiniGameState.PLAYING && !uiState.reflexIsWaiting && uiState.reflexRound > 0) {
+            val timeoutMs = (2000L - (uiState.reflexRound * 100L)).coerceAtLeast(800L)
+            roundTimerProgress.animateTo(0f, animationSpec = tween(timeoutMs.toInt(), easing = LinearEasing))
+        }
+    }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("⚡", fontSize = 38.sp)
         Spacer(modifier = Modifier.height(4.dp))
@@ -1167,6 +1533,23 @@ fun ReflexGame(
                 stringResource(R.string.game_reflex_round, uiState.reflexRound, uiState.reflexMaxRounds),
                 GamePastelLavender,
                 Color(0xFF5B2D8E)
+            )
+        }
+
+        if (uiState.miniGameState == MiniGameState.PLAYING && !uiState.reflexIsWaiting && uiState.reflexRound > 0) {
+            Spacer(modifier = Modifier.height(10.dp))
+            LinearProgressIndicator(
+                progress = { roundTimerProgress.value },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(50.dp)),
+                color = when {
+                    roundTimerProgress.value > 0.5f -> GameVibrantReflex
+                    roundTimerProgress.value > 0.25f -> GameVibrantSlotsLight
+                    else -> Color(0xFFEF5350)
+                },
+                trackColor = GamePastelLavLight.copy(alpha = 0.4f)
             )
         }
 
@@ -1275,14 +1658,24 @@ fun ReflexGame(
                                                 exit = scaleOut(tween(120)) + fadeOut(tween(80))
                                             ) {
                                                 target?.let { t ->
+                                                    val targetColor = when {
+                                                        uiState.reflexRound >= 8 -> Color(0xFFEF5350) // red
+                                                        uiState.reflexRound >= 5 -> Color(0xFFFF9800) // orange
+                                                        else -> GamePastelLavender // lavender
+                                                    }
+                                                    val targetBorderColor = when {
+                                                        uiState.reflexRound >= 8 -> Color(0xFFFFCDD2)
+                                                        uiState.reflexRound >= 5 -> Color(0xFFFFE0B2)
+                                                        else -> GamePastelLavLight
+                                                    }
                                                     Surface(
                                                         modifier = Modifier
                                                             .fillMaxSize()
                                                             .bounceClick { viewModel.tapReflexTarget(t.id) },
                                                         shape = RoundedCornerShape(16.dp),
-                                                        color = GamePastelLavender,
+                                                        color = targetColor,
                                                         shadowElevation = 8.dp,
-                                                        border = BorderStroke(2.dp, GamePastelLavLight)
+                                                        border = BorderStroke(2.dp, targetBorderColor)
                                                     ) {
                                                         Box(contentAlignment = Alignment.Center) {
                                                             Text(t.emoji, fontSize = 24.sp)
@@ -1329,7 +1722,13 @@ fun ReflexGame(
                 Spacer(modifier = Modifier.height(16.dp))
                 GameActionButtons(
                     accentColor = GamePastelLavender,
-                    onPlayAgain = { viewModel.startGame(GameType.REFLEX) },
+                    onPlayAgain = {
+                        viewModel.startGame(
+                            GameType.REFLEX,
+                            ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                            ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                        )
+                    },
                     onClose = { viewModel.closeMiniGame() }
                 )
              }
@@ -1371,7 +1770,7 @@ fun ReflexGame(
                  )
                  Spacer(Modifier.height(4.dp))
                  Text(
-                     "Yakala!",
+                     stringResource(R.string.game_catch_pre_title),
                      style = MaterialTheme.typography.titleMedium,
                      fontWeight = FontWeight.ExtraBold,
                      color = catchBlueDk
@@ -1395,7 +1794,7 @@ fun ReflexGame(
                              Icon(painterResource(R.drawable.ic_game_flower), null, Modifier.size(28.dp), tint = Color.Unspecified)
                          }
                          Text(
-                             "Sepeti sürükleyerek iyi şeyleri yakala!\n💣 Bombalardan kaç!",
+                             stringResource(R.string.game_catch_instruction),
                              style = MaterialTheme.typography.bodyMedium,
                              color = catchBlueDk,
                              textAlign = TextAlign.Center
@@ -1406,7 +1805,7 @@ fun ReflexGame(
                              border = BorderStroke(1.dp, catchBlue.copy(alpha = 0.4f))
                          ) {
                              Text(
-                                 "3 can • ~30 sn • Puan 15+ = 🏆",
+                                 stringResource(R.string.game_catch_tip),
                                  modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                  style = MaterialTheme.typography.labelSmall,
                                  fontWeight = FontWeight.Bold,
@@ -1419,7 +1818,7 @@ fun ReflexGame(
                              shape = RoundedCornerShape(50.dp),
                              modifier = Modifier.fillMaxWidth(0.6f).height(50.dp)
                          ) {
-                             Text("Başla!", fontWeight = FontWeight.ExtraBold, color = Color.White)
+                             Text(stringResource(R.string.btn_start_game), fontWeight = FontWeight.ExtraBold, color = Color.White)
                          }
                      }
                  }
@@ -1439,7 +1838,13 @@ fun ReflexGame(
              Spacer(Modifier.height(16.dp))
              GameActionButtons(
                  accentColor = catchBlue,
-                 onPlayAgain = { viewModel.startGame(GameType.CATCH) },
+                onPlayAgain = {
+                    viewModel.startGame(
+                        GameType.CATCH,
+                        ignoreLevelLock = GAME_ROOM_LEVEL_LOCK_DISABLED,
+                        ignoreEnergyLimit = GAME_ROOM_LEVEL_LOCK_DISABLED
+                    )
+                },
                  onClose     = { viewModel.closeMiniGame() }
              )
          }
@@ -1461,6 +1866,7 @@ fun ReflexGame(
      var items      by remember { mutableStateOf(listOf<FallingItem>()) }
      var nextItemId by remember { mutableStateOf(0) }
      var arenaSize  by remember { mutableStateOf(IntSize.Zero) }
+     var elapsedSeconds by remember { mutableStateOf(0f) }
 
      val goodEmojis = remember { listOf(R.drawable.ic_game_apple, R.drawable.ic_game_fish, R.drawable.ic_game_yarn, R.drawable.ic_game_flower) }
 
@@ -1476,6 +1882,7 @@ fun ReflexGame(
              val dt = ((nowNanos - lastFrameNanos) / 1_000_000_000f).coerceIn(0f, 0.1f)
              lastFrameNanos = nowNanos
              elapsed += dt
+             elapsedSeconds = elapsed
 
              // Spawn items
              spawnTimer -= dt
@@ -1530,12 +1937,57 @@ fun ReflexGame(
              modifier = Modifier.fillMaxWidth(),
              horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
          ) {
-             GameBadge("⭐ $score puan", catchBlue, catchBlueDk)
+             // Animated score badge
+             Surface(
+                 color = catchBlue.copy(alpha = 0.25f),
+                 shape = RoundedCornerShape(50.dp),
+                 border = BorderStroke(1.dp, catchBlue.copy(alpha = 0.4f))
+             ) {
+                 Row(
+                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                     verticalAlignment = Alignment.CenterVertically,
+                     horizontalArrangement = Arrangement.spacedBy(4.dp)
+                 ) {
+                     Icon(Icons.Filled.TrackChanges, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF0D47A1))
+                     androidx.compose.animation.AnimatedContent(
+                         targetState = score,
+                         transitionSpec = {
+                             (slideInVertically { -it } + fadeIn(tween(150))) with
+                                 (slideOutVertically { it } + fadeOut(tween(100)))
+                         },
+                         label = "score_anim"
+                     ) { s ->
+                         Text(
+                             "$s",
+                             style = MaterialTheme.typography.labelSmall,
+                             fontWeight = FontWeight.ExtraBold,
+                             color = catchBlueDk
+                         )
+                     }
+                 }
+             }
              val heartsText = "❤️".repeat(lives.coerceIn(0, 3))
              GameBadge(heartsText.ifEmpty { "💀" }, Color(0xFFEF9A9A), Color(0xFFB71C1C))
          }
 
-         Spacer(Modifier.height(10.dp))
+         // 30s timer bar
+         val timerProgress = (1f - elapsedSeconds / 30f).coerceIn(0f, 1f)
+         Spacer(Modifier.height(6.dp))
+         LinearProgressIndicator(
+             progress = { timerProgress },
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .height(5.dp)
+                 .clip(RoundedCornerShape(50.dp)),
+             color = when {
+                 timerProgress > 0.5f -> Color(0xFF66BB6A)
+                 timerProgress > 0.25f -> Color(0xFFFF9800)
+                 else -> Color(0xFFEF5350)
+             },
+             trackColor = catchBlue.copy(alpha = 0.2f)
+         )
+
+         Spacer(Modifier.height(8.dp))
 
          // Arena
          Box(
@@ -1613,10 +2065,234 @@ fun ReflexGame(
 
          Spacer(Modifier.height(8.dp))
          Text(
-             "Sepeti yatay sürükleyerek yönlendir!",
+             stringResource(R.string.game_catch_hint),
              style = MaterialTheme.typography.labelSmall,
              color = catchBlueDk.copy(alpha = 0.6f),
              fontWeight = FontWeight.SemiBold
          )
      }
  }
+
+// ════════════════════════════════════════════════════════════════════
+//  PRE-GAME OVERLAY  – shown when a game card is tapped
+// ════════════════════════════════════════════════════════════════════
+
+private data class GamePreviewConfig(
+    val emoji: String,
+    val title: String,
+    val description: String,
+    val rewardHint: String,
+    val gradientTop: Color,
+    val gradientBottom: Color,
+    val textColor: Color,
+    val buttonColor: Color
+)
+
+@Composable
+private fun previewConfigFor(gameType: GameType): GamePreviewConfig = when (gameType) {
+    GameType.RPS -> GamePreviewConfig(
+        emoji = "✊", title = stringResource(R.string.game_rps_title),
+        description = stringResource(R.string.game_preview_rps_desc),
+        rewardHint = stringResource(R.string.game_reward_rps),
+        gradientTop = GameVibrantRPS, gradientBottom = GameVibrantRPSLight,
+        textColor = Color.White, buttonColor = Color(0xFFB5003A)
+    )
+    GameType.SLOTS -> GamePreviewConfig(
+        emoji = "🎰", title = stringResource(R.string.game_slots_title),
+        description = stringResource(R.string.game_preview_slots_desc),
+        rewardHint = stringResource(R.string.game_reward_slots),
+        gradientTop = GameVibrantSlots, gradientBottom = GameVibrantSlotsLight,
+        textColor = Color.White, buttonColor = Color(0xFFBF3600)
+    )
+    GameType.MEMORY -> GamePreviewConfig(
+        emoji = "🧠", title = stringResource(R.string.game_memory_title),
+        description = stringResource(R.string.game_preview_memory_desc),
+        rewardHint = stringResource(R.string.game_reward_memory),
+        gradientTop = GameVibrantMemory, gradientBottom = GameVibrantMemoryLight,
+        textColor = Color.White, buttonColor = Color(0xFF00796B)
+    )
+    GameType.REFLEX -> GamePreviewConfig(
+        emoji = "⚡", title = stringResource(R.string.game_reflex_title),
+        description = stringResource(R.string.game_preview_reflex_desc),
+        rewardHint = stringResource(R.string.game_reward_reflex),
+        gradientTop = GameVibrantReflex, gradientBottom = GameVibrantReflexLight,
+        textColor = Color.White, buttonColor = Color(0xFF4A1DB5)
+    )
+    GameType.CATCH -> GamePreviewConfig(
+        emoji = "🧺", title = stringResource(R.string.game_catch_title),
+        description = stringResource(R.string.game_catch_instruction),
+        rewardHint = stringResource(R.string.game_reward_catch),
+        gradientTop = GameVibrantCatch, gradientBottom = GameVibrantCatchLight,
+        textColor = Color.White, buttonColor = Color(0xFF015F8A)
+    )
+}
+
+@Composable
+private fun PreGameOverlay(
+    gameType: GameType,
+    catLevel: Int,
+    catEnergy: Int,
+    onPlay: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val cfg = previewConfigFor(gameType)
+    val isLocked  = catLevel < gameType.minLevel
+    val hasEnergy = GAME_ROOM_LEVEL_LOCK_DISABLED || catEnergy >= gameType.energyCost
+    val canPlay   = !isLocked && hasEnergy
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        var visible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { visible = true }
+
+        AnimatedVisibility(
+            visible = visible,
+            enter = slideInVertically(
+                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)
+            ) { it / 2 } + fadeIn(tween(220))
+        ) {
+            Card(
+                shape = RoundedCornerShape(36.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(listOf(cfg.gradientTop, cfg.gradientBottom)),
+                            RoundedCornerShape(36.dp)
+                        )
+                        .padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Animated big emoji
+                    var emojiVisible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay(120)
+                        emojiVisible = true
+                    }
+                    AnimatedVisibility(
+                        visible = emojiVisible,
+                        enter = scaleIn(spring(dampingRatio = Spring.DampingRatioLowBouncy)) + fadeIn()
+                    ) {
+                        Text(cfg.emoji, fontSize = 72.sp)
+                    }
+
+                    Text(
+                        cfg.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = cfg.textColor,
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Description card
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.White.copy(alpha = 0.22f)
+                    ) {
+                        Text(
+                            cfg.description,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = cfg.textColor,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+                    }
+
+                    // Stats row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
+                    ) {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(50.dp)
+                        ) {
+                            Text(
+                                "⚡ ${gameType.energyCost}",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = if (!hasEnergy && !isLocked) Color(0xFFFFCDD2) else cfg.textColor
+                            )
+                        }
+                        Surface(
+                            color = Color.White.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(50.dp)
+                        ) {
+                            Text(
+                                "🏆 ${cfg.rewardHint}",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = cfg.textColor
+                            )
+                        }
+                    }
+
+                    // Lock / low-energy warning
+                    if (!canPlay) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.Black.copy(alpha = 0.18f)
+                        ) {
+                            Text(
+                                if (isLocked) stringResource(R.string.game_pregame_locked, gameType.minLevel)
+                                else          stringResource(R.string.game_pregame_low_energy, catEnergy, gameType.energyCost),
+                                modifier = Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = cfg.textColor.copy(alpha = 0.9f),
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Button(
+                        onClick = onPlay,
+                        enabled = canPlay,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = cfg.buttonColor,
+                            disabledContainerColor = cfg.buttonColor.copy(alpha = 0.45f)
+                        ),
+                        shape = RoundedCornerShape(50.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .bounceClick { if (canPlay) onPlay() }
+                    ) {
+                        Text(
+                            stringResource(R.string.btn_play_game),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 18.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            stringResource(R.string.btn_dismiss),
+                            color = cfg.textColor.copy(alpha = 0.65f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

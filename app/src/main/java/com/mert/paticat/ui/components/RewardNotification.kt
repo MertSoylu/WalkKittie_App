@@ -1,16 +1,30 @@
 package com.mert.paticat.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.ui.res.stringResource
+import com.mert.paticat.R
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,19 +33,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import com.mert.paticat.R
+import com.mert.paticat.ui.theme.AccentGold
+import com.mert.paticat.ui.theme.PremiumMint
 
 data class RewardNotificationData(
     val xp: Int = 0,
     val foodPoints: Int = 0,
     val gold: Int = 0,
-    val title: String? = null, // null = use localized default from string resource
+    val title: String? = null,
     val message: String = ""
 )
 
@@ -41,11 +56,15 @@ fun RewardNotificationArea(
     onDismiss: () -> Unit
 ) {
     val isVisible = rewardData != null
-    
-    // Auto dismiss after 3 seconds
+    val dismissProgress = remember { Animatable(1f) }
+
     LaunchedEffect(rewardData) {
         if (rewardData != null) {
-            delay(3000)
+            dismissProgress.snapTo(1f)
+            dismissProgress.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 3000, easing = LinearEasing)
+            )
             onDismiss()
         }
     }
@@ -53,85 +72,136 @@ fun RewardNotificationArea(
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
-            initialOffsetY = { -it },
-            animationSpec = tween(durationMillis = 500)
-        ) + fadeIn(animationSpec = tween(500)),
+            initialOffsetY = { -it - 80 },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        ) + fadeIn(animationSpec = tween(150)),
         exit = slideOutVertically(
             targetOffsetY = { -it },
-            animationSpec = tween(durationMillis = 500)
-        ) + fadeOut(animationSpec = tween(500)),
+            animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing)
+        ) + fadeOut(animationSpec = tween(200)),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 48.dp) // Below system status bar
+            .padding(top = 48.dp)
     ) {
         if (rewardData != null) {
+            var dragOffset by remember { mutableStateOf(0f) }
+            val animatedDrag by animateFloatAsState(
+                targetValue = dragOffset,
+                animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                label = "dragOffset"
+            )
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .graphicsLayer { translationY = animatedDrag }
                     .pointerInput(Unit) {
-                        detectVerticalDragGestures { _, dragAmount ->
-                            if (dragAmount < -10) { // Swiped up
-                                onDismiss()
+                        detectVerticalDragGestures(
+                            onDragEnd = {
+                                if (dragOffset < -60f) {
+                                    onDismiss()
+                                } else {
+                                    dragOffset = 0f
+                                }
                             }
+                        ) { _, dragAmount ->
+                            dragOffset = (dragOffset + dragAmount).coerceIn(-300f, 16f)
                         }
                     },
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                shadowElevation = 8.dp
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f),
+                shadowElevation = 16.dp,
+                tonalElevation = 4.dp
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Icon/Emoji area
-                    Box(
+                Column {
+                    Row(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 14.dp, bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🎁", fontSize = 24.sp)
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = rewardData.title ?: androidx.compose.ui.res.stringResource(R.string.reward_title),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        
-                        if (rewardData.message.isNotEmpty()) {
-                            Text(
-                                text = rewardData.message,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.CardGiftcard,
+                                contentDescription = stringResource(R.string.icon_coin),
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.primary
                             )
-                        } else {
-                            // Show rewards inline
-                            Row(
-                                modifier = Modifier.padding(top = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (rewardData.xp > 0) {
-                                    RewardItem(icon = "✨", amount = "+${rewardData.xp} XP", color = Color(0xFFFFB74D))
-                                }
-                                if (rewardData.foodPoints > 0) {
-                                    RewardItem(icon = "🍖", amount = "+${rewardData.foodPoints}", color = Color(0xFF81C784))
-                                }
-                                if (rewardData.gold > 0) {
-                                    RewardItem(icon = "🪙", amount = "+${rewardData.gold}", color = Color(0xFFFFD54F))
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = rewardData.title
+                                    ?: androidx.compose.ui.res.stringResource(R.string.reward_title),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            if (rewardData.message.isNotEmpty()) {
+                                Text(
+                                    text = rewardData.message,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier.padding(top = 6.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (rewardData.xp > 0) {
+                                        RewardChip(
+                                            icon = Icons.Filled.Star,
+                                            amount = "+${rewardData.xp} XP",
+                                            iconColor = AccentGold,
+                                            chipColor = AccentGold.copy(alpha = 0.12f)
+                                        )
+                                    }
+                                    if (rewardData.foodPoints > 0) {
+                                        RewardChip(
+                                            icon = Icons.Filled.Favorite,
+                                            amount = "+${rewardData.foodPoints}",
+                                            iconColor = PremiumMint,
+                                            chipColor = PremiumMint.copy(alpha = 0.12f)
+                                        )
+                                    }
+                                    if (rewardData.gold > 0) {
+                                        RewardChip(
+                                            icon = Icons.Filled.MonetizationOn,
+                                            amount = "+${rewardData.gold}",
+                                            iconColor = AccentGold,
+                                            chipColor = AccentGold.copy(alpha = 0.12f)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+
+                    LinearProgressIndicator(
+                        progress = { dismissProgress.value },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        trackColor = Color.Transparent
+                    )
                 }
             }
         }
@@ -139,15 +209,34 @@ fun RewardNotificationArea(
 }
 
 @Composable
-private fun RewardItem(icon: String, amount: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = icon, fontSize = 14.sp)
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = amount,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
+private fun RewardChip(
+    icon: ImageVector,
+    amount: String,
+    iconColor: Color,
+    chipColor: Color,
+    label: String = "Reward"
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = chipColor
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(13.dp),
+                tint = iconColor
+            )
+            Text(
+                text = amount,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }

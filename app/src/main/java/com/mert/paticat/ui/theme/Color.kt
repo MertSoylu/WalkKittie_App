@@ -35,7 +35,7 @@ val BackgroundLight = Color(0xFFFDFDFD)
 val BackgroundDark = Color(0xFF0A0E1A)
 
 val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0x330F0F0F) // ~20% opaque — glassmorphism
+val SurfaceDark = Color(0xFF141826)
 
 val CardOnLight = Color(0xFFF8F9FA)
 val CardOnDark = Color(0x40161616) // ~25% opaque — glassmorphism
@@ -74,6 +74,12 @@ val SuccessGreen = PremiumMint
 val WarningOrange = Color(0xFFFFB74D)
 val ErrorRed = Color(0xFFEF5350)
 
+// --- Cat Stat Semantic Tokens ---
+// Use these instead of raw premium colors for cat status bars/indicators
+val HungerColor = PremiumPeach      // Food/hunger indicator
+val EnergyColor = PremiumBlue       // Energy/battery indicator
+val HappinessColor = PremiumPink    // Happiness/mood indicator
+
 val CardPink = PremiumPink.copy(alpha = 0.05f)
 val CardBlue = PremiumBlue.copy(alpha = 0.05f)
 val CardMint = PremiumMint.copy(alpha = 0.05f)
@@ -91,4 +97,14 @@ val GamePastelLavLight  = Color(0xFFE8D8F5)
 val GamePastelBlue      = Color(0xFFBDE0FE)   // Sky blue
 val GamePastelYellow    = Color(0xFFFFF3B0)   // Butter yellow
 
-
+// --- Vibrant Game Palette (per-game accent colors) ---
+val GameVibrantRPS        = Color(0xFFFF2D78)   // Hot pink   – RPS
+val GameVibrantRPSLight   = Color(0xFFFF80AB)
+val GameVibrantSlots      = Color(0xFFFF6D00)   // Orange     – Slots
+val GameVibrantSlotsLight = Color(0xFFFFAB40)
+val GameVibrantMemory     = Color(0xFF00BFA5)   // Teal       – Memory
+val GameVibrantMemoryLight= Color(0xFF69F0AE)
+val GameVibrantReflex     = Color(0xFF651FFF)   // Deep purple– Reflex
+val GameVibrantReflexLight= Color(0xFFB388FF)
+val GameVibrantCatch      = Color(0xFF0277BD)   // Deep blue  – Catch
+val GameVibrantCatchLight = Color(0xFF4FC3F7)

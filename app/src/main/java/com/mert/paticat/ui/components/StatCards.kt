@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import com.mert.paticat.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -60,11 +62,11 @@ fun StatCard(
         animationSpec = tween(durationMillis = 1000),
         label = "progress"
     )
-    
+
     LaunchedEffect(progress) {
         animatedProgress = progress
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -89,14 +91,14 @@ fun StatCard(
                 ) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = null,
+                        contentDescription = title,
                         tint = progressColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
@@ -118,7 +120,7 @@ fun StatCard(
                     }
                 }
             }
-            
+
             if (progress > 0f) {
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
@@ -188,7 +190,7 @@ fun GradientStatCard(
                         )
                     }
                 }
-                
+
                 Box(
                     modifier = Modifier
                         .size(64.dp)
@@ -198,7 +200,7 @@ fun GradientStatCard(
                 ) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = null,
+                        contentDescription = title,
                         tint = Color.White,
                         modifier = Modifier.size(32.dp)
                     )

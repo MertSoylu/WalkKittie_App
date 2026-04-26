@@ -6,6 +6,7 @@ import com.mert.paticat.data.local.dao.InventoryDao
 import com.mert.paticat.data.local.entity.CatInteractionEntity
 import com.mert.paticat.data.local.entity.InventoryEntity
 import com.mert.paticat.data.local.toDbString
+import com.mert.paticat.domain.model.EconomySource
 import com.mert.paticat.domain.model.InteractionType
 import com.mert.paticat.domain.model.ShopItem
 import com.mert.paticat.data.local.preferences.UserPreferencesRepository
@@ -61,9 +62,11 @@ class ShopRepositoryImpl @Inject constructor(
                 "xp_multiplier" -> userPreferencesRepository.setXpBoostExpiry(expiry)
                 "combo_multiplier" -> userPreferencesRepository.setComboBoostExpiry(expiry)
             }
-            // Deduct gold for boost
-            val newCoins = cat.coins - item.price
-            catDao.updateCoins(newCoins)
+            catRepository.addCoins(
+                amount = -item.price,
+                source = EconomySource.SHOP_PURCHASE,
+                note = item.id
+            )
             return true
         }
 
@@ -74,9 +77,11 @@ class ShopRepositoryImpl @Inject constructor(
             return false
         }
 
-        // Deduct gold
-        val newCoins = cat.coins - item.price
-        catDao.updateCoins(newCoins)
+        catRepository.addCoins(
+            amount = -item.price,
+            source = EconomySource.SHOP_PURCHASE,
+            note = item.id
+        )
 
         // Add to inventory (capped)
         val newQty = (currentQty + 1).coerceAtMost(ShopItem.MAX_INVENTORY_PER_ITEM)

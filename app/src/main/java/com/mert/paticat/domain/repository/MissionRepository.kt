@@ -11,9 +11,13 @@ interface MissionRepository {
     fun getTodayMissions(): Flow<List<Mission>>
     fun getActiveMissions(): Flow<List<Mission>>
     fun getCompletedMissions(): Flow<List<Mission>>
-    
+
     suspend fun generateDailyMissions()
     suspend fun updateMissionProgress(missionId: String, progress: Int)
     suspend fun completeMission(missionId: String)
-    suspend fun checkAndCompleteMissions(steps: Int? = null, waterMl: Int? = null)
+    suspend fun checkAndCompleteMissions(
+        steps: Int? = null,
+        waterMl: Int? = null,
+        gameCount: Int? = null
+    )
 }

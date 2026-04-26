@@ -19,6 +19,8 @@ import androidx.core.app.NotificationCompat
 import com.mert.paticat.data.local.dao.DailyStatsDao
 import com.mert.paticat.data.local.dao.UserProfileDao
 import com.mert.paticat.data.local.entity.DailyStatsEntity
+import com.mert.paticat.domain.model.EconomyConfig
+import com.mert.paticat.domain.model.EconomySource
 import com.mert.paticat.domain.repository.CatRepository
 import com.mert.paticat.domain.repository.MissionRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,61 +35,61 @@ import kotlin.math.max
 
 /**
  * Optimized Step Counter Foreground Service
- * 
+ *
  * Battery Optimization Strategy:
  * 1. Uses hardware batching (30 second batches) to reduce CPU wakeups
- * 2. Only syncs to DB every 100 steps OR every 10 minutes (whichever comes first)
+ * 2. Only syncs to DB every 250 steps OR every 20 minutes (whichever comes first)
  * 3. Uses SENSOR_DELAY_NORMAL for lowest power consumption
  * 4. Minimal notification updates
  */
 @AndroidEntryPoint
 class StepCounterService : Service(), SensorEventListener {
-    
+
     @Inject lateinit var dailyStatsDao: DailyStatsDao
     @Inject lateinit var catRepository: CatRepository
     @Inject lateinit var userProfileDao: UserProfileDao
     @Inject lateinit var missionRepository: MissionRepository
     @Inject lateinit var stepCounterManager: StepCounterManager
     @Inject lateinit var userPreferencesRepository: com.mert.paticat.data.local.preferences.UserPreferencesRepository
-    
+
     private lateinit var sensorManager: SensorManager
     private var stepCounterSensor: Sensor? = null
-    
+
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
-    
+
     // Step tracking state
     @Volatile private var initialStepCount: Int = -1
     @Volatile private var currentDaySteps: Int = 0
     private var lastSavedDate: String = ""
     @Volatile private var lastProcessedStepsForRewards: Int = 0
 
-    
+
     // Battery optimization thresholds
     @Volatile private var lastSyncedSteps: Int = 0
     private var lastSyncTime: Long = 0L
     private var lastNotificationSteps: Int = 0
-    
+
     // User weight for calorie calculation (loaded from profile)
     private var userWeightKg: Float = 70f
-    
+
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
-    
+
     companion object {
         const val CHANNEL_ID = "step_counter_channel"
         const val NOTIFICATION_ID = 2001
-        
+
         const val ACTION_START = "com.mert.paticat.START_STEP_COUNTER"
         const val ACTION_STOP = "com.mert.paticat.STOP_STEP_COUNTER"
-        
+
         private const val PREFS_NAME = "walkkittie_step_prefs"
         private const val KEY_INITIAL_SENSOR_VAL = "initial_sensor_val"
         private const val KEY_LAST_DATE = "last_date"
         private const val KEY_REWARD_STEPS_CURSOR = "reward_steps_cursor"
-        
+
         // Reward settings
-        private const val STEPS_PER_FOOD_POINT = 100
-        
+        private const val STEPS_PER_FOOD_POINT = EconomyConfig.STEPS_PER_COIN
+
         // Battery optimization settings
         private const val STEP_SYNC_THRESHOLD = 250      // Sync every 250 steps (Increased from 100)
         private const val TIME_SYNC_THRESHOLD = 20 * 60 * 1000L  // Or every 20 minutes (Increased from 10)
@@ -97,12 +99,12 @@ class StepCounterService : Service(), SensorEventListener {
         fun startService(context: Context) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    if (context.checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION) 
+                    if (context.checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION)
                         != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                         return
                     }
                 }
-                
+
                 val intent = Intent(context, StepCounterService::class.java).apply {
                     action = ACTION_START
                 }
@@ -117,7 +119,7 @@ class StepCounterService : Service(), SensorEventListener {
             }
             }
         }
-        
+
         fun stopService(context: Context) {
             try {
                 val intent = Intent(context, StepCounterService::class.java).apply {
@@ -131,7 +133,7 @@ class StepCounterService : Service(), SensorEventListener {
             }
         }
     }
-    
+
     override fun onCreate() {
         super.onCreate()
         try {
@@ -146,7 +148,7 @@ class StepCounterService : Service(), SensorEventListener {
             }
         }
     }
-    
+
     private fun loadUserWeight() {
         serviceScope.launch {
             try {
@@ -157,7 +159,7 @@ class StepCounterService : Service(), SensorEventListener {
             }
         }
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
             if (intent?.action == ACTION_STOP) {
@@ -168,7 +170,7 @@ class StepCounterService : Service(), SensorEventListener {
 
             // Permission check
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION) 
+                if (checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION)
                     != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     stopSelf()
                     return START_NOT_STICKY
@@ -188,7 +190,7 @@ class StepCounterService : Service(), SensorEventListener {
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
-            
+
             registerSensor()
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) {
@@ -197,81 +199,81 @@ class StepCounterService : Service(), SensorEventListener {
         }
         return START_STICKY
     }
-    
+
     private fun registerSensor() {
         stepCounterSensor?.let { sensor ->
             // Use hardware batching to reduce CPU wakeups
             // SENSOR_DELAY_NORMAL = lowest power consumption
             // BATCH_LATENCY_US = collect events in hardware for 30 seconds before waking CPU
             sensorManager.registerListener(
-                this, 
-                sensor, 
+                this,
+                sensor,
                 SensorManager.SENSOR_DELAY_NORMAL,
                 BATCH_LATENCY_US
             )
         }
     }
-    
+
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type != Sensor.TYPE_STEP_COUNTER) return
-        
+
         val sensorValue = event.values[0].toInt()
         val today = LocalDate.now().format(dateFormatter)
-        
+
         // Handle day change
         if (lastSavedDate != today) {
             handleNewDay(today, sensorValue)
         }
-        
+
         // Ensure we load DB state on first read to avoid data loss on service restart
         if (initialStepCount < 0) {
             // Load DB state asynchronously (avoids ANR from runBlocking)
             loadTodayStepsFromDbAsync(today, sensorValue)
             return // Skip this event; next event will be processed after async init completes
         }
-        
+
         // Handle device reboot mid-day (sensor value resets to 0)
         // Check for sudden drop in sensor value that isn't handled by initialStepCount logic
-        if (sensorValue < (initialStepCount + currentDaySteps - 100)) { 
+        if (sensorValue < (initialStepCount + currentDaySteps - 100)) {
             // -100 is a buffer to avoid false positives on minor drift
             // Sensor reset detected! Re-reconcile using currentDaySteps as known truth
             android.util.Log.i("StepCounterService", "Device reboot detected! Re-calculating baseline.")
             initialStepCount = sensorValue - currentDaySteps
             saveState()
         }
-        
+
         // Calculate today's steps
         val newStepsSinceBoot = max(currentDaySteps, sensorValue - initialStepCount)
         currentDaySteps = newStepsSinceBoot
-        
+
         // Update live steps for UI
         stepCounterManager.updateLiveSteps(currentDaySteps)
-        
+
         // Battery optimization: Only sync if threshold met
         val currentTime = System.currentTimeMillis()
         val stepDiff = kotlin.math.abs(currentDaySteps - lastSyncedSteps)
         val timeDiff = currentTime - lastSyncTime
-        
+
         if (stepDiff >= STEP_SYNC_THRESHOLD || timeDiff >= TIME_SYNC_THRESHOLD || lastSyncedSteps == 0) {
             syncToDatabase(today)
             lastSyncedSteps = currentDaySteps
             lastSyncTime = currentTime
         }
-        
+
         // Update notification less frequently
         if (kotlin.math.abs(currentDaySteps - lastNotificationSteps) >= NOTIFICATION_UPDATE_THRESHOLD) {
             updateNotification()
             lastNotificationSteps = currentDaySteps
         }
     }
-    
+
     private fun handleNewDay(today: String, sensorValue: Int) {
         // Clock drift protection: Only move forward
         if (lastSavedDate.isNotEmpty() && today < lastSavedDate) {
             android.util.Log.w("StepCounterService", "Clock drift detected? Date $today is before $lastSavedDate. Ignoring.")
             return
         }
-        
+
         android.util.Log.i("StepCounterService", "New day detected: $today. Resetting steps.")
         lastSavedDate = today
         initialStepCount = sensorValue
@@ -281,7 +283,7 @@ class StepCounterService : Service(), SensorEventListener {
         lastNotificationSteps = 0
         saveState()
     }
-    
+
     private fun syncToDatabase(date: String) {
         val steps = currentDaySteps
         serviceScope.launch {
@@ -289,7 +291,7 @@ class StepCounterService : Service(), SensorEventListener {
                 // Calculate calories and distance based on user weight
                 val calories = calculateCalories(steps)
                 val distance = calculateDistance(steps)
-                
+
                 // Update daily stats
                 val existing = dailyStatsDao.getDailyStatsOnce(date)
                 if (existing != null) {
@@ -297,7 +299,7 @@ class StepCounterService : Service(), SensorEventListener {
                 } else {
                     dailyStatsDao.insertDailyStats(DailyStatsEntity(date = date, steps = steps, caloriesBurned = calories, distanceKm = distance))
                 }
-                
+
                 // Calculate rewards
                 val diffForRewards = steps - lastProcessedStepsForRewards
                 if (diffForRewards >= STEPS_PER_FOOD_POINT) {
@@ -306,26 +308,39 @@ class StepCounterService : Service(), SensorEventListener {
 
                     val now = System.currentTimeMillis()
                     val comboExpiry = userPreferencesRepository.getComboBoostExpiry()
-                    val goldMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getStepBoostExpiry()) 2 else 1
-                    val xpMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getXpBoostExpiry()) 2 else 1
-                    catRepository.addCoins(pointsEarned * goldMultiplier)
-                    catRepository.addXp(pointsEarned * xpMultiplier)
-                    
+                    val goldMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getStepBoostExpiry()) {
+                        EconomyConfig.STEP_BOOST_MULTIPLIER
+                    } else {
+                        1
+                    }
+                    val xpMultiplier = if (now < comboExpiry || now < userPreferencesRepository.getXpBoostExpiry()) {
+                        EconomyConfig.XP_BOOST_MULTIPLIER
+                    } else {
+                        1
+                    }
+                    val earnedCoins = pointsEarned * goldMultiplier
+                    val earnedXp = pointsEarned * xpMultiplier
+                    catRepository.addCoins(
+                        amount = earnedCoins,
+                        source = EconomySource.STEP_REWARD
+                    )
+                    catRepository.addXp(earnedXp)
+
                     // Track pending rewards for the UI notification
-                    userPreferencesRepository.addPendingRewards(pointsEarned, pointsEarned)
-                    
+                    userPreferencesRepository.addPendingRewards(xp = earnedXp, gold = earnedCoins)
+
                     lastProcessedStepsForRewards = steps - remainder
                 }
-                
+
                 // Check missions
                 missionRepository.checkAndCompleteMissions(steps = steps)
-                
+
                 // Update cat status (decay/recovery) periodically in background
                 catRepository.decreaseHungerOverTime()
-                
+
                 // Save state
                 saveState()
-                
+
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) {
                     android.util.Log.e("StepCounterService", "Sync failed", e)
@@ -333,11 +348,11 @@ class StepCounterService : Service(), SensorEventListener {
             }
         }
     }
-    
+
     /**
      * Calculate calories burned based on steps and user weight
      * Formula: calories = steps × 0.04 × (weight / 70)
-     * 
+     *
      * Base assumption: 70kg person burns ~0.04 kcal per step
      * Heavier people burn more, lighter people burn less
      */
@@ -345,7 +360,7 @@ class StepCounterService : Service(), SensorEventListener {
         val caloriesPerStep = 0.04f * (userWeightKg / 70f)
         return (steps * caloriesPerStep).toInt()
     }
-    
+
     /**
      * Calculate distance based on steps
      * Average stride length: ~0.762 meters (for 170cm person)
@@ -355,12 +370,12 @@ class StepCounterService : Service(), SensorEventListener {
         val strideMeters = 0.762 * (userWeightKg / 70.0).coerceIn(0.8, 1.3)
         return (steps * strideMeters) / 1000.0 // Convert to km
     }
-    
+
     private fun loadState() {
             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val savedDate = prefs.getString(KEY_LAST_DATE, "") ?: ""
             val today = LocalDate.now().format(dateFormatter)
-            
+
             if (savedDate == today) {
                 // Same day, load memory state
                 initialStepCount = prefs.getInt(KEY_INITIAL_SENSOR_VAL, -1)
@@ -368,12 +383,19 @@ class StepCounterService : Service(), SensorEventListener {
                 lastSavedDate = today
             } else {
                 // Different day (or first install), let the sensor init block handle it DB fetch
-                initialStepCount = -1 
+                val previousDate   = prefs.getString(KEY_LAST_DATE, "") ?: ""
+                val previousCursor = prefs.getInt(KEY_REWARD_STEPS_CURSOR, 0)
+
+                initialStepCount = -1
                 lastSavedDate = today
                 lastProcessedStepsForRewards = 0
+
+                if (previousDate.isNotEmpty()) {
+                    reconcilePreviousDayRewards(previousDate, previousCursor)
+                }
             }
     }
-    
+
     /**
      * Load today's steps from DB asynchronously.
      * Called only once during first sensor event for reconciliation.
@@ -383,11 +405,10 @@ class StepCounterService : Service(), SensorEventListener {
             try {
                 val entity = dailyStatsDao.getDailyStatsOnce(date)
                 val dbSteps = entity?.steps ?: 0
-                
+
                 // Reconcile sensor value with DB data
                 initialStepCount = sensorValue - dbSteps
                 currentDaySteps = dbSteps
-                lastProcessedStepsForRewards = dbSteps
                 lastSyncedSteps = dbSteps
                 saveState()
             } catch (e: Exception) {
@@ -400,7 +421,27 @@ class StepCounterService : Service(), SensorEventListener {
             }
         }
     }
-    
+
+    private fun reconcilePreviousDayRewards(date: String, cursor: Int) {
+        serviceScope.launch {
+            try {
+                val dbSteps = dailyStatsDao.getDailyStatsOnce(date)?.steps ?: 0
+                val unrewarded = dbSteps - cursor
+                if (unrewarded >= STEPS_PER_FOOD_POINT) {
+                    val points = unrewarded / STEPS_PER_FOOD_POINT
+                    catRepository.addCoins(
+                        amount = points,
+                        source = EconomySource.STEP_RECONCILIATION
+                    )
+                    catRepository.addXp(points)
+                    userPreferencesRepository.addPendingRewards(points, points)
+                }
+            } catch (e: Exception) {
+                // non-fatal
+            }
+        }
+    }
+
     private fun saveState() {
         getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().apply {
             putInt(KEY_INITIAL_SENSOR_VAL, initialStepCount)
@@ -412,7 +453,7 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     override fun onBind(intent: Intent?): IBinder? = null
-    
+
     override fun onDestroy() {
         super.onDestroy()
         sensorManager.unregisterListener(this)
@@ -422,33 +463,33 @@ class StepCounterService : Service(), SensorEventListener {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = getSystemService(NotificationManager::class.java)
-            
+
             // Low importance for step counter (minimal battery/distraction)
             val channel = NotificationChannel(
-                CHANNEL_ID, 
-                getString(R.string.notif_channel_steps_name), 
+                CHANNEL_ID,
+                getString(R.string.notif_channel_steps_name),
                 NotificationManager.IMPORTANCE_LOW
-            ).apply { 
+            ).apply {
                 setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)
             }
             notificationManager.createNotificationChannel(channel)
-            
+
             // Goal achievement channel (high importance)
             val goalChannel = NotificationChannel(
-                "goal_channel", 
-                getString(R.string.notif_channel_goals_name), 
+                "goal_channel",
+                getString(R.string.notif_channel_goals_name),
                 NotificationManager.IMPORTANCE_HIGH
-            ).apply { 
+            ).apply {
                 description = getString(R.string.notif_channel_goals_desc)
             }
             notificationManager.createNotificationChannel(goalChannel)
-            
+
             // Cat status channel
             val catChannel = NotificationChannel(
-                "cat_status_channel", 
-                getString(R.string.notif_channel_cat_status_name), 
+                "cat_status_channel",
+                getString(R.string.notif_channel_cat_status_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = getString(R.string.notif_channel_cat_status_desc)
@@ -456,12 +497,12 @@ class StepCounterService : Service(), SensorEventListener {
             notificationManager.createNotificationChannel(catChannel)
         }
     }
-    
+
     private fun createNotification(): Notification {
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         val calories = calculateCalories(currentDaySteps)
-        
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.notif_channel_steps_name))
             .setContentText(getString(R.string.notif_steps_content, currentDaySteps, calories))
@@ -471,7 +512,7 @@ class StepCounterService : Service(), SensorEventListener {
             .setSilent(true)  // No sound/vibration for battery saving
             .build()
     }
-    
+
     private fun updateNotification() {
         val notification = createNotification()
         getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)

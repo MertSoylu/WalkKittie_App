@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Walkkittie</string>
+    <string name="app_name">WalkKittie</string>
     <!-- Welcome Screen -->
     <string name="welcome_page1_title">Kedinle Tanış! 🐱</string>
     <string name="welcome_page1_desc">Sanal bir kedi benimsiyorsun. Adım attıkça, su içtikçe ve günlük görevleri tamamladıkça kedin mutlu ve sağlıklı olur!</string>
@@ -10,7 +10,7 @@
     <string name="welcome_page3_desc">Taş-Kağıt-Makas, Hafıza, Refleks ve Slot gibi mini oyunlar oyna. XP kazan, yeni ünvanlar aç ve efsanevi bir kedi sahibi ol!</string>
     <string name="welcome_btn_next">İleri</string>
     <string name="welcome_btn_start">Başlayalım 🚀</string>
-    
+
     <!-- Setup Screen -->
     <string name="setup_title">Profil Oluştur 📝</string>
     <string name="setup_subtitle">Seni ve dostunu tanıyalım! ✨</string>
@@ -25,7 +25,7 @@
     <string name="setup_error_cat_name">Lütfen kedine bir isim ver! 🐾</string>
     <string name="setup_error_gender">Lütfen cinsiyet seçimi yap.</string>
     <string name="setup_btn_start">Maceraya Başla! 🐱✨</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">Ana Sayfa</string>
     <string name="nav_cat">Kedim</string>
@@ -87,6 +87,29 @@
     <string name="cat_sleeping_title">💤 Uyuyor…</string>
     <string name="cat_xp_label">%1$d / %2$d XP</string>
 
+    <!-- Level Up Dialog -->
+    <string name="level_up_title">🎉 TEBRİKLER! 🎉</string>
+    <string name="level_up_message">Kedinizle aranızdaki bağ güçlendi!\nYeni ünvanınızı gururla taşıyın.</string>
+    <string name="level_up_button">Muhteşem!</string>
+    <string name="level_up_badge_icon">Seviye Rozetı</string>
+
+    <!-- Icon Descriptions (Accessibility) -->
+    <string name="icon_heart">Kalp</string>
+    <string name="icon_favorite">Favori</string>
+    <string name="icon_warning">Uyarı</string>
+    <string name="icon_video">Video İzle</string>
+    <string name="icon_shopping_cart">Alışveriş Sepeti</string>
+    <string name="icon_refresh">Yenile</string>
+    <string name="icon_close">Kapat</string>
+    <string name="icon_trophy">Kupa</string>
+    <string name="icon_star">Yıldız</string>
+    <string name="icon_coin">Altın</string>
+    <string name="icon_xp">XP</string>
+    <string name="icon_energy">Enerji</string>
+    <string name="icon_happiness">Mutluluk</string>
+    <string name="icon_hunger">Açlık</string>
+    <string name="icon_water">Su</string>
+
     <!-- Statistics Screen -->
     <string name="stats_title">İstatistikler</string>
     <string name="stats_daily">Günlük</string>
@@ -112,7 +135,7 @@
     <string name="stats_calories_input">Kalori (kcal)</string>
     <string name="stats_save">Kaydet</string>
     <string name="stats_cancel">İptal</string>
-    
+
     <string name="meal_breakfast">Kahvaltı</string>
     <string name="meal_lunch">Öğle Yemeği</string>
     <string name="meal_dinner">Akşam Yemeği</string>
@@ -167,14 +190,14 @@
     <string name="btn_start_game">Başla! 🚀</string>
     <string name="game_rps_countdown">Taş... Kağıt... Makas...</string>
     <string name="game_slots_instruction">Eşleşmeleri bul, ödül kazan!</string>
-    
+
     <!-- Memory Game -->
     <string name="game_memory_title">Hafıza Patisi</string>
     <string name="game_memory_desc">Kartları çevir, eşlerini bul! Hafızanı test et. 🧠</string>
     <string name="game_memory_header">Hafıza Patisi 🧠</string>
     <string name="game_memory_moves">Hamle: %d</string>
     <string name="game_memory_pairs">Eşleşme: %d/6</string>
-    
+
     <!-- Reflex Game -->
     <string name="game_reflex_title">Kedi Refleksi</string>
     <string name="game_reflex_desc">Pati izlerini yakala! Hızlı ol, kayboluyorlar! ⚡</string>
@@ -183,6 +206,34 @@
     <string name="game_reflex_round">Tur: %1$d / %2$d</string>
     <string name="game_reflex_tap">Yakala!</string>
     <string name="game_reflex_ready">Hazır ol…</string>
+
+    <!-- Catch Game -->
+    <string name="game_catch_title">Yakala!</string>
+    <string name="game_catch_desc">Sepeti kaydır, iyi şeyleri topla, bombalardan kaç!</string>
+    <string name="game_catch_pre_title">Yakala! 🧺</string>
+    <string name="game_catch_instruction">Sepeti sürükleyerek iyi şeyleri yakala!\n💣 Bombalardan kaç!</string>
+    <string name="game_catch_tip">3 can • ~30 sn • Puan 15+ = 🏆</string>
+    <string name="game_catch_score">⭐ %d puan</string>
+    <string name="game_catch_hint">Sepeti yatay sürükleyerek yönlendir!</string>
+
+    <!-- PreGame Overlay -->
+    <string name="btn_play_game">🎮 Oyna!</string>
+    <string name="btn_dismiss">Vazgeç</string>
+    <string name="game_pregame_locked">🔒 Seviye %d gerekli</string>
+    <string name="game_pregame_low_energy">⚡ Yeterli enerji yok (%1$d/%2$d)</string>
+    <string name="game_choice_rock">Taş</string>
+    <string name="game_choice_paper">Kağıt</string>
+    <string name="game_choice_scissors">Makas</string>
+    <string name="game_countdown_go">BAŞLA!</string>
+    <string name="game_preview_rps_desc">Kedinle karşı karşıya gel!\nTaş, kağıt ya da makası seç ve kazan.</string>
+    <string name="game_preview_slots_desc">3 sembolü eşleştir!\nJackpot büyük ödül demek.</string>
+    <string name="game_preview_memory_desc">12 kartı çevir, eşleri bul!\nAz hamlede bitirirsen daha fazla ödül alırsın.</string>
+    <string name="game_preview_reflex_desc">Beliren pati hedeflerine hızla dokun!\nZorluk her turda artar.</string>
+    <string name="game_reward_rps">8 altın • 20 XP</string>
+    <string name="game_reward_slots">24 altın • 40 XP</string>
+    <string name="game_reward_memory">8 altın • 20 XP</string>
+    <string name="game_reward_reflex">10 altın • 25 XP</string>
+    <string name="game_reward_catch">12 altın • 30 XP</string>
 
     <!-- Shop Screen -->
     <string name="shop_title">Market</string>
@@ -195,7 +246,7 @@
     <string name="shop_error_no_food_points">Yetersiz mama puanı!</string>
     <string name="shop_error_no_stock">Envanterde bu yiyecek yok! 📦</string>
     <string name="shop_error_inventory_full">Envanter dolu! (Maks %d) Önce besle.</string>
-    <string name="shop_inventory_full_label">Dolu (%d/%d)</string>
+    <string name="shop_inventory_full_label">Dolu (%1$d/%2$d)</string>
     <string name="shop_msg_purchased">%1$s satın alındı! %2$s</string>
     <string name="shop_error_purchase_failed">Satın alma başarısız: %s</string>
     <string name="shop_item_dry_food">Kuru Mama</string>
@@ -254,10 +305,10 @@
     <string name="stat_details">Detaylar →</string>
     <string name="unit_day">Gün</string>
     <string name="unit_steps">Adım</string>
-    
+
     <string name="unit_food_points">Mama Puanı</string>
     <string name="unit_gold">Altın</string>
-    
+
     <!-- Dialogs -->
     <string name="dialog_edit_name_title">İsim Düzenle</string>
     <string name="dialog_edit_name_label">İsmin</string>
@@ -266,7 +317,7 @@
     <string name="btn_save">Kaydet</string>
     <string name="btn_cancel">İptal</string>
     <string name="btn_confirm">Onayla</string>
-    
+
     <!-- Missions -->
     <string name="mission_steps_1000_title">İlk Adımlar</string>
     <string name="mission_steps_1000_desc">1000 adım at</string>
@@ -278,7 +329,7 @@
     <string name="mission_water_1000_desc">1 litre su iç</string>
     <string name="mission_water_2000_title">Hidrasyon Şampiyonu</string>
     <string name="mission_water_2000_desc">2 litre su iç</string>
-    
+
     <!-- Dynamic Missions -->
     <string name="mission_steps_tier1_title">Adım Hedefi %25</string>
     <string name="mission_steps_tier1_desc">%d adım at</string>
@@ -288,18 +339,20 @@
     <string name="mission_steps_tier3_desc">%d adım at</string>
     <string name="mission_steps_tier4_title">Adım Hedefi %100</string>
     <string name="mission_steps_tier4_desc">%d adım at</string>
-    
+
     <string name="mission_water_tier1_title">Su Molası</string>
     <string name="mission_water_tier1_desc">%d ml su iç</string>
     <string name="mission_water_tier2_title">Sulu Bir Gün</string>
     <string name="mission_water_tier2_desc">%d ml su iç</string>
+    <string name="mission_game_tier1_title">Oyun Zamanı</string>
+    <string name="mission_game_tier1_desc">%d mini oyun tamamla</string>
 
     <!-- Level Info -->
     <string name="level_system_title">Seviye Sistemi ⭐</string>
     <string name="level_label_with_title">Seviye %1$d (%2$s)</string>
     <string name="level_label">Seviye %d</string>
     <string name="level_next_label">Bir sonraki seviyeye %d XP kaldı</string>
-    
+
     <!-- Level Titles -->
     <string name="level_title_kitten">Yavru Kedi</string>
     <string name="level_title_junior">Genç Kedi</string>
@@ -362,9 +415,9 @@
     <string name="ad_reward_gold_btn">+10 🪙</string>
     <string name="time_fmt_hm">%1$d sa %2$d dk</string>
     <string name="time_fmt_m">%1$d dk</string>
-    
+
     <!-- Notifications -->
-    <string name="notif_channel_steps_name">Walkkittie Adım Sayar</string>
+    <string name="notif_channel_steps_name">WalkKittie Adım Sayar</string>
     <string name="notif_steps_content">%1$d adım • %2$d kcal</string>
     <string name="notif_channel_goals_name">Hedefler</string>
     <string name="notif_channel_goals_desc">Günlük hedefe ulaşıldığında bildirim gönderir</string>
@@ -389,11 +442,11 @@
 
     <!-- Settings -->
     <string name="settings_privacy_policy">Gizlilik Politikası</string>
-    <string name="privacy_policy_content">Walkkittie Gizlilik Politikası\n\nBu uygulama, sanal bir evcil hayvana bakmanız için fiziksel aktivitelerinizi takip etmenizi sağlar. Gizliliğiniz bizim için önemlidir:\n\n1. Aktivite Takibi: Uygulamamız adımlarınızı saymak için cihazınızın sensörlerini kullanır. Bu veriler sadece oyun içi mekaniklerde kullanılır.\n\n2. Health Connect: İsteğe bağlı olarak Health Connect entegrasyonu sağlayabiliriz. Bu veriler yalnızca cihazınızda işlenir ve dış sunuculara aktarılmaz.\n\n3. Reklamlar: Uygulamamız AdMob reklamlarını kullanır. Bu hizmetler size kişiselleştirilmiş reklamlar göstermek için cihaz tanımlayıcılarını kullanabilir.\n\n4. Veri Saklama: Kişisel verileriniz sunucularımızda saklanmaz; tüm ilerlemeniz yerel olarak cihazınızda tutulur.\n\nDaha fazla bilgi için Google\'ın Gizlilik Politikasını inceleyebilirsiniz:</string>
+    <string name="privacy_policy_content">WalkKittie Gizlilik Politikası\n\nBu uygulama, sanal bir evcil hayvana bakmanız için fiziksel aktivitelerinizi takip etmenizi sağlar. Gizliliğiniz bizim için önemlidir:\n\n1. Aktivite Takibi: Uygulamamız adımlarınızı saymak için cihazınızın sensörlerini kullanır. Bu veriler sadece oyun içi mekaniklerde kullanılır.\n\n2. Health Connect: İsteğe bağlı olarak Health Connect entegrasyonu sağlayabiliriz. Bu veriler yalnızca cihazınızda işlenir ve dış sunuculara aktarılmaz.\n\n3. Reklamlar: Uygulamamız AdMob reklamlarını kullanır. Bu hizmetler size kişiselleştirilmiş reklamlar göstermek için cihaz tanımlayıcılarını kullanabilir.\n\n4. Veri Saklama: Kişisel verileriniz sunucularımızda saklanmaz; tüm ilerlemeniz yerel olarak cihazınızda tutulur.\n\nDaha fazla bilgi için Google\'ın Gizlilik Politikasını inceleyebilirsiniz:</string>
     <string name="url_google_privacy_policy">https://policies.google.com/privacy</string>
 
     <!-- Tutorial -->
-    <string name="tutorial_home_welcome_title">Walkkittie\'ye Hoş Geldin! 🐱</string>
+    <string name="tutorial_home_welcome_title">WalkKittie\'ye Hoş Geldin! 🐱</string>
     <string name="tutorial_home_welcome_desc">Bu uygulama ile yürüyüşlerini takip ederken sanal kedine bakacaksın. Adımların enerjiye dönüşür ve kedini mutlu eder!</string>
     <string name="tutorial_home_cat_title">Kedini Tanı 😺</string>
     <string name="tutorial_home_cat_desc">Ortadaki kart senin kedini gösterir. Kedinin adı %1$s! Ona dokunarak kedi sayfasına gidebilir, besleyebilir ve oynayabilirsin.</string>
@@ -420,6 +473,22 @@
     <string name="tutorial_btn_close">Kapat</string>
 
     <!-- Hardcoded string fixes -->
+    <string name="ad_label">Reklam</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="language_welcome_title">Welcome / Hoş geldiniz</string>
+    <string name="language_select_prompt">Please select your language\nLütfen dilinizi seçin</string>
+    <string name="language_english_name">English</string>
+    <string name="language_english_native">English</string>
+    <string name="language_turkish_name">Türkçe</string>
+    <string name="language_turkish_native">Turkish</string>
+    <string name="cat_hero_level_prefix">Sv.</string>
+    <string name="cat_image_description">%1$s kedisi</string>
+    <string name="stats_care_rating_excellent">🌟 Mükemmel!</string>
+    <string name="stats_care_rating_very_good">😊 Çok İyi!</string>
+    <string name="stats_care_rating_good">👍 İyi</string>
+    <string name="stats_care_rating_improving">💪 Gelişiyor</string>
+    <string name="stats_care_rating_beginner">🐾 Başlangıç</string>
     <string name="streak_current">Gün Seri</string>
     <string name="streak_longest">En Uzun</string>
     <string name="cat_status_title">Kedi Durumu</string>
@@ -431,10 +500,12 @@
     <string name="water_glasses_drunk">%d bardak içildi 💧</string>
     <string name="btn_undo">Geri Al</string>
     <string name="btn_back">Geri</string>
+    <string name="btn_decrease">Azalt</string>
+    <string name="btn_increase">Artır</string>
     <string name="reward_title">Yeni Ödüller Kazandın!</string>
     <string name="notif_water_channel_name">Su Hatırlatıcı</string>
     <string name="notif_water_channel_desc">Günlük su içme hatırlatmaları</string>
-    <string name="notif_water_app_title">Walkkittie 🐱</string>
+    <string name="notif_water_app_title">WalkKittie 🐱</string>
     <string-array name="water_reminder_messages">
         <item>💧 Su içme zamanı! Kedini mutlu et!</item>
         <item>🐱 Minik dostun seninle birlikte su içmek istiyor!</item>
@@ -457,6 +528,7 @@
     <string name="stats_game_slots">Pati Çarkı</string>
     <string name="stats_game_memory">Hafıza Patisi</string>
     <string name="stats_game_reflex">Kedi Refleksi</string>
+    <string name="stats_game_catch">Yakala!</string>
     <string name="stats_care_chart_title">Etkileşim Grafiği</string>
     <string name="stats_care_total_interactions">Toplam Etkileşim</string>
     <string name="stats_care_game_breakdown">Oyun Dağılımı</string>
