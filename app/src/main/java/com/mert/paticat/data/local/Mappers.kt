@@ -63,7 +63,8 @@ fun DailyStatsEntity.toDomain(): DailyStats {
         caloriesBurned = caloriesBurned,
         caloriesConsumed = caloriesConsumed,
         waterMl = waterMl,
-        activeMinutes = activeMinutes
+        activeMinutes = activeMinutes,
+        distanceKm = if (distanceKm > 0.0) distanceKm else (steps * 0.75) / 1000.0
     )
 }
 

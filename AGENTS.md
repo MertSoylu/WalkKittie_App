@@ -43,7 +43,7 @@ worker/               # WorkManager + ReminderScheduler
 ## Key Conventions
 
 ### Room (Database)
-- Schema version: **11**. Every schema change requires named Migration in `PatiCatDatabase.kt` companion object (inline).
+- Schema version: **12**. Every schema change requires named Migration in `PatiCatDatabase.kt` companion object (inline).
 - `CatEntity` is single-row (always `id = 1`). Never insert row 2+.
 - Migration pattern: `val MIGRATION_X_Y = Migration(X, Y) { db → … }`
 

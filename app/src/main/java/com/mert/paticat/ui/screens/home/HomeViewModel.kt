@@ -97,7 +97,10 @@ class HomeViewModel @Inject constructor(
                 // Use live steps if available and greater than persistent stats
                 // This ensures UI updates instantly without waiting for DB sync
                 val currentSteps = if (liveSteps > stats.steps) liveSteps else stats.steps
-                val currentStats = stats.copy(steps = currentSteps)
+                val currentStats = stats.copy(
+                    steps = currentSteps,
+                    distanceKm = (currentSteps * 0.75) / 1000.0
+                )
                 
                 HomeData(cat, currentStats, missions, currentStepGoal, currentWaterGoal, profile?.currentStreak ?: 0)
             }.collect { data ->

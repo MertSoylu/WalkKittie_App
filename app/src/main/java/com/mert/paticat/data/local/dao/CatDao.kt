@@ -37,6 +37,12 @@ interface CatDao {
     
     @Query("UPDATE cat_state SET xp = :xp, level = :level WHERE id = 1")
     suspend fun updateXpAndLevel(xp: Long, level: Int)
+
+    @Query("UPDATE cat_state SET happiness = CASE WHEN happiness + :delta < 0 THEN 0 WHEN happiness + :delta > 100 THEN 100 ELSE happiness + :delta END WHERE id = 1")
+    suspend fun incrementHappiness(delta: Int)
+
+    @Query("UPDATE cat_state SET energy = CASE WHEN energy + :delta < 0 THEN 0 WHEN energy + :delta > 100 THEN 100 ELSE energy + :delta END WHERE id = 1")
+    suspend fun incrementEnergy(delta: Int)
     
     @Query("UPDATE cat_state SET foodPoints = :foodPoints WHERE id = 1")
     suspend fun updateFoodPoints(foodPoints: Int)

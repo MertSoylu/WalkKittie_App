@@ -136,6 +136,10 @@ class UserPreferencesRepository @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences[STEP_COUNTING_ENABLED] = enabled
         }
+        context.getSharedPreferences("walkkittie_step_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("step_counting_enabled_sp_backup", enabled)
+            .apply()
     }
 
     suspend fun addPendingRewards(xp: Int, gold: Int) {

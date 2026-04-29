@@ -11,6 +11,7 @@ interface UserProfileRepository {
     fun getUserProfile(): Flow<UserProfile?>
     suspend fun getUserProfileOnce(): UserProfile?
     suspend fun initializeProfileIfNeeded()
+    suspend fun upsertProfile(profile: UserProfile)
     suspend fun updateProfile(profile: UserProfile)
     suspend fun updateStepGoal(goal: Int)
     suspend fun updateWaterGoal(goal: Int)

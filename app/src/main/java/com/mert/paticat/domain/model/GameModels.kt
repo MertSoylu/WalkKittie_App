@@ -42,15 +42,9 @@ data class DailyStats(
     val waterMl: Int = 0,
     val caloriesBurned: Int = 0,
     val caloriesConsumed: Int = 0,
-    val activeMinutes: Int = 0
+    val activeMinutes: Int = 0,
+    val distanceKm: Double = (steps * 0.75) / 1000.0
 ) {
-    /**
-     * Calculate estimated distance in kilometers.
-     * Average step length: 0.75 meters
-     */
-    val distanceKm: Double
-        get() = (steps * 0.75) / 1000.0
-
     /**
      * Calculate estimated calories burned from steps.
      * Rough estimation: 0.04 calories per step

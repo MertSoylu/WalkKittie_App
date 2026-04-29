@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface CatRepository {
     fun getCat(): Flow<Cat>
     suspend fun getCatOnce(): Cat
+    suspend fun getStoredCatOnce(): Cat
     suspend fun initializeCat()
     suspend fun updateCat(cat: Cat)
     suspend fun updateSleepState(isSleeping: Boolean, sleepEndTime: Long, energy: Int, lastUpdated: Long)

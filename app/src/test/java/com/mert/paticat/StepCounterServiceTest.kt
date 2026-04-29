@@ -31,6 +31,7 @@ class StepCounterServiceTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var context: Context
     private lateinit var sharedPrefs: SharedPreferences
+    private lateinit var editor: SharedPreferences.Editor
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -47,7 +48,7 @@ class StepCounterServiceTest {
         context = mock()
         sharedPrefs = mock()
 
-        val editor = mock<SharedPreferences.Editor>()
+        editor = mock()
         whenever(editor.putInt(any(), any())).thenReturn(editor)
         whenever(editor.putString(any(), any())).thenReturn(editor)
         whenever(sharedPrefs.edit()).thenReturn(editor)
@@ -107,6 +108,7 @@ class StepCounterServiceTest {
         verify(catRepository, times(1)).addCoins(1, EconomySource.STEP_REWARD, null)
         verify(catRepository, times(1)).addXp(1)
         verify(userPreferencesRepository, times(1)).addPendingRewards(1, 1)
+        verify(editor, atLeastOnce()).putInt("reward_steps_cursor", 150)
     }
 
     @Test

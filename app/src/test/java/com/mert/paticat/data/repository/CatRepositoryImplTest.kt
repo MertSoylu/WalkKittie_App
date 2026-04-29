@@ -192,4 +192,32 @@ class CatRepositoryImplTest {
 
         verify(catDao).updateCoins(0)
     }
+
+    @Test
+    fun `getStoredCatOnce returns raw stored cat without decay write`() = runTest {
+        val cat = CatEntity(hunger = 10, isSleeping = true)
+        whenever(catDao.getCatOnce()).thenReturn(cat)
+
+        val result = repository.getStoredCatOnce()
+
+        assertEquals(10, result.hunger)
+        assertEquals(true, result.isSleeping)
+        verify(catDao, never()).updateCat(any())
+    }
+
+    @Test
+    fun `updateHappiness delegates to atomic increment query`() = runTest {
+        repository.updateHappiness(7)
+
+        verify(catDao).incrementHappiness(7)
+        verify(catDao, never()).updateHappiness(any())
+    }
+
+    @Test
+    fun `updateEnergy delegates to atomic increment query`() = runTest {
+        repository.updateEnergy(-5)
+
+        verify(catDao).incrementEnergy(-5)
+        verify(catDao, never()).updateEnergy(any())
+    }
 }

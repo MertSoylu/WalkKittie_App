@@ -181,7 +181,10 @@ class StatisticsViewModel @Inject constructor(
                 var todayDomain = todayStats?.toDomain() ?: DailyStats(LocalDate.now())
                 
                 if (todayDomain.date == LocalDate.now() && liveSteps > todayDomain.steps) {
-                     todayDomain = todayDomain.copy(steps = liveSteps)
+                     todayDomain = todayDomain.copy(
+                         steps = liveSteps,
+                         distanceKm = (liveSteps * 0.75) / 1000.0
+                     )
                 }
 
                 val historyDomain = allRecentStats.map { 

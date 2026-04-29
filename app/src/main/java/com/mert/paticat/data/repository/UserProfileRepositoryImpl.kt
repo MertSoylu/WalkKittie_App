@@ -36,21 +36,12 @@ class UserProfileRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun upsertProfile(profile: UserProfile) {
+        userProfileDao.insertProfile(profile.toEntity())
+    }
+
     override suspend fun updateProfile(profile: UserProfile) {
-        userProfileDao.updateProfile(
-            UserProfileEntity(
-                id = profile.id,
-                name = profile.name,
-                gender = profile.gender,
-                weight = profile.weight,
-                dailyStepGoal = profile.dailyStepGoal,
-                dailyWaterGoalMl = profile.dailyWaterGoalMl,
-                dailyCalorieGoal = profile.dailyCalorieGoal,
-                currentStreak = profile.currentStreak,
-                longestStreak = profile.longestStreak,
-                totalXpEarned = profile.totalXpEarned
-            )
-        )
+        userProfileDao.updateProfile(profile.toEntity())
     }
 
     override suspend fun updateStepGoal(goal: Int) {
@@ -66,5 +57,20 @@ class UserProfileRepositoryImpl @Inject constructor(
         current?.let {
             userProfileDao.updateProfile(it.copy(dailyCalorieGoal = goal))
         }
+    }
+
+    private fun UserProfile.toEntity(): UserProfileEntity {
+        return UserProfileEntity(
+            id = id,
+            name = name,
+            gender = gender,
+            weight = weight,
+            dailyStepGoal = dailyStepGoal,
+            dailyWaterGoalMl = dailyWaterGoalMl,
+            dailyCalorieGoal = dailyCalorieGoal,
+            currentStreak = currentStreak,
+            longestStreak = longestStreak,
+            totalXpEarned = totalXpEarned
+        )
     }
 }

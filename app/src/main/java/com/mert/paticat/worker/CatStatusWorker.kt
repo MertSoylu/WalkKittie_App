@@ -31,6 +31,7 @@ class CatStatusWorker @AssistedInject constructor(
             return Result.success()
         }
 
+        val storedCat = catRepository.getStoredCatOnce()
         val cat = catRepository.getCatOnce()
         
         val prefs = applicationContext.getSharedPreferences("paticat_game_state", Context.MODE_PRIVATE)
@@ -54,9 +55,9 @@ class CatStatusWorker @AssistedInject constructor(
         //    isSleeping comes from DB which may not yet reflect the decay logic,
         //    so we check sleepEndTime > 0 AND currentTime > endTime.
         //    After decay runs in-app, sleepEndTime is reset to 0, preventing repeat notifications.
-        val endTime = cat.sleepEndTime
+        val endTime = storedCat.sleepEndTime
         
-        if (cat.isSleeping && endTime > 0 && currentTime > endTime) {
+        if (storedCat.isSleeping && endTime > 0 && currentTime > endTime) {
              val lastWakeNotif = prefs.getLong("last_wake_notif_time", 0L)
              if (currentTime - lastWakeNotif >= twelveHoursInMillis) {
                  sendNotification(

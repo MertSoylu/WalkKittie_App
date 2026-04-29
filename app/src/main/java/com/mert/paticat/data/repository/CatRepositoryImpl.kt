@@ -46,6 +46,7 @@ class CatRepositoryImpl @Inject constructor(
 
     /** Mutex to prevent race conditions on coin updates from StepCounterService + Shop */
     private val coinsMutex = Mutex()
+    private val xpMutex = Mutex()
 
     override fun getCat(): Flow<Cat> = catDao.getCat().map { entity ->
         entity?.let {
@@ -94,6 +95,10 @@ class CatRepositoryImpl @Inject constructor(
         return Cat()
     }
 
+    override suspend fun getStoredCatOnce(): Cat {
+        return catDao.getCatOnce()?.toDomain() ?: Cat()
+    }
+
     override suspend fun initializeCat() {
         val existing = catDao.getCatOnce()
         if (existing == null) {
@@ -111,14 +116,14 @@ class CatRepositoryImpl @Inject constructor(
         syncWidget()
     }
 
-    override suspend fun addXp(amount: Int) {
-        val cat = catDao.getCatOnce() ?: return
-        var newXp = cat.xp + amount
+    override suspend fun addXp(amount: Int) = xpMutex.withLock {
+        val cat = catDao.getCatOnce() ?: return@withLock
+        val newXp = cat.xp + amount
         var newLevel = cat.level
 
         // Check for level up
         var xpForNextLevel = Cat.xpForLevel(newLevel + 1)
-        while (newXp >= xpForNextLevel) {
+        while (newXp >= xpForNextLevel && newLevel < 99) {
             newLevel++
             xpForNextLevel = Cat.xpForLevel(newLevel + 1)
         }
@@ -146,16 +151,12 @@ class CatRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateHappiness(delta: Int) {
-        val cat = catDao.getCatOnce() ?: return
-        val newHappiness = (cat.happiness + delta).coerceIn(0, 100)
-        catDao.updateHappiness(newHappiness)
+        catDao.incrementHappiness(delta)
         syncWidget()
     }
 
     override suspend fun updateEnergy(delta: Int) {
-        val cat = catDao.getCatOnce() ?: return
-        val newEnergy = (cat.energy + delta).coerceIn(0, 100)
-        catDao.updateEnergy(newEnergy)
+        catDao.incrementEnergy(delta)
         syncWidget()
     }
 

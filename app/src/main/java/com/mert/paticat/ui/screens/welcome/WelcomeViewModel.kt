@@ -58,7 +58,7 @@ class WelcomeViewModel @Inject constructor(
                     )
                 )
             } else {
-                userProfileRepository.updateProfile(
+                userProfileRepository.upsertProfile(
                     UserProfile(
                         name = name,
                         gender = gender,

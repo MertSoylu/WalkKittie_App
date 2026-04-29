@@ -330,6 +330,7 @@ class StepCounterService : Service(), SensorEventListener {
                     userPreferencesRepository.addPendingRewards(xp = earnedXp, gold = earnedCoins)
 
                     lastProcessedStepsForRewards = steps - remainder
+                    saveState()
                 }
 
                 // Check missions

@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.platform.LocalContext
 import com.mert.paticat.ui.components.EntranceAnimation
-import com.mert.paticat.ui.components.bounceClick
 import com.mert.paticat.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -197,18 +196,7 @@ fun SetupProfileScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
-                            .bounceClick {
-                            if (name.isBlank()) {
-                                errorMessage = context.getString(com.mert.paticat.R.string.setup_error_name)
-                            } else if (catName.isBlank()) {
-                                errorMessage = context.getString(com.mert.paticat.R.string.setup_error_cat_name)
-                            } else {
-                                viewModel.saveUserProfile(name, catName, "MALE", stepGoal, waterGoal, calorieGoal)
-                                markNewUser()
-                                onSetupComplete()
-                            }
-                            },
+                            .height(64.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PremiumPink,
@@ -279,7 +267,6 @@ fun SetupGoalItem(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surface)
-                        .bounceClick { if (value > step) onValueChange(value - step) }
                 ) {
                     Icon(Icons.Default.Remove, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_decrease), tint = color)
                 }
@@ -292,7 +279,6 @@ fun SetupGoalItem(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surface)
-                        .bounceClick { onValueChange(value + step) }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_increase), tint = color)
                 }
