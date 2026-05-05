@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Guidance for OpenCode sessions working in this repository.
 
 ## Build & Test Commands
 
@@ -11,7 +11,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 ./gradlew connectedAndroidTest    # Run instrumented tests
 ```
 
-⚠️ Do NOT run build commands unless explicitly asked.
+Do NOT run build commands unless explicitly asked.
 
 ## Architecture
 
@@ -43,8 +43,9 @@ worker/               # WorkManager + ReminderScheduler
 ## Key Conventions
 
 ### Room (Database)
-- Schema version: **12**. Every schema change requires named Migration in `PatiCatDatabase.kt` companion object (inline).
+- Schema version: **14**. Every schema change requires a named Migration in `PatiCatDatabase.kt` companion object (inline).
 - `CatEntity` is single-row (always `id = 1`). Never insert row 2+.
+- `exportSchema = false`; no JSON schema files are generated.
 - Migration pattern: `val MIGRATION_X_Y = Migration(X, Y) { db → … }`
 
 ### Dependency Injection
@@ -67,7 +68,6 @@ worker/               # WorkManager + ReminderScheduler
 
 ### Dependency Versions
 - All library versions in `gradle/libs.versions.toml`. **Only update there**, never inline in `build.gradle.kts`.
-- WorkManager + hilt-work declared inline—keep there.
 
 ### Background Work
 - Step counting: `StepCounterService` (foreground) + `StepCounterManager`.
@@ -76,22 +76,3 @@ worker/               # WorkManager + ReminderScheduler
 
 ### Mappers
 - Entity ↔ domain conversions in `data/local/Mappers.kt`. No mapping logic in DAOs or ViewModels.
-
-## Response Efficiency
-
-- Default: concise (max 250 words).
-- No explanations unless requested.
-- Prefer structured output, diff patches, modified functions only.
-- No decorative formatting.
-
-## Scope & Context Control
-
-- Never scan full repo unless asked.
-- Operate only on provided files.
-- Ask which file if context missing.
-- No speculative refactors or unrelated edits.
-
-## Execution Strategy
-
-Complex tasks: 1-sentence plan, wait for confirmation.
-Bug fixes: focus error only, minimal steps.

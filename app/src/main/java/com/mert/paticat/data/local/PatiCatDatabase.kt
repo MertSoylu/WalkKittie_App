@@ -17,7 +17,7 @@ import com.mert.paticat.data.local.entity.*
         CatInteractionEntity::class,
         EconomyEventEntity::class
     ],
-    version = 12, // Version 12: Added economy_events table for local economy ledger
+    version = 14, // Version 14: Fixed catId defaultValue mismatch in cat_interactions
     exportSchema = false
 )
 abstract class PatiCatDatabase : RoomDatabase() {
@@ -88,6 +88,62 @@ abstract class PatiCatDatabase : RoomDatabase() {
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_economy_events_date ON economy_events(date)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_economy_events_source ON economy_events(source)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_economy_events_timestamp ON economy_events(timestamp)")
+            }
+        }
+
+        // cat_interactions was created in MIGRATION_10_11 without catId/ForeignKey.
+        // This migration recreates the table with the correct schema.
+        val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE cat_interactions_new (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "catId INTEGER NOT NULL DEFAULT 1, " +
+                        "date TEXT NOT NULL, " +
+                        "type TEXT NOT NULL, " +
+                        "foodItemId TEXT, " +
+                        "timestamp INTEGER NOT NULL, " +
+                        "details TEXT, " +
+                        "FOREIGN KEY(catId) REFERENCES cat_state(id) ON DELETE CASCADE" +
+                    ")"
+                )
+                database.execSQL(
+                    "INSERT INTO cat_interactions_new (id, catId, date, type, foodItemId, timestamp, details) " +
+                    "SELECT id, 1, date, type, foodItemId, timestamp, details FROM cat_interactions"
+                )
+                database.execSQL("DROP TABLE cat_interactions")
+                database.execSQL("ALTER TABLE cat_interactions_new RENAME TO cat_interactions")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cat_interactions_date ON cat_interactions(date)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cat_interactions_type ON cat_interactions(type)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cat_interactions_catId ON cat_interactions(catId)")
+            }
+        }
+
+        // Room expects catId with no DEFAULT clause (defaultValue = undefined).
+        // Recreate table without DEFAULT and drop the extra catId index.
+        val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE cat_interactions_new (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "catId INTEGER NOT NULL, " +
+                        "date TEXT NOT NULL, " +
+                        "type TEXT NOT NULL, " +
+                        "foodItemId TEXT, " +
+                        "timestamp INTEGER NOT NULL, " +
+                        "details TEXT, " +
+                        "FOREIGN KEY(catId) REFERENCES cat_state(id) ON DELETE CASCADE" +
+                    ")"
+                )
+                database.execSQL(
+                    "INSERT INTO cat_interactions_new (id, catId, date, type, foodItemId, timestamp, details) " +
+                    "SELECT id, catId, date, type, foodItemId, timestamp, details FROM cat_interactions"
+                )
+                database.execSQL("DROP TABLE cat_interactions")
+                database.execSQL("ALTER TABLE cat_interactions_new RENAME TO cat_interactions")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cat_interactions_date ON cat_interactions(date)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cat_interactions_type ON cat_interactions(type)")
+                database.execSQL("DROP INDEX IF EXISTS index_cat_interactions_catId")
             }
         }
     }
