@@ -1,38 +1,71 @@
 package com.mert.paticat.ui.screens.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Task
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mert.paticat.ui.components.EntranceAnimation
-import com.mert.paticat.ui.theme.*
+import com.mert.paticat.R
+import com.mert.paticat.domain.model.LevelData
+import com.mert.paticat.ui.components.marshmallow.ChipPill
+import com.mert.paticat.ui.components.marshmallow.PillowCard
+import com.mert.paticat.ui.components.marshmallow.SectionHeader2
+import com.mert.paticat.ui.components.marshmallow.softEntrance
+import com.mert.paticat.ui.theme.AccentGold
+import com.mert.paticat.ui.theme.PremiumMint
+import com.mert.paticat.ui.theme.PremiumPeach
+import com.mert.paticat.ui.theme.PremiumPink
+import com.mert.paticat.ui.theme.PremiumPurple
 
-/**
- * Level Info Screen - Explains how leveling works and shows progression
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelInfoScreen(
     onBack: () -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -41,51 +74,61 @@ fun LevelInfoScreen(
             TopAppBar(
                 title = {
                     Text(
-                        androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_system_title),
-                        fontWeight = FontWeight.Black
+                        text = stringResource(R.string.level_system_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.btn_cancel))
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.btn_cancel))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            // Current Level Card
-            EntranceAnimation {
-                Card(
+            Spacer(Modifier.height(2.dp))
+
+            Box(modifier = Modifier.softEntrance()) {
+                PillowCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = AccentGold.copy(alpha = 0.15f))
+                    backgroundColor = AccentGold.copy(alpha = 0.16f),
+                    contentPadding = 22.dp,
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Icon(Icons.Filled.EmojiEvents, contentDescription = null, modifier = Modifier.size(48.dp), tint = AccentGold)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        val levelTitleStr = androidx.compose.ui.res.stringResource(
-                            com.mert.paticat.domain.model.Cat.getLevelTitleResId(uiState.level)
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(AccentGold.copy(alpha = 0.22f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.EmojiEvents, null, modifier = Modifier.size(36.dp), tint = AccentGold)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        val levelTitleStr = stringResource(
+                            com.mert.paticat.domain.model.Cat.getLevelTitleResId(uiState.level),
                         )
                         Text(
-                            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_label_with_title, uiState.level, levelTitleStr),
+                            text = stringResource(R.string.level_label_with_title, uiState.level, levelTitleStr),
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Black,
-                            color = AccentGold
+                            fontWeight = FontWeight.ExtraBold,
+                            color = AccentGold,
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(Modifier.height(8.dp))
 
                         LinearProgressIndicator(
                             progress = { uiState.levelProgress },
@@ -97,152 +140,124 @@ fun LevelInfoScreen(
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(Modifier.height(8.dp))
 
                         Text(
-                            "${uiState.xpInCurrentLevel} / ${uiState.xpNeededForNextLevel} XP",
+                            text = "${uiState.xpInCurrentLevel} / ${uiState.xpNeededForNextLevel} XP",
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-
                         Text(
-                            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_next_label, uiState.xpNeededForNextLevel - uiState.xpInCurrentLevel),
+                            text = stringResource(
+                                R.string.level_next_label,
+                                uiState.xpNeededForNextLevel - uiState.xpInCurrentLevel,
+                            ),
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
 
-            // How to Earn XP Section
-            EntranceAnimation(delay = 100) {
-                Column {
-                    Text(
-                        androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_gain_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+            Column(modifier = Modifier.softEntrance(delayMillis = 100)) {
+                SectionHeader2(
+                    title = stringResource(R.string.level_xp_gain_title),
+                    leadingEmoji = "✨",
+                )
+                Spacer(Modifier.height(12.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     XpSourceCard(
                         icon = Icons.Default.SportsEsports,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_games),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_games_desc),
+                        title = stringResource(R.string.level_xp_source_games),
+                        description = stringResource(R.string.level_xp_games_desc),
                         xp = "+20~40 XP",
-                        color = PremiumPink
+                        color = PremiumPink,
                     )
-
-                    // Spacer and cards for Feed/Sleep/Missions
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     XpSourceCard(
                         icon = Icons.Default.Restaurant,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_feed),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_feed_desc),
+                        title = stringResource(R.string.level_xp_source_feed),
+                        description = stringResource(R.string.level_xp_feed_desc),
                         xp = "+2 XP",
-                        color = PremiumPeach
+                        color = PremiumPeach,
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     XpSourceCard(
                         icon = Icons.Default.Bedtime,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_sleep),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_sleep_desc),
+                        title = stringResource(R.string.level_xp_source_sleep),
+                        description = stringResource(R.string.level_xp_sleep_desc),
                         xp = "+5 XP",
-                        color = PremiumPurple
+                        color = PremiumPurple,
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     XpSourceCard(
                         icon = Icons.Default.Task,
-                        title = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_source_mission),
-                        description = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_xp_mission_desc),
+                        title = stringResource(R.string.level_xp_source_mission),
+                        description = stringResource(R.string.level_xp_mission_desc),
                         xp = "+10~50 XP",
-                        color = AccentGold
+                        color = AccentGold,
                     )
                 }
             }
 
-            // Level Requirements Table
-            EntranceAnimation(delay = 200) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+            Box(modifier = Modifier.softEntrance(delayMillis = 200)) {
+                PillowCard(modifier = Modifier.fillMaxWidth(), contentPadding = 18.dp) {
+                    Column {
                         Text(
-                            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_requirements_title),
+                            text = stringResource(R.string.level_requirements_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.semantics { heading() },
                         )
+                        Spacer(Modifier.height(14.dp))
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Show level requirements
-                        listOf(
-                            2 to 200,
-                            3 to 800,
-                            4 to 1800,
-                            5 to 3200,
-                            10 to 16200,
-                            15 to 39200,
-                            20 to 72200,
-                            50 to 480200
-                        ).forEach { (level, xp) ->
-                            LevelRequirementRow(
-                                level = level,
-                                xpRequired = xp,
-                                isCurrentLevel = level == uiState.level,
-                                isPassed = level < uiState.level
-                            )
-                            if (level != 50) {
-                                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            }
-                        }
+                        LevelSection(
+                            titleRes = R.string.level_section_early,
+                            rows = LevelData.EARLY_GAME,
+                            currentLevel = uiState.level,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        LevelSection(
+                            titleRes = R.string.level_section_mid,
+                            rows = LevelData.MID_GAME,
+                            currentLevel = uiState.level,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        LevelSection(
+                            titleRes = R.string.level_section_late,
+                            rows = LevelData.LATE_GAME,
+                            currentLevel = uiState.level,
+                        )
                     }
                 }
             }
 
-            // Tips Section
-            EntranceAnimation(delay = 300) {
-                Card(
+            Box(modifier = Modifier.softEntrance(delayMillis = 280)) {
+                PillowCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = PremiumMint.copy(alpha = 0.1f))
+                    backgroundColor = PremiumMint.copy(alpha = 0.10f),
+                    contentPadding = 18.dp,
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("💡", fontSize = 24.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("💡", fontSize = 22.sp)
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_tip_title),
+                                text = stringResource(R.string.level_tip_title),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = PremiumMint
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PremiumMint,
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
+                        Spacer(Modifier.height(10.dp))
                         Text(
-                            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_tips_content),
+                            text = stringResource(R.string.level_tips_content),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 22.sp
+                            lineHeight = 22.sp,
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(Modifier.height(40.dp))
         }
     }
 }
@@ -253,116 +268,121 @@ fun XpSourceCard(
     title: String,
     description: String,
     xp: String,
-    color: Color
+    color: Color,
 ) {
-    Surface(
+    PillowCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = color.copy(alpha = 0.1f)
+        backgroundColor = color.copy(alpha = 0.10f),
+        contentPadding = 14.dp,
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape),
-                contentAlignment = Alignment.Center
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.22f)),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+                Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
+            Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, fontWeight = FontWeight.Bold)
                 Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    description,
+                    text = description,
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
-            Surface(
-                color = color,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = xp,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    color = Color.White,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 14.sp
-                )
-            }
+            ChipPill(
+                text = xp,
+                backgroundColor = color,
+                contentColor = Color.White,
+            )
         }
     }
 }
 
 @Composable
-fun LevelRequirementRow(
-    level: Int,
-    xpRequired: Int,
-    isCurrentLevel: Boolean,
-    isPassed: Boolean
-) {
+private fun LevelSection(titleRes: Int, rows: List<Pair<Int, Int>>, currentLevel: Int) {
+    Text(
+        text = stringResource(titleRes),
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.semantics { heading() },
+    )
+    Spacer(Modifier.height(8.dp))
+    rows.forEachIndexed { idx, (level, xp) ->
+        LevelRequirementRow(
+            level = level,
+            xpRequired = xp,
+            isCurrentLevel = level == currentLevel,
+            isPassed = level < currentLevel,
+        )
+        if (idx < rows.lastIndex) {
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 6.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+            )
+        }
+    }
+}
+
+@Composable
+fun LevelRequirementRow(level: Int, xpRequired: Int, isCurrentLevel: Boolean, isPassed: Boolean) {
+    // Out-of-bounds rows are silently dropped — keeps the table forward-compatible
+    // if a future patch expands LevelData but leaves stale callers behind.
+    if (level > LevelData.MAX_LEVEL) return
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = CircleShape,
-            color = when {
-                isPassed -> PremiumMint.copy(alpha = 0.2f)
-                isCurrentLevel -> AccentGold.copy(alpha = 0.2f)
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                    when {
+                        isPassed -> PremiumMint.copy(alpha = 0.22f)
+                        isCurrentLevel -> AccentGold.copy(alpha = 0.22f)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    },
+                ),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                if (isPassed) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        tint = PremiumMint,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Text(
-                        "$level",
-                        fontWeight = FontWeight.Black,
-                        color = if (isCurrentLevel) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            if (isPassed) {
+                Icon(Icons.Default.Check, null, tint = PremiumMint, modifier = Modifier.size(18.dp))
+            } else {
+                Text(
+                    text = "$level",
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (isCurrentLevel) AccentGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(Modifier.width(14.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            val levelTitleStr = androidx.compose.ui.res.stringResource(
-                com.mert.paticat.domain.model.Cat.getLevelTitleResId(level)
+            val levelTitleStr = stringResource(
+                com.mert.paticat.domain.model.Cat.getLevelTitleResId(level),
             )
             Text(
-                androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.level_label_with_title, level, levelTitleStr),
-                fontWeight = if (isCurrentLevel) FontWeight.Black else FontWeight.Bold,
-                color = if (isCurrentLevel) AccentGold else MaterialTheme.colorScheme.onSurface
+                text = stringResource(R.string.level_label_with_title, level, levelTitleStr),
+                fontWeight = if (isCurrentLevel) FontWeight.ExtraBold else FontWeight.Bold,
+                color = if (isCurrentLevel) AccentGold else MaterialTheme.colorScheme.onSurface,
             )
         }
 
         Text(
-            "${xpRequired} XP",
+            text = "$xpRequired XP",
             fontWeight = FontWeight.Bold,
             color = when {
                 isPassed -> PremiumMint
                 isCurrentLevel -> AccentGold
                 else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
+            },
         )
     }
 }

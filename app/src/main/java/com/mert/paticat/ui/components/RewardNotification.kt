@@ -44,8 +44,9 @@ import com.mert.paticat.ui.theme.PremiumMint
 
 data class RewardNotificationData(
     val xp: Int = 0,
-    val foodPoints: Int = 0,
     val gold: Int = 0,
+    val isXpBoosted: Boolean = false,
+    val isGoldBoosted: Boolean = false,
     val title: String? = null,
     val message: String = ""
 )
@@ -169,15 +170,8 @@ fun RewardNotificationArea(
                                             icon = Icons.Filled.Star,
                                             amount = "+${rewardData.xp} XP",
                                             iconColor = AccentGold,
-                                            chipColor = AccentGold.copy(alpha = 0.12f)
-                                        )
-                                    }
-                                    if (rewardData.foodPoints > 0) {
-                                        RewardChip(
-                                            icon = Icons.Filled.Favorite,
-                                            amount = "+${rewardData.foodPoints}",
-                                            iconColor = PremiumMint,
-                                            chipColor = PremiumMint.copy(alpha = 0.12f)
+                                            chipColor = AccentGold.copy(alpha = 0.12f),
+                                            badge = if (rewardData.isXpBoosted) "2x" else null
                                         )
                                     }
                                     if (rewardData.gold > 0) {
@@ -185,7 +179,8 @@ fun RewardNotificationArea(
                                             icon = Icons.Filled.MonetizationOn,
                                             amount = "+${rewardData.gold}",
                                             iconColor = AccentGold,
-                                            chipColor = AccentGold.copy(alpha = 0.12f)
+                                            chipColor = AccentGold.copy(alpha = 0.12f),
+                                            badge = if (rewardData.isGoldBoosted) "2x" else null
                                         )
                                     }
                                 }
@@ -214,7 +209,8 @@ private fun RewardChip(
     amount: String,
     iconColor: Color,
     chipColor: Color,
-    label: String = "Reward"
+    label: String = "Reward",
+    badge: String? = null
 ) {
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -237,6 +233,18 @@ private fun RewardChip(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
+            if (badge != null) {
+                Text(
+                    text = badge,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    color = iconColor,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.28f))
+                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                )
+            }
         }
     }
 }

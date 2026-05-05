@@ -33,7 +33,14 @@ class HealthRepositoryImpl @Inject constructor(
     override fun getStatsForDate(date: LocalDate): Flow<DailyStats?> {
         return dailyStatsDao.getStatsForDate(date.toDbString()).map { it?.toDomain() }
     }
-    
+
+    override fun getStatsForDateRange(start: LocalDate, end: LocalDate): Flow<List<DailyStats>> {
+        return dailyStatsDao.getStatsInRange(
+            start.toDbString(),
+            end.toDbString()
+        ).map { list -> list.map { it.toDomain() } }
+    }
+
     override fun getWeeklyStats(): Flow<List<DailyStats>> {
         val today = LocalDate.now()
         val weekAgo = today.minusDays(6)

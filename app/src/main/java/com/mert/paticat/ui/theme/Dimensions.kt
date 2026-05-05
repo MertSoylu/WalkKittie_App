@@ -3,11 +3,11 @@ package com.mert.paticat.ui.theme
 import androidx.compose.ui.unit.dp
 
 /**
- * Design system spacing and size constants.
- * All spacing follows 8dp grid. Touch targets follow Material Design 3 (min 48dp).
+ * Marshmallow design system: spacing, sizes, radii.
+ * Squircle radii are non-multiples of 8 to give the pillow/marshmallow feel.
  */
 object Dimensions {
-    // Spacing grid (8dp base)
+    // Spacing grid
     val spaceXs = 4.dp
     val spaceSmall = 8.dp
     val spaceMedium = 16.dp
@@ -18,23 +18,36 @@ object Dimensions {
     // Screen padding
     val screenPaddingHorizontal = 20.dp
     val screenPaddingVertical = 16.dp
+    val homeScreenHorizontalPadding = 18.dp
 
-    // Touch targets — minimum 48dp per Material Design 3
+    // Touch targets
     val touchTargetMin = 48.dp
-    val touchTargetSmall = 40.dp   // Only inside compound components where parent is 48dp+
+    val touchTargetSmall = 40.dp
     val iconSize = 24.dp
     val iconSizeLarge = 32.dp
 
-    // Corner radii — standardized to multiples of 8dp
-    val radiusSmall = 8.dp
-    val radiusMedium = 16.dp
-    val radiusLarge = 24.dp
-    val radiusXl = 28.dp
-    val radiusFull = 50.dp         // Equivalent to CircleShape for rectangular items
+    // --- Marshmallow squircle radii ---
+    val radiusXs = 10.dp
+    val radiusS = 14.dp
+    val radiusM = 22.dp
+    val radiusL = 32.dp
+    val radiusXl2 = 40.dp
 
-    // Card elevation
-    val elevationCard = 4.dp
-    val elevationDialog = 24.dp
+    // Legacy radius aliases
+    val radiusSmall = radiusS
+    val radiusMedium = radiusM
+    val radiusLarge = radiusL
+    val radiusXl = radiusXl2
+    val radiusFull = 100.dp
+
+    // Pillow shadow + outline thicknesses
+    val pillowShadow = 18.dp
+    val pillowShadowSmall = 10.dp
+    val pillowOutline = 1.dp
+
+    // Card elevation (kept for legacy components)
+    val elevationCard = 0.dp
+    val elevationDialog = 0.dp
 
     // Bottom navigation clearance
     val bottomNavClearance = 110.dp

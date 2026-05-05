@@ -23,4 +23,13 @@ object GameConstants {
     const val HAPPINESS_LOSS_PER_HOUR_AWAKE = -4.0            // was -3.0
     const val HAPPINESS_GAIN_GOOD_CONDITION = 1.0             // was 2.0
     const val HAPPINESS_PENALTY_CRITICAL_CONDITION = 3.0      // was 2.0, stronger neglect penalty
+
+    // ===== Mini-game economy =====
+    // Slot RTP transparency
+    const val SLOT_JACKPOT_PROBABILITY = 0.005
+    const val SLOT_TWO_MATCH_PROBABILITY = 0.20
+
+    // Anti-grind daily caps for mini-game rewards (best-effort in-memory)
+    const val MAX_DAILY_GAME_XP = 500
+    const val MAX_DAILY_GAME_COIN = 100
 }

@@ -18,6 +18,13 @@ import com.mert.paticat.ui.screens.welcome.SetupProfileScreen
 
 /**
  * Main Navigation Host for the app.
+ *
+ * TODO: Migrate to typed routes (`@Serializable object GamesRoute` + `composable<GamesRoute>`)
+ * once the project adopts Navigation 2.8+ with the kotlinx-serialization plugin and
+ * `androidx.navigation:navigation-compose` typed-route APIs. The current dependency in
+ * `gradle/libs.versions.toml` is 2.8.5, but kotlinx-serialization plugin + runtime are not
+ * yet on the classpath — adding them requires a separate dependency-bump PR. Until then,
+ * route names live as plain strings in `Screen.kt`.
  */
 @Composable
 fun PatiCatNavHost(
@@ -71,7 +78,12 @@ fun PatiCatNavHost(
         composable(Screen.MainApp.route) {
             com.mert.paticat.ui.screens.main.MainPagerScreen(
                 onNavigateToGames = { navController.navigate(Screen.Games.route) },
-                onNavigateToLevelInfo = { navController.navigate(Screen.LevelInfo.route) }
+                onNavigateToLevelInfo = { navController.navigate(Screen.LevelInfo.route) },
+                onResetComplete = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
         

@@ -122,7 +122,7 @@ dependencies {
 
     // AdMob & UMP (GDPR)
     implementation(libs.play.services.ads)
-    implementation("com.google.android.ump:user-messaging-platform:3.0.0")
+    implementation(libs.user.messaging.platform)
 
     // In-App Update
     implementation(libs.play.app.update)

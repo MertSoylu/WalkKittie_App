@@ -205,4 +205,18 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun getComboBoostExpiry(): Long =
         context.dataStore.data.map { it[COMBO_BOOST_EXPIRES_AT] ?: 0L }.first()
+
+    suspend fun resetExceptLanguage() {
+        // Single edit transaction — if anything fails between clear() and the
+        // re-set, DataStore rolls back so the saved locale is never lost.
+        context.dataStore.edit { prefs ->
+            val savedLocale = prefs[LOCALE_LANGUAGE]
+            prefs.clear()
+            if (savedLocale != null) {
+                prefs[LOCALE_LANGUAGE] = savedLocale
+                prefs[IS_LANGUAGE_SELECTED] = true
+            }
+        }
+        context.getSharedPreferences("paticat_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+    }
 }

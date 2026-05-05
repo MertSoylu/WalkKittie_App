@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">WalkKittie</string>
+    <string name="splash_subtitle">Sanal Dostun &amp; Sağlık Takibin</string>
     <!-- Welcome Screen -->
     <string name="welcome_page1_title">Kedinle Tanış! 🐱</string>
     <string name="welcome_page1_desc">Sanal bir kedi benimsiyorsun. Adım attıkça, su içtikçe ve günlük görevleri tamamladıkça kedin mutlu ve sağlıklı olur!</string>
@@ -63,6 +64,15 @@
     <string name="inventory_empty">Henüz yiyeceğin yok. Mağazadan satın al!</string>
     <string name="inventory_empty_hint">Mağazadan ürün satın alabilirsin</string>
     <string name="shop_open_button">Mağazayı Aç</string>
+    <string name="shop_tab_food">Mama</string>
+    <string name="shop_tab_boost">Boost</string>
+    <string name="shop_tab_inventory">Çanta</string>
+    <string name="shop_active_boosts_title">Aktif boostlar</string>
+    <string name="shop_no_active_boosts">Boost yok, enerji hazır ✨</string>
+    <string name="shop_inventory_empty_title">Çanta boş</string>
+    <string name="shop_boost_label_gold">2x altın</string>
+    <string name="shop_boost_label_xp">2x XP</string>
+    <string name="shop_boost_label_combo">2x altın + XP</string>
     <string name="feed_button">Besle 🍖</string>
     <string name="feed_disabled_sleeping">Kedi uyuyor 💤</string>
     <string name="shop_buy_button_price">%1$d 🪙</string>
@@ -70,6 +80,8 @@
     <string name="cat_play_room">Oyun Odası</string>
     <string name="cat_play_room_disabled">Yetersiz Enerji ⚡</string>
     <string name="cat_action_sleep">Uyut</string>
+    <string name="cat_room_hint">Kedi odası hazır ✨</string>
+    <string name="cat_room_cta">Kedi odasına git</string>
     <string name="cat_full_energy">Enerjiyi Fuller ⚡</string>
     <string name="cat_ad_reduce_sleep">Reklam İzle: Enerji Doldur ⚡</string>
     <string name="cat_pet_limit_reached">Kedin şu an yorgun! 5 saat sonra tekrar sevebilirsin. 🐱</string>
@@ -130,6 +142,8 @@
     <string name="stats_best_day">En İyi Gün</string>
     <string name="stats_goal_success">Hedef Başarısı</string>
     <string name="stats_chart_no_data">Veri Yok</string>
+    <string name="undo_action">Geri Al</string>
+    <string name="stats_mtd_note">(bu ay, MTD)</string>
     <string name="stats_add_meal_title">Öğün Ekle</string>
     <string name="stats_meal_name">Yemek Adı</string>
     <string name="stats_calories_input">Kalori (kcal)</string>
@@ -235,13 +249,6 @@
     <string name="game_reward_reflex">10 altın • 25 XP</string>
     <string name="game_reward_catch">12 altın • 30 XP</string>
 
-    <!-- Shop Screen -->
-    <string name="shop_title">Market</string>
-    <string name="shop_balance_total">Toplam Bakiye</string>
-    <string name="shop_stock_food">Mama Stoğu</string>
-    <string name="shop_tab_food">Yiyecek</string>
-    <string name="shop_tab_accessories">Aksesuar</string>
-    <string name="shop_tab_special">Özel</string>
     <string name="shop_error_no_coin">Yetersiz altın! 🪙</string>
     <string name="shop_error_no_food_points">Yetersiz mama puanı!</string>
     <string name="shop_error_no_stock">Envanterde bu yiyecek yok! 📦</string>
@@ -259,13 +266,13 @@
     <string name="shop_item_step_multiplier">2x Adım Çarpanı</string>
     <string name="shop_item_step_multiplier_desc">24 saat boyunca adımdan 2x altın kazan</string>
     <string name="shop_boost_active">⏱ %s kaldı</string>
-    <string name="shop_boost_purchased">Güçlendirme aktif! 24 saat 2x altın ⚡</string>
+    <string name="shop_boost_purchased">2x altın aktif! ⚡</string>
     <string name="shop_item_xp_multiplier">2x XP Çarpanı</string>
     <string name="shop_item_xp_multiplier_desc">24 saat boyunca adımdan 2x XP kazan</string>
-    <string name="shop_boost_xp_purchased">XP güçlendirmesi aktif! 24 saat 2x XP 🌟</string>
+    <string name="shop_boost_xp_purchased">2x XP aktif! 🌟</string>
     <string name="shop_item_combo_multiplier">2x Kombo Güçlendirmesi</string>
     <string name="shop_item_combo_multiplier_desc">24 saat boyunca adımdan 2x altın ve 2x XP kazan</string>
-    <string name="shop_boost_combo_purchased">Kombo aktif! 24 saat 2x altın + 2x XP 💎</string>
+    <string name="shop_boost_combo_purchased">Kombo boost aktif! 💎</string>
     <string name="shop_item_canned_food">Konserve</string>
     <string name="shop_item_canned_food_desc">Lezzetli konserve mama</string>
     <string name="shop_item_tuna">Ton Balığı</string>
@@ -317,6 +324,10 @@
     <string name="btn_save">Kaydet</string>
     <string name="btn_cancel">İptal</string>
     <string name="btn_confirm">Onayla</string>
+    <string name="shop_confirm_buy">%1$d coin harcanacak. Emin misin?</string>
+    <string name="reset_progress">Verileri Sıfırla</string>
+    <string name="reset_confirm_message">Tüm ilerlemen silinecek. Bu işlem geri alınamaz.</string>
+    <string name="settings_privacy_options">Gizlilik Tercihleri</string>
 
     <!-- Missions -->
     <string name="mission_steps_1000_title">İlk Adımlar</string>
@@ -564,4 +575,67 @@
     <!-- Boosters -->
     <string name="booster_title">Aktif Güçlendirmeler ⚡</string>
     <string name="dialog_close">Kapat</string>
+
+    <!-- Language labels -->
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_english">İngilizce</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_mission_complete">Görev tamamlandı</string>
+    <string name="a11y_mission_pending">Görev devam ediyor</string>
+    <string name="a11y_streak_icon">Seri</string>
+    <string name="a11y_difficulty_stars">Zorluk: %1$d yıldız</string>
+
+    <!-- Buttons -->
+    <string name="btn_spinning">Dönüyor…</string>
+
+    <!-- Reset confirmation -->
+    <string name="reset_hold_to_confirm">Sıfırlamak için 2 sn basılı tut</string>
+    <string name="reset_irreversible_warning">Bu eylem geri alınamaz</string>
+
+    <!-- Game errors -->
+    <string name="game_error_insufficient_energy">Enerji yetersiz</string>
+    <string name="game_quit_confirm_title">Oyundan çık</string>
+    <string name="game_quit_confirm_message">Çıkmak istediğine emin misin? İlerleme kaybolur.</string>
+    <string name="game_quit_confirm_yes">Çık</string>
+    <string name="game_quit_confirm_no">Devam et</string>
+
+    <!-- Buy confirmation -->
+    <string name="buy_confirm_title">Satın alma onayı</string>
+    <string name="buy_confirm_message">%1$s için %2$d altın harcanacak. Onaylıyor musun?</string>
+
+    <!-- Ad states -->
+    <string name="ad_state_loading">Reklam yükleniyor…</string>
+    <string name="ad_state_expired">Reklam yenileniyor…</string>
+    <string name="ad_state_failed">Reklam yüklenemedi</string>
+
+    <!-- Accessibility / Icon descriptions (additions) -->
+    <string name="loading_cat_icon">Yükleniyor kedi simgesi</string>
+    <string name="icon_paw">Pati simgesi</string>
+    <string name="icon_play_cta">Oyna düğmesi</string>
+    <string name="icon_cat_emoji">Kedi simgesi</string>
+    <string name="icon_shop_fab">Mağaza</string>
+    <string name="icon_booster_fab">Güçlendirici</string>
+    <string name="icon_chart_emoji">Grafik simgesi</string>
+    <string name="cd_difficulty_stars">Zorluk: %1$d / %2$d yıldız</string>
+    <string name="cd_catch_falling_item">Düşen nesne</string>
+    <string name="cd_reflex_tap_target">Tıkla hedef</string>
+    <string name="empty_state_chart_emoji_cd">Henüz veri yok</string>
+    <string name="empty_state_cat_emoji_cd">Henüz aktivite yok</string>
+
+    <!-- Stats / Game labels (additions) -->
+    <string name="stats_summary_title">Özet</string>
+    <string name="game_unlock_level">Seviye %1$d</string>
+
+    <!-- Level info section headers -->
+    <string name="level_section_early">Erken oyun</string>
+    <string name="level_section_mid">Orta oyun</string>
+    <string name="level_section_late">İleri oyun</string>
+
+    <!-- Theme names -->
+    <string name="theme_name_pink">Pembe</string>
+    <string name="theme_name_blue">Mavi</string>
+    <string name="theme_name_green">Yeşil</string>
+    <string name="theme_name_purple">Mor</string>
+    <string name="theme_name_orange">Turuncu</string>
 </resources>

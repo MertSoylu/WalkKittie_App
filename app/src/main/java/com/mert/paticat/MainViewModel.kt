@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,7 +30,9 @@ class MainViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
 
-    private val _catName = MutableStateFlow("Mochi")
+    // Default empty until cat repo emits — prevents tutorial/UI from showing
+    // a placeholder name before user-provided value loads.
+    private val _catName = MutableStateFlow("")
     val catName: StateFlow<String> = _catName.asStateFlow()
 
     private val _isDarkMode = MutableStateFlow(false)
@@ -48,7 +49,8 @@ class MainViewModel @Inject constructor(
 
     private var lastSeenLevelCache = 1
 
-    @Volatile private var isClearingRewards = false
+    private val _rewardQueue = ArrayDeque<com.mert.paticat.ui.components.RewardNotificationData>()
+    private var _lastQueuedReward: com.mert.paticat.ui.components.RewardNotificationData? = null
 
     init {
         try {
@@ -142,30 +144,47 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             kotlinx.coroutines.flow.combine(
                 preferencesRepository.pendingRewardXp,
-                preferencesRepository.pendingRewardGold
-            ) { xp, gold ->
+                preferencesRepository.pendingRewardGold,
+                preferencesRepository.stepBoostExpiresAt,
+                preferencesRepository.xpBoostExpiresAt,
+                preferencesRepository.comboBoostExpiresAt
+            ) { xp, gold, stepBoostExpiresAt, xpBoostExpiresAt, comboBoostExpiresAt ->
                 if (xp > 0 || gold > 0) {
+                    val now = System.currentTimeMillis()
+                    val isComboBoosted = comboBoostExpiresAt > now
                     com.mert.paticat.ui.components.RewardNotificationData(
                         xp = xp,
-                        gold = gold
+                        gold = gold,
+                        isXpBoosted = xp > 0 && (isComboBoosted || xpBoostExpiresAt > now),
+                        isGoldBoosted = gold > 0 && (isComboBoosted || stepBoostExpiresAt > now)
                     )
                 } else {
                     null
                 }
             }.collect { data ->
-                if (data != null && _rewardNotificationData.value == null && !isClearingRewards) {
+                if (data == null || data == _lastQueuedReward) return@collect
+                _lastQueuedReward = data
+                if (_rewardNotificationData.value == null) {
                     _rewardNotificationData.value = data
+                } else {
+                    _rewardQueue.addLast(data)
                 }
             }
         }
     }
 
     fun clearRewardNotification() {
-        isClearingRewards = true
         viewModelScope.launch {
             _rewardNotificationData.value = null
+            _lastQueuedReward = null
             preferencesRepository.clearPendingRewards()
-            isClearingRewards = false
+            dequeueNextReward()
+        }
+    }
+
+    private fun dequeueNextReward() {
+        if (_rewardQueue.isNotEmpty()) {
+            _rewardNotificationData.value = _rewardQueue.removeFirst()
         }
     }
 
@@ -182,26 +201,21 @@ class MainViewModel @Inject constructor(
             try {
                 val userProfile = userProfileRepository.getUserProfileOnce() ?: return@launch
                 val stepGoal = userProfile.dailyStepGoal
+                val today = LocalDate.now()
+                val rangeStart = today.minusDays(365)
+
+                val statsMap = healthRepository
+                    .getStatsForDateRange(rangeStart, today)
+                    .first()
+                    .associateBy { it.date }
 
                 var streak = 0
-                val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-                val today = LocalDate.now()
-
-                // Check today
-                val todayStats = healthRepository.getStatsForDate(today).first()
-                if (todayStats != null && todayStats.steps >= stepGoal) {
-                    streak++
-                }
-
-                // Check past days (bounded to max 365 days to prevent infinite loop)
-                var i = 1L
-                while (i <= 365L) {
-                    val date = today.minusDays(i)
-                    val stats = healthRepository.getStatsForDate(date).first()
-
+                var date = today
+                while (date >= rangeStart) {
+                    val stats = statsMap[date]
                     if (stats != null && stats.steps >= stepGoal) {
                         streak++
-                        i++
+                        date = date.minusDays(1)
                     } else {
                         break
                     }

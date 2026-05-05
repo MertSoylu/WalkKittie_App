@@ -17,197 +17,173 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mert.paticat.ui.components.EntranceAnimation
-import com.mert.paticat.ui.components.bounceClick
-import com.mert.paticat.ui.components.pulsate
-import com.mert.paticat.ui.theme.*
+import com.mert.paticat.R
+import com.mert.paticat.ui.components.PatiCatBackground
+import com.mert.paticat.ui.components.marshmallow.ActionPillButton
+import com.mert.paticat.ui.components.marshmallow.breath
+import com.mert.paticat.ui.components.marshmallow.softEntrance
+import com.mert.paticat.ui.theme.MoodHappyGradient
+import com.mert.paticat.ui.theme.MoodSadGradient
+import com.mert.paticat.ui.theme.MoodSleepGradient
+import com.mert.paticat.ui.theme.PremiumPink
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
 ) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val savedPage = rememberSaveable { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(initialPage = savedPage.intValue, pageCount = { 3 })
+    LaunchedEffect(pagerState.currentPage) { savedPage.intValue = pagerState.currentPage }
     val scope = rememberCoroutineScope()
 
-    // Background gradient - Made slightly simpler for better text contrast
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        PatiCatBackground()
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) { page ->
                 OnboardingPage(page = page)
             }
 
-            // Pager Indicator
             Row(
                 modifier = Modifier
-                    .height(50.dp)
+                    .height(40.dp)
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 repeat(3) { iteration ->
                     val isSelected = pagerState.currentPage == iteration
-                    val color = if (isSelected) PremiumPink else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                    val width by animateDpAsState(if (isSelected) 24.dp else 8.dp)
+                    val color = if (isSelected) PremiumPink
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                    val width by animateDpAsState(if (isSelected) 28.dp else 8.dp, label = "ind_$iteration")
 
                     Box(
                         modifier = Modifier
                             .padding(4.dp)
                             .clip(RoundedCornerShape(50))
                             .background(color)
-                            .size(width = width, height = 8.dp)
+                            .size(width = width, height = 8.dp),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Bottom Button
-            Button(
+            ActionPillButton(
+                text = if (pagerState.currentPage == 2)
+                    stringResource(R.string.welcome_btn_start)
+                else stringResource(R.string.welcome_btn_next),
                 onClick = {
                     if (pagerState.currentPage < 2) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
+                        scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                     } else {
                         onFinish()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 32.dp)
-                    .height(56.dp)
-                    .bounceClick {
-                        if (pagerState.currentPage < 2) {
-                            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                        } else {
-                            onFinish()
-                        }
-                     },
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PremiumPink),
-                elevation = ButtonDefaults.buttonElevation(8.dp)
-            ) {
-                Text(
-                    text = if (pagerState.currentPage == 2) androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_btn_start) else androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_btn_next),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
+                    .padding(horizontal = 28.dp)
+                    .padding(bottom = 28.dp, top = 12.dp),
+                leadingEmoji = if (pagerState.currentPage == 2) "🚀" else "→",
+            )
         }
     }
 }
 
 @Composable
 fun OnboardingPage(page: Int) {
-    val pageContent = when (page) {
+    val (title, desc, emoji) = when (page) {
         0 -> Triple(
-            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page1_title),
-            androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page1_desc),
-            Icons.Filled.Pets as ImageVector
+            stringResource(R.string.welcome_page1_title),
+            stringResource(R.string.welcome_page1_desc),
+            "🐾",
         )
         1 -> Triple(
-             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page2_title),
-             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page2_desc),
-            Icons.Filled.BarChart as ImageVector
+            stringResource(R.string.welcome_page2_title),
+            stringResource(R.string.welcome_page2_desc),
+            "📊",
         )
         else -> Triple(
-             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page3_title),
-             androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.welcome_page3_desc),
-            Icons.Filled.EmojiEvents as ImageVector
+            stringResource(R.string.welcome_page3_title),
+            stringResource(R.string.welcome_page3_desc),
+            "🏆",
         )
+    }
+    val gradient = when (page) {
+        0 -> MoodHappyGradient
+        1 -> MoodSadGradient
+        else -> MoodSleepGradient
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(horizontal = 32.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-        EntranceAnimation {
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .pulsate()
-                    .clip(CircleShape)
-                    .background(
-                        when (page) {
-                            0 -> PremiumPink.copy(alpha = 0.1f)
-                            1 -> PremiumBlue.copy(alpha = 0.1f)
-                            else -> PremiumMint.copy(alpha = 0.1f)
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = pageContent.third,
-                    contentDescription = null,
-                    modifier = Modifier.size(100.dp),
-                    tint = when (page) { 0 -> PremiumPink; 1 -> PremiumBlue; else -> PremiumMint }
-                )
-            }
+        Box(
+            modifier = Modifier
+                .softEntrance()
+                .size(240.dp)
+                .breath(amplitude = 0.05f)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(gradient)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = emoji, fontSize = 110.sp)
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        EntranceAnimation(delay = 200) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = pageContent.first,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+        Column(
+            modifier = Modifier.softEntrance(delayMillis = 120),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                Text(
-                    text = pageContent.second,
-                    style = MaterialTheme.typography.titleMedium, // Larger size
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = 28.sp
-                )
-            }
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium,
+                lineHeight = 26.sp,
+            )
         }
     }
 }

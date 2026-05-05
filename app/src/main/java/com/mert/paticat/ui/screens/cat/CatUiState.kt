@@ -33,7 +33,11 @@ data class CatUiState(
     // Boosts
     val stepBoostExpiresAt: Long = 0L,
     val xpBoostExpiresAt: Long = 0L,
-    val comboBoostExpiresAt: Long = 0L
+    val comboBoostExpiresAt: Long = 0L,
+    // Rapid double-tap protection for feeding
+    val isFeedingInProgress: Boolean = false,
+    // Surfaced ad show/load failure message (snackbar consumes & clears).
+    val adError: String? = null
 ) {
     val currentMood: CatMood
         get() = cat.mood

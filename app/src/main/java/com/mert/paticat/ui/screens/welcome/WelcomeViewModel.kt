@@ -38,7 +38,7 @@ class WelcomeViewModel @Inject constructor(
         }
     }
 
-    fun saveUserProfile(name: String, catName: String, gender: String, stepGoal: Int, waterGoal: Int, calorieGoal: Int) {
+    fun saveUserProfile(name: String, catName: String, stepGoal: Int, waterGoal: Int) {
         viewModelScope.launch {
             // Update Cat Name
             catRepository.initializeCat()
@@ -51,20 +51,16 @@ class WelcomeViewModel @Inject constructor(
                 userProfileRepository.updateProfile(
                     existingProfile.copy(
                         name = name,
-                        gender = gender,
                         dailyStepGoal = stepGoal,
-                        dailyWaterGoalMl = waterGoal,
-                        dailyCalorieGoal = calorieGoal
+                        dailyWaterGoalMl = waterGoal
                     )
                 )
             } else {
                 userProfileRepository.upsertProfile(
                     UserProfile(
                         name = name,
-                        gender = gender,
                         dailyStepGoal = stepGoal,
-                        dailyWaterGoalMl = waterGoal,
-                        dailyCalorieGoal = calorieGoal
+                        dailyWaterGoalMl = waterGoal
                     )
                 )
             }

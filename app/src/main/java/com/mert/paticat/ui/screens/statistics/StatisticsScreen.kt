@@ -1,31 +1,67 @@
 package com.mert.paticat.ui.screens.statistics
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,19 +72,38 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mert.paticat.R
 import com.mert.paticat.domain.model.InteractionSummary
-import com.mert.paticat.ui.components.*
-import com.mert.paticat.ui.theme.*
+import com.mert.paticat.ui.components.AnimatedWeeklyBarChart
+import com.mert.paticat.ui.components.BeautifulProgressBar
+import com.mert.paticat.ui.components.NativeAdCard
+import com.mert.paticat.ui.components.marshmallow.ActionPillButton
+import com.mert.paticat.ui.components.marshmallow.ChipPill
+import com.mert.paticat.ui.components.marshmallow.MarshmallowTabs
+import com.mert.paticat.ui.components.marshmallow.PillowCard
+import com.mert.paticat.ui.components.marshmallow.pillowPress
+import com.mert.paticat.ui.components.marshmallow.softEntrance
+import com.mert.paticat.ui.theme.AccentGold
+import com.mert.paticat.ui.theme.Dimensions
+import com.mert.paticat.ui.theme.PremiumMint
+import com.mert.paticat.ui.theme.PremiumPeach
+import com.mert.paticat.ui.theme.PremiumPink
+import com.mert.paticat.ui.theme.PremiumPurple
 import java.text.NumberFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatisticsScreen(
-    viewModel: StatisticsViewModel = hiltViewModel()
-) {
+fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedCategory by remember { mutableIntStateOf(0) }
+    var selectedCategory by rememberSaveable { mutableIntStateOf(0) }
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -56,265 +111,180 @@ fun StatisticsScreen(
                 title = {
                     Text(
                         stringResource(R.string.stats_title),
-                        fontWeight = FontWeight.Black,
-                        fontSize = 24.sp
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
         },
-        containerColor = Color.Transparent
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            // CATEGORY TABS (4 tabs)
-            EntranceAnimation {
-                PremiumTabSelector(
-                    options = listOf(
-                        stringResource(R.string.stats_tab_activity),
-                        stringResource(R.string.stats_water),
-                        stringResource(R.string.stats_tab_cat_care),
-                        stringResource(R.string.stats_tab_history)
-                    ),
-                    selectedIndex = selectedCategory,
-                    onSelect = { selectedCategory = it }
-                )
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Dimensions.screenPaddingHorizontal),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Spacer(Modifier.height(2.dp))
+                Box(modifier = Modifier.softEntrance()) {
+                    MarshmallowTabs(
+                        selectedIndex = selectedCategory,
+                        items = listOf(
+                            stringResource(R.string.stats_tab_activity),
+                            stringResource(R.string.stats_water),
+                            stringResource(R.string.stats_tab_cat_care),
+                            stringResource(R.string.stats_tab_history),
+                        ),
+                        onSelect = { selectedCategory = it },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
-            // CONTENT BASED ON TAB
-            AnimatedVisibility(visible = selectedCategory == 0) {
-                ActivityContent(uiState, numberFormat)
+                AnimatedVisibility(visible = selectedCategory == 0) {
+                    ActivityContent(uiState, numberFormat)
+                }
+                AnimatedVisibility(visible = selectedCategory == 1) {
+                    HydrationContent(
+                        uiState = uiState,
+                        onAddWater = { viewModel.addWater(it) },
+                        canUndo = uiState.lastAddedWater != null,
+                        onUndo = { uiState.lastAddedWater?.let { viewModel.removeWater(it) } },
+                    )
+                }
+                AnimatedVisibility(visible = selectedCategory == 2) {
+                    CatCareContent(uiState, viewModel)
+                }
+                AnimatedVisibility(visible = selectedCategory == 3) {
+                    HistoryContent(uiState, viewModel)
+                }
+
+                Spacer(modifier = Modifier.height(Dimensions.bottomNavClearance))
             }
-
-            AnimatedVisibility(visible = selectedCategory == 1) {
-                HydrationContent(
-                    uiState = uiState,
-                    onAddWater = { viewModel.addWater(it) },
-                    canUndo = uiState.lastAddedWater != null,
-                    onUndo = { uiState.lastAddedWater?.let { viewModel.removeWater(it) } }
-                )
-            }
-
-            AnimatedVisibility(visible = selectedCategory == 2) {
-                CatCareContent(uiState, viewModel)
-            }
-
-            AnimatedVisibility(visible = selectedCategory == 3) {
-                HistoryContent(uiState, viewModel)
-            }
-
-            Spacer(modifier = Modifier.height(110.dp))
         }
     }
 }
 
-// ==================== SHARED HELPERS ====================
+// ==================== HELPERS ====================
 
 @Composable
-fun GradientStatCard(
-    gradient: Brush,
-    modifier: Modifier = Modifier,
-    cornerRadius: Dp = 24.dp,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(gradient)
-            .shadow(0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            content = content
-        )
-    }
-}
-
-@Composable
-fun GradientIconBox(
-    icon: ImageVector,
-    color: Color,
-    size: Dp = 48.dp,
-    iconSize: Dp = 24.dp
-) {
+private fun GradientIconBox(icon: ImageVector, color: Color, size: Dp = 44.dp, iconSize: Dp = 22.dp) {
     Box(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    listOf(color.copy(alpha = 0.35f), color.copy(alpha = 0.12f))
-                )
-            ),
-        contentAlignment = Alignment.Center
+            .background(color.copy(alpha = 0.18f)),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(icon, null, tint = color, modifier = Modifier.size(iconSize))
     }
 }
 
-// ==================== ACTIVITY TAB ====================
+// ==================== ACTIVITY ====================
 
 @Composable
 fun ActivityContent(uiState: StatisticsUiState, numberFormat: NumberFormat) {
     val stepColor = MaterialTheme.colorScheme.primary
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
-        // Hero Steps Card — gradient background
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            stepColor.copy(alpha = 0.18f),
-                            stepColor.copy(alpha = 0.05f)
-                        )
-                    )
-                )
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        PillowCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = stepColor.copy(alpha = 0.12f),
+            contentPadding = 22.dp,
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
+            Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column {
                         Text(
                             stringResource(R.string.stats_total_steps),
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            numberFormat.format(uiState.todayStats.steps),
+                            text = numberFormat.format(uiState.todayStats.steps),
                             style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black,
-                            color = stepColor
+                            fontWeight = FontWeight.ExtraBold,
+                            color = stepColor,
                         )
                     }
-                    // Circular progress around icon
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(72.dp)
-                    ) {
+                    Box(modifier = Modifier.size(74.dp), contentAlignment = Alignment.Center) {
                         val animProg by animateFloatAsState(
                             targetValue = (uiState.todayStats.steps.toFloat() / uiState.stepGoal).coerceIn(0f, 1f),
                             animationSpec = tween(1200, easing = FastOutSlowInEasing),
-                            label = "step_circle"
+                            label = "step_circle",
                         )
                         CircularProgressIndicator(
                             progress = { animProg },
                             modifier = Modifier.fillMaxSize(),
-                            strokeWidth = 6.dp,
+                            strokeWidth = 7.dp,
                             color = stepColor,
-                            trackColor = stepColor.copy(alpha = 0.12f),
-                            strokeCap = StrokeCap.Round
+                            trackColor = stepColor.copy(alpha = 0.14f),
+                            strokeCap = StrokeCap.Round,
                         )
-                        Icon(
-                            Icons.Default.DirectionsWalk,
-                            null,
-                            tint = stepColor,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Icon(Icons.Default.DirectionsWalk, null, tint = stepColor, modifier = Modifier.size(28.dp))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(Modifier.height(14.dp))
 
-                // Gradient progress bar
                 BeautifulProgressBar(
                     progress = (uiState.todayStats.steps.toFloat() / uiState.stepGoal).coerceIn(0f, 1f),
                     label = "",
                     currentValue = "",
                     targetValue = "",
-                    color = stepColor
+                    color = stepColor,
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
-                    stringResource(R.string.chart_label_goal, numberFormat.format(uiState.stepGoal)),
+                    text = stringResource(R.string.chart_label_goal, numberFormat.format(uiState.stepGoal)),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
 
-        // Distance & Calories grid
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SoftStatCard(
                 title = stringResource(R.string.stats_distance),
                 value = String.format("%.1f km", uiState.todayStats.distanceKm),
                 icon = Icons.Default.TrendingUp,
                 color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             SoftStatCard(
                 title = stringResource(R.string.stats_burned),
                 value = "${uiState.todayStats.caloriesBurned} kcal",
                 icon = Icons.Default.LocalFireDepartment,
                 color = PremiumPeach,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
 
-        // Native Ad
         NativeAdCard(nativeAd = uiState.nativeAd)
 
-        // Weekly Chart Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    GradientIconBox(Icons.Default.BarChart, stepColor, size = 36.dp, iconSize = 18.dp)
-                    Text(
-                        stringResource(R.string.stats_weekly_activity),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                if (uiState.chartData.isNotEmpty()) {
-                    AnimatedWeeklyBarChart(
-                        data = uiState.chartData,
-                        labels = uiState.chartLabels,
-                        maxValue = uiState.stepGoal.coerceAtLeast(1),
-                        barColor = stepColor,
-                        goalValue = uiState.stepGoal
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("📊", fontSize = 40.sp)
-                        Text(
-                            stringResource(R.string.stats_chart_no_data),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-        }
+        WeeklyChartCard(
+            title = stringResource(R.string.stats_weekly_activity),
+            color = stepColor,
+            chartData = uiState.chartData,
+            chartLabels = uiState.chartLabels,
+            maxValue = uiState.stepGoal.coerceAtLeast(1),
+            goalValue = uiState.stepGoal,
+        )
     }
 }
 
@@ -324,138 +294,153 @@ fun SoftStatCard(
     value: String,
     icon: ImageVector,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(color.copy(alpha = 0.15f), color.copy(alpha = 0.05f))
-                )
-            )
+    PillowCard(
+        modifier = modifier,
+        backgroundColor = color.copy(alpha = 0.12f),
+        contentPadding = 16.dp,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             GradientIconBox(icon, color, size = 44.dp, iconSize = 22.dp)
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             Text(
-                value,
-                fontWeight = FontWeight.Black,
+                text = value,
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = 18.sp,
                 color = color,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 1
+                maxLines = 1,
             )
             Text(
-                title,
+                text = title,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
 }
 
-// Keep legacy PremiumStatCard alias for any other usages
 @Composable
-fun PremiumStatCard(
+private fun WeeklyChartCard(
     title: String,
-    value: String,
-    icon: ImageVector,
     color: Color,
-    modifier: Modifier = Modifier
-) = SoftStatCard(title, value, icon, color, modifier)
+    chartData: List<Int>,
+    chartLabels: List<String>,
+    maxValue: Int,
+    goalValue: Int? = null,
+) {
+    PillowCard(modifier = Modifier.fillMaxWidth(), contentPadding = 18.dp) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GradientIconBox(Icons.Default.BarChart, color, size = 36.dp, iconSize = 18.dp)
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+            Spacer(Modifier.height(14.dp))
+            if (chartData.isNotEmpty()) {
+                AnimatedWeeklyBarChart(
+                    data = chartData,
+                    labels = chartLabels,
+                    maxValue = maxValue,
+                    barColor = color,
+                    goalValue = goalValue,
+                )
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val chartEmptyCd = stringResource(R.string.empty_state_chart_emoji_cd)
+                    Text(
+                        text = "📊",
+                        fontSize = 36.sp,
+                        modifier = Modifier.semantics { contentDescription = chartEmptyCd },
+                    )
+                    Text(
+                        text = stringResource(R.string.stats_chart_no_data),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+    }
+}
 
-// ==================== HYDRATION TAB ====================
+// ==================== HYDRATION ====================
 
 @Composable
 fun HydrationContent(
     uiState: StatisticsUiState,
     onAddWater: (Int) -> Unit,
     canUndo: Boolean = false,
-    onUndo: () -> Unit = {}
+    onUndo: () -> Unit = {},
 ) {
     val waterColor = MaterialTheme.colorScheme.secondary
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
-        // Hero Water Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(waterColor.copy(alpha = 0.18f), waterColor.copy(alpha = 0.04f))
-                    )
-                )
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        PillowCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = waterColor.copy(alpha = 0.12f),
+            contentPadding = 22.dp,
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
+            Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
                         Text(
                             stringResource(R.string.stats_water),
                             style = MaterialTheme.typography.labelLarge,
-                            color = waterColor.copy(alpha = 0.8f)
+                            color = waterColor.copy(alpha = 0.85f),
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "${uiState.todayStats.waterMl}",
+                            text = "${uiState.todayStats.waterMl}",
                             style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black,
-                            color = waterColor
+                            fontWeight = FontWeight.ExtraBold,
+                            color = waterColor,
                         )
                         Text(
-                            "/ ${uiState.waterGoal} ml",
+                            text = "/ ${uiState.waterGoal} ml",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = waterColor.copy(alpha = 0.7f)
+                            color = waterColor.copy(alpha = 0.7f),
                         )
                     }
-                    // Water drop ring
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(72.dp)
-                    ) {
+                    Box(modifier = Modifier.size(72.dp), contentAlignment = Alignment.Center) {
                         val animProg by animateFloatAsState(
                             targetValue = (uiState.todayStats.waterMl.toFloat() / uiState.waterGoal).coerceIn(0f, 1f),
                             animationSpec = tween(1200, easing = FastOutSlowInEasing),
-                            label = "water_circle"
+                            label = "water_circle",
                         )
                         CircularProgressIndicator(
                             progress = { animProg },
                             modifier = Modifier.fillMaxSize(),
-                            strokeWidth = 6.dp,
+                            strokeWidth = 7.dp,
                             color = waterColor,
-                            trackColor = waterColor.copy(alpha = 0.12f),
-                            strokeCap = StrokeCap.Round
+                            trackColor = waterColor.copy(alpha = 0.14f),
+                            strokeCap = StrokeCap.Round,
                         )
-                        Icon(
-                            Icons.Default.LocalDrink,
-                            null,
-                            tint = waterColor,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Icon(Icons.Default.LocalDrink, null, tint = waterColor, modifier = Modifier.size(28.dp))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(Modifier.height(14.dp))
 
-                // Taller animated progress bar
                 val progress = (uiState.todayStats.waterMl.toFloat() / uiState.waterGoal).coerceIn(0f, 1f)
                 val animatedProgress by animateFloatAsState(
                     targetValue = progress,
-                    animationSpec = tween(1000, easing = FastOutSlowInEasing),
-                    label = "water_progress"
+                    animationSpec = tween(1000),
+                    label = "water_progress",
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(40.dp)
+                        .height(36.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(waterColor.copy(alpha = 0.10f))
+                        .background(waterColor.copy(alpha = 0.16f)),
                 ) {
                     Box(
                         modifier = Modifier
@@ -463,87 +448,45 @@ fun HydrationContent(
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(20.dp))
                             .background(
-                                Brush.horizontalGradient(
-                                    listOf(waterColor, waterColor.copy(alpha = 0.7f))
-                                )
-                            )
+                                Brush.horizontalGradient(listOf(waterColor, waterColor.copy(alpha = 0.8f))),
+                            ),
                     )
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${(progress * 100).toInt()}%",
-                            color = if (progress > 0.45f) MaterialTheme.colorScheme.onPrimary else waterColor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = "${uiState.todayStats.waterMl} / ${uiState.waterGoal} ml",
-                            color = if (progress > 0.65f) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else waterColor.copy(alpha = 0.7f),
-                            fontSize = 12.sp
-                        )
-                    }
+                    // TODO(A2): replace with dedicated onWaterFill / onWaterTrack tokens.
+                    // Fill is solid waterColor → Color.White contrast holds across light+dark.
+                    // Track is waterColor.alpha=0.16 → onSurface keeps WCAG AA on light theme
+                    // where waterColor's mid-tone fails.
+                    Text(
+                        text = "${(progress * 100).toInt()}% · ${uiState.todayStats.waterMl}/${uiState.waterGoal} ml",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = if (progress > 0.5f) Color.White else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
 
-                // Add water buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     listOf(200, 300, 500).forEach { amount ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(waterColor, waterColor.copy(alpha = 0.75f))
-                                    )
-                                )
-                                .clickable { onAddWater(amount) }
-                                .padding(vertical = 12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Text(
-                                    "${amount}ml",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
+                        ActionPillButton(
+                            text = "+${amount}",
+                            onClick = { onAddWater(amount) },
+                            backgroundColor = waterColor,
+                            modifier = Modifier.weight(1f),
+                        )
                     }
                     if (canUndo) {
-                        IconButton(
-                            onClick = onUndo,
+                        Box(
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(waterColor.copy(alpha = 0.15f))
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(waterColor.copy(alpha = 0.18f))
+                                .pillowPress(onClick = onUndo),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                Icons.Default.Undo,
-                                contentDescription = "Undo",
-                                tint = waterColor,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(Icons.Default.Undo, stringResource(R.string.undo_action), tint = waterColor, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -552,101 +495,68 @@ fun HydrationContent(
     }
 }
 
-// ==================== CAT CARE TAB ====================
+// ==================== CAT CARE ====================
 
 @Composable
 fun CatCareContent(uiState: StatisticsUiState, viewModel: StatisticsViewModel) {
     val primary = MaterialTheme.colorScheme.primary
     val summary = uiState.catCareSummary
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Range selector
-        PremiumTabSelector(
-            options = listOf(
-                stringResource(R.string.stats_range_daily),
-                stringResource(R.string.stats_range_weekly),
-                stringResource(R.string.stats_range_monthly)
-            ),
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        MarshmallowTabs(
             selectedIndex = when (uiState.catCareRange) {
                 StatsRange.DAILY -> 0
                 StatsRange.WEEKLY -> 1
                 StatsRange.MONTHLY -> 2
             },
+            items = listOf(
+                stringResource(R.string.stats_range_daily),
+                stringResource(R.string.stats_range_weekly),
+                stringResource(R.string.stats_range_monthly),
+            ),
             onSelect = {
                 viewModel.selectCatCareRange(
                     when (it) {
                         0 -> StatsRange.DAILY
                         1 -> StatsRange.WEEKLY
                         else -> StatsRange.MONTHLY
-                    }
+                    },
                 )
-            }
+            },
+            modifier = Modifier.fillMaxWidth(),
         )
 
-        // Care Score Card
         CareScoreCard(summary.careScore, primary)
-
-        // Summary Cards Grid
         CareInteractionSummaryGrid(summary)
-
-        // Game Breakdown Card
         if (summary.totalGames > 0) {
             GameBreakdownCard(summary)
         }
-
-        // Interaction Chart
         if (uiState.careChartData.isNotEmpty() && uiState.catCareRange != StatsRange.DAILY) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        GradientIconBox(Icons.Default.Favorite, primary, size = 36.dp, iconSize = 18.dp)
-                        Text(
-                            stringResource(R.string.stats_care_chart_title),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    AnimatedWeeklyBarChart(
-                        data = uiState.careChartData,
-                        labels = uiState.careChartLabels,
-                        maxValue = (uiState.careChartData.maxOrNull() ?: 10) + 5,
-                        barColor = primary
-                    )
-                }
-            }
+            WeeklyChartCard(
+                title = stringResource(R.string.stats_care_chart_title),
+                color = primary,
+                chartData = uiState.careChartData,
+                chartLabels = uiState.careChartLabels,
+                maxValue = (uiState.careChartData.maxOrNull() ?: 10) + 5,
+            )
         }
-
-        // Empty state
         if (summary.totalInteractions == 0) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
+            PillowCard(modifier = Modifier.fillMaxWidth(), contentPadding = 28.dp) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("🐱", fontSize = 48.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    val catEmptyCd = stringResource(R.string.empty_state_cat_emoji_cd)
                     Text(
-                        stringResource(R.string.stats_care_no_data),
+                        text = "🐱",
+                        fontSize = 48.sp,
+                        modifier = Modifier.semantics { contentDescription = catEmptyCd },
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.stats_care_no_data),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -664,81 +574,61 @@ fun CareScoreCard(score: Int, accentColor: Color) {
         else -> stringResource(R.string.stats_care_rating_beginner)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(accentColor.copy(alpha = 0.15f), accentColor.copy(alpha = 0.04f))
-                )
-            )
+    PillowCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = accentColor.copy(alpha = 0.12f),
+        contentPadding = 18.dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    stringResource(R.string.stats_care_score),
+                    text = stringResource(R.string.stats_care_score),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    stringResource(R.string.stats_care_score_desc),
+                    text = stringResource(R.string.stats_care_score_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(accentColor.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        ratingText,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = accentColor
-                    )
-                }
+                Spacer(Modifier.height(8.dp))
+                ChipPill(
+                    text = ratingText,
+                    backgroundColor = accentColor.copy(alpha = 0.14f),
+                    contentColor = accentColor,
+                )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            // Circular progress
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(88.dp)
-            ) {
+            Spacer(Modifier.width(12.dp))
+            Box(modifier = Modifier.size(88.dp), contentAlignment = Alignment.Center) {
                 val animatedProgress by animateFloatAsState(
                     targetValue = score / 100f,
-                    animationSpec = tween(1200, easing = FastOutSlowInEasing),
-                    label = "care_score_progress"
+                    animationSpec = tween(1200),
+                    label = "care_progress",
                 )
                 CircularProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier.fillMaxSize(),
                     strokeWidth = 9.dp,
                     color = accentColor,
-                    trackColor = accentColor.copy(alpha = 0.12f),
-                    strokeCap = StrokeCap.Round
+                    trackColor = accentColor.copy(alpha = 0.14f),
+                    strokeCap = StrokeCap.Round,
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "$score",
-                        fontWeight = FontWeight.Black,
+                        text = "$score",
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 26.sp,
-                        color = accentColor
+                        color = accentColor,
                     )
                     Text(
-                        "/100",
+                        text = "/100",
                         fontSize = 10.sp,
-                        color = accentColor.copy(alpha = 0.6f)
+                        color = accentColor.copy(alpha = 0.6f),
                     )
                 }
             }
@@ -750,86 +640,37 @@ fun CareScoreCard(score: Int, accentColor: Color) {
 fun CareInteractionSummaryGrid(summary: InteractionSummary) {
     val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.secondary
-
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CareStatMiniCard(
-                icon = Icons.Filled.Fastfood,
-                label = stringResource(R.string.stats_care_feed_count),
-                count = summary.feedCount,
-                color = primary,
-                modifier = Modifier.weight(1f)
-            )
-            CareStatMiniCard(
-                icon = Icons.Filled.SportsEsports,
-                label = stringResource(R.string.stats_care_game_count),
-                count = summary.totalGames,
-                color = secondary,
-                modifier = Modifier.weight(1f)
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            CareStatMiniCard(Icons.Filled.Fastfood, stringResource(R.string.stats_care_feed_count), summary.feedCount, primary, Modifier.weight(1f))
+            CareStatMiniCard(Icons.Filled.SportsEsports, stringResource(R.string.stats_care_game_count), summary.totalGames, secondary, Modifier.weight(1f))
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CareStatMiniCard(
-                icon = Icons.Filled.Bedtime,
-                label = stringResource(R.string.stats_care_sleep_count),
-                count = summary.sleepCount,
-                color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.weight(1f)
-            )
-            CareStatMiniCard(
-                icon = Icons.Filled.Favorite,
-                label = stringResource(R.string.stats_care_pet_count),
-                count = summary.petCount,
-                color = PremiumPink,
-                modifier = Modifier.weight(1f)
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            CareStatMiniCard(Icons.Filled.Bedtime, stringResource(R.string.stats_care_sleep_count), summary.sleepCount, MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+            CareStatMiniCard(Icons.Filled.Favorite, stringResource(R.string.stats_care_pet_count), summary.petCount, PremiumPink, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-fun CareStatMiniCard(
-    icon: ImageVector,
-    label: String,
-    count: Int,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(color.copy(alpha = 0.14f), color.copy(alpha = 0.03f))
-                )
-            )
+fun CareStatMiniCard(icon: ImageVector, label: String, count: Int, color: Color, modifier: Modifier = Modifier) {
+    PillowCard(
+        modifier = modifier,
+        backgroundColor = color.copy(alpha = 0.10f),
+        contentPadding = 14.dp,
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Emoji in a soft circle background
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp), tint = color)
-            }
-            Spacer(modifier = Modifier.height(10.dp))
+            GradientIconBox(icon, color, size = 50.dp, iconSize = 24.dp)
+            Spacer(Modifier.height(8.dp))
+            Text(text = "$count", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = color)
             Text(
-                "$count",
-                fontWeight = FontWeight.Black,
-                fontSize = 26.sp,
-                color = color
-            )
-            Text(
-                label,
+                text = label,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -838,74 +679,53 @@ fun CareStatMiniCard(
 @Composable
 fun GameBreakdownCard(summary: InteractionSummary) {
     val primary = MaterialTheme.colorScheme.primary
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+    PillowCard(modifier = Modifier.fillMaxWidth(), contentPadding = 18.dp) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GradientIconBox(Icons.Default.SportsEsports, primary, size = 36.dp, iconSize = 18.dp)
-                Text(
-                    stringResource(R.string.stats_care_game_breakdown),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text(text = stringResource(R.string.stats_care_game_breakdown), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
 
             val gameItems = listOf(
                 Triple("✊", stringResource(R.string.stats_game_rps), summary.gameRpsCount),
                 Triple("🎰", stringResource(R.string.stats_game_slots), summary.gameSlotsCount),
                 Triple("🧠", stringResource(R.string.stats_game_memory), summary.gameMemoryCount),
                 Triple("⚡", stringResource(R.string.stats_game_reflex), summary.gameReflexCount),
-                Triple("🧺", stringResource(R.string.stats_game_catch), summary.gameCatchCount)
+                Triple("🧺", stringResource(R.string.stats_game_catch), summary.gameCatchCount),
             ).filter { it.third > 0 }
 
             val maxCount = gameItems.maxOfOrNull { it.third } ?: 1
 
             gameItems.forEachIndexed { idx, (emoji, name, count) ->
-                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                Column(modifier = Modifier.padding(vertical = 5.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(emoji, fontSize = 20.sp)
-                            Text(
-                                name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Text(name, style = MaterialTheme.typography.bodyMedium)
                         }
                         Text(
-                            stringResource(R.string.stats_times, count),
+                            text = stringResource(R.string.stats_times, count),
                             fontWeight = FontWeight.Bold,
-                            color = primary
+                            color = primary,
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    // Mini progress bar per game
+                    Spacer(Modifier.height(5.dp))
                     val barProgress by animateFloatAsState(
                         targetValue = count.toFloat() / maxCount,
-                        animationSpec = tween(800, easing = FastOutSlowInEasing),
-                        label = "game_bar_$idx"
+                        animationSpec = tween(800),
+                        label = "game_bar_$idx",
                     )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp))
-                            .background(primary.copy(alpha = 0.10f))
+                            .background(primary.copy(alpha = 0.10f)),
                     ) {
                         Box(
                             modifier = Modifier
@@ -913,199 +733,115 @@ fun GameBreakdownCard(summary: InteractionSummary) {
                                 .fillMaxHeight()
                                 .clip(RoundedCornerShape(3.dp))
                                 .background(
-                                    Brush.horizontalGradient(
-                                        listOf(primary, primary.copy(alpha = 0.6f))
-                                    )
-                                )
+                                    Brush.horizontalGradient(listOf(primary, primary.copy(alpha = 0.7f))),
+                                ),
                         )
                     }
                 }
                 if (idx < gameItems.lastIndex) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                 }
             }
         }
     }
 }
 
-// ==================== HISTORY TAB ====================
+// ==================== HISTORY ====================
 
 @Composable
 fun HistoryContent(uiState: StatisticsUiState, viewModel: StatisticsViewModel) {
     val historyColor = PremiumPurple
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        PremiumTabSelector(
-            options = listOf(
-                stringResource(R.string.stats_weekly),
-                stringResource(R.string.stats_monthly)
-            ),
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        MarshmallowTabs(
             selectedIndex = if (uiState.selectedRange == StatsRange.MONTHLY) 1 else 0,
-            onSelect = {
-                viewModel.selectRange(if (it == 0) StatsRange.WEEKLY else StatsRange.MONTHLY)
-            }
+            items = listOf(
+                stringResource(R.string.stats_weekly),
+                stringResource(R.string.stats_monthly),
+            ),
+            onSelect = { viewModel.selectRange(if (it == 0) StatsRange.WEEKLY else StatsRange.MONTHLY) },
+            modifier = Modifier.fillMaxWidth(),
         )
 
         if (uiState.dateRangeLabel.isNotEmpty()) {
             Box(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(historyColor.copy(alpha = 0.10f))
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
+                ChipPill(
                     text = uiState.dateRangeLabel,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = historyColor,
-                    fontWeight = FontWeight.SemiBold
+                    backgroundColor = historyColor.copy(alpha = 0.12f),
+                    contentColor = historyColor,
                 )
             }
         }
 
-        // Top 3 performance metrics — individual cards
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            HistoryMetricCard(
-                icon = Icons.Default.EmojiEvents,
-                label = stringResource(R.string.stats_best_day),
-                value = "${uiState.detailedStats.bestDaySteps}",
-                color = AccentGold,
-                modifier = Modifier.weight(1f)
-            )
-            HistoryMetricCard(
-                icon = Icons.Default.TrendingUp,
-                label = stringResource(R.string.stats_daily_avg),
-                value = "${uiState.detailedStats.avgSteps}",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
-            )
-            HistoryMetricCard(
-                icon = Icons.Default.CheckCircle,
-                label = stringResource(R.string.stats_goal_success),
-                value = "${uiState.detailedStats.completionRate}%",
-                color = PremiumMint,
-                modifier = Modifier.weight(1f)
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            HistoryMetricCard(Icons.Default.EmojiEvents, stringResource(R.string.stats_best_day), "${uiState.detailedStats.bestDaySteps}", AccentGold, Modifier.weight(1f))
+            HistoryMetricCard(Icons.Default.TrendingUp, stringResource(R.string.stats_daily_avg), "${uiState.detailedStats.avgSteps}", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+            HistoryMetricCard(Icons.Default.CheckCircle, stringResource(R.string.stats_goal_success), "${uiState.detailedStats.completionRate}%", PremiumMint, Modifier.weight(1f))
         }
 
-        // Total stats card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(historyColor.copy(alpha = 0.10f), historyColor.copy(alpha = 0.02f))
-                    )
-                )
+        PillowCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = historyColor.copy(alpha = 0.10f),
+            contentPadding = 18.dp,
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column {
                 Text(
-                    stringResource(R.string.stats_general_performance),
+                    text = stringResource(R.string.stats_general_performance),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    HistoryStatItem(
-                        icon = "👟",
-                        label = stringResource(R.string.stats_total_steps),
-                        value = "${uiState.detailedStats.totalSteps}"
-                    )
-                    HistoryStatItem(
-                        icon = "🔥",
-                        label = stringResource(R.string.stats_burned),
-                        value = "${uiState.detailedStats.totalCaloriesBurned} kcal"
-                    )
-                    HistoryStatItem(
-                        icon = "💧",
-                        label = stringResource(R.string.stats_water),
-                        value = "${uiState.detailedStats.totalWater} ml"
-                    )
+                Spacer(Modifier.height(14.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                    HistoryStatItem("👟", stringResource(R.string.stats_total_steps), "${uiState.detailedStats.totalSteps}")
+                    HistoryStatItem("🔥", stringResource(R.string.stats_burned), "${uiState.detailedStats.totalCaloriesBurned} kcal")
+                    HistoryStatItem("💧", stringResource(R.string.stats_water), "${uiState.detailedStats.totalWater} ml")
                 }
             }
         }
 
-        // Chart card
         if (uiState.chartData.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        GradientIconBox(Icons.Default.BarChart, historyColor, size = 36.dp, iconSize = 18.dp)
-                        Text(
-                            stringResource(R.string.stats_weekly_activity),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    AnimatedWeeklyBarChart(
-                        data = uiState.chartData,
-                        labels = uiState.chartLabels,
-                        maxValue = uiState.stepGoal.coerceAtLeast(1),
-                        barColor = historyColor,
-                        goalValue = uiState.stepGoal
-                    )
-                }
-            }
+            WeeklyChartCard(
+                title = stringResource(R.string.stats_weekly_activity),
+                color = historyColor,
+                chartData = uiState.chartData,
+                chartLabels = uiState.chartLabels,
+                maxValue = uiState.stepGoal.coerceAtLeast(1),
+                goalValue = uiState.stepGoal,
+            )
         }
     }
 }
 
 @Composable
-fun HistoryMetricCard(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(color.copy(alpha = 0.16f), color.copy(alpha = 0.04f))
-                )
-            )
+fun HistoryMetricCard(icon: ImageVector, label: String, value: String, color: Color, modifier: Modifier = Modifier) {
+    PillowCard(
+        modifier = modifier,
+        backgroundColor = color.copy(alpha = 0.12f),
+        contentPadding = 12.dp,
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             GradientIconBox(icon, color, size = 40.dp, iconSize = 20.dp)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
-                value,
-                fontWeight = FontWeight.Black,
+                text = value,
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = 15.sp,
                 color = color,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
-                label,
+                text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                maxLines = 2
+                maxLines = 2,
             )
         }
     }
@@ -1115,35 +851,19 @@ fun HistoryMetricCard(
 fun HistoryStatItem(icon: String, label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(icon, fontSize = 22.sp)
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
-            value,
+            text = value,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Text(
-            label,
+            text = label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
 
-// ==================== LEGACY / REUSABLE ====================
-
-@Composable
-fun MiniLegend(color: Color, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(text, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}

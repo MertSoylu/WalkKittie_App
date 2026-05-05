@@ -5,103 +5,110 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.mert.paticat.R
+import com.mert.paticat.ui.components.marshmallow.PillowCard
+import com.mert.paticat.ui.theme.Dimensions
 
 /**
- * A beautiful Native Ad card that blends into the app's UI.
+ * Marshmallow-shelled native ad. Outer surface is a PillowCard; the AdMob view
+ * inflate (`populateNativeAdView`) is preserved verbatim — do NOT modify.
  */
 @Composable
 fun NativeAdCard(
     nativeAd: NativeAd?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    if (nativeAd != null) {
-        val loadedAd = nativeAd
-        val label = stringResource(R.string.ad_label)
-        val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
-        val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-        val ctaColor = MaterialTheme.colorScheme.primary.toArgb()
-        val ctaTextColor = MaterialTheme.colorScheme.onPrimary.toArgb()
-        val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
-
-        Card(
+    if (nativeAd == null) {
+        PillowCard(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                .height(180.dp),
+            shape = RoundedCornerShape(Dimensions.radiusL),
+            contentPadding = 12.dp,
         ) {
-            Column(modifier = Modifier.padding(10.dp)) {
-                // Badge
-                Surface(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(bottom = 4.dp)
-                ) {
-                    Text(
-                        label,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+        return
+    }
 
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = { ctx ->
-                        val adView = LayoutInflater.from(ctx).inflate(R.layout.ad_unified_home, null) as NativeAdView
-                        populateNativeAdView(
-                            nativeAd = loadedAd,
-                            adView = adView,
-                            textColor = textColor,
-                            secondaryTextColor = secondaryTextColor,
-                            ctaColor = ctaColor,
-                            ctaTextColor = ctaTextColor,
-                            surfaceColor = surfaceColor
-                        )
-                        adView
-                    },
-                    update = { adView ->
-                        populateNativeAdView(
-                            nativeAd = loadedAd,
-                            adView = adView,
-                            textColor = textColor,
-                            secondaryTextColor = secondaryTextColor,
-                            ctaColor = ctaColor,
-                            ctaTextColor = ctaTextColor,
-                            surfaceColor = surfaceColor
-                        )
-                    }
+    val label = stringResource(R.string.ad_label)
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val ctaColor = MaterialTheme.colorScheme.primary.toArgb()
+    val ctaTextColor = MaterialTheme.colorScheme.onPrimary.toArgb()
+    val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
+
+    PillowCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensions.radiusL),
+        contentPadding = 12.dp,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(Dimensions.radiusS),
+                modifier = Modifier.padding(bottom = 6.dp),
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
                 )
             }
+
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = { ctx ->
+                    val adView = LayoutInflater.from(ctx)
+                        .inflate(R.layout.ad_unified_home, null) as NativeAdView
+                    populateNativeAdView(
+                        nativeAd = nativeAd,
+                        adView = adView,
+                        textColor = textColor,
+                        secondaryTextColor = secondaryTextColor,
+                        ctaColor = ctaColor,
+                        ctaTextColor = ctaTextColor,
+                        surfaceColor = surfaceColor,
+                    )
+                    adView
+                },
+                update = { adView ->
+                    populateNativeAdView(
+                        nativeAd = nativeAd,
+                        adView = adView,
+                        textColor = textColor,
+                        secondaryTextColor = secondaryTextColor,
+                        ctaColor = ctaColor,
+                        ctaTextColor = ctaTextColor,
+                        surfaceColor = surfaceColor,
+                    )
+                },
+            )
         }
     }
 }
@@ -113,14 +120,11 @@ private fun populateNativeAdView(
     secondaryTextColor: Int,
     ctaColor: Int,
     ctaTextColor: Int,
-    surfaceColor: Int
+    surfaceColor: Int,
 ) {
     adView.setBackgroundColor(surfaceColor)
 
-    // Set the media view.
     adView.mediaView = adView.findViewById(R.id.ad_media)
-
-    // Set other ad assets.
     adView.headlineView = adView.findViewById(R.id.ad_headline)
     adView.bodyView = adView.findViewById(R.id.ad_body)
     adView.callToActionView = adView.findViewById(R.id.ad_call_to_action)
@@ -128,15 +132,12 @@ private fun populateNativeAdView(
     adView.starRatingView = adView.findViewById(R.id.ad_stars)
     adView.advertiserView = adView.findViewById(R.id.ad_advertiser)
 
-    // The headline and mediaContent are guaranteed to be in every NativeAd.
     (adView.headlineView as TextView).apply {
         text = nativeAd.headline
         setTextColor(textColor)
     }
     nativeAd.mediaContent?.let { adView.mediaView?.setMediaContent(it) }
 
-    // These assets aren't guaranteed to be in every NativeAd, so it's important to
-    // check before trying to display them.
     if (nativeAd.body == null) {
         adView.bodyView?.visibility = View.INVISIBLE
     } else {
@@ -161,9 +162,7 @@ private fun populateNativeAdView(
     if (nativeAd.icon == null) {
         adView.iconView?.visibility = View.GONE
     } else {
-        (adView.iconView as ImageView).setImageDrawable(
-            nativeAd.icon?.drawable
-        )
+        (adView.iconView as ImageView).setImageDrawable(nativeAd.icon?.drawable)
         adView.iconView?.visibility = View.VISIBLE
     }
 
@@ -177,7 +176,5 @@ private fun populateNativeAdView(
         adView.advertiserView?.visibility = View.VISIBLE
     }
 
-    // This method tells the Google Mobile Ads SDK that you have finished populating your
-    // native ad view with this native ad.
     adView.setNativeAd(nativeAd)
 }

@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mert.paticat.ui.theme.AccentGold
+import com.mert.paticat.ui.theme.ChartGoalMetColor
 import com.mert.paticat.ui.theme.PastelBlue
 import com.mert.paticat.ui.theme.PastelMint
 import com.mert.paticat.ui.theme.PastelPeach
@@ -105,12 +106,14 @@ fun AnimatedWeeklyBarChart(
                     verticalAlignment = Alignment.Bottom
                 ) {
                     data.forEachIndexed { index, value ->
+                        val goalMet = goalValue != null && value >= goalValue
                         AnimatedBarWithLabel(
                             value = value,
                             maxValue = maxValue,
                             label = labels[index],
-                            barColor = if (goalValue != null && value >= goalValue) PastelMint else barColor,
-                            isToday = index == data.lastIndex
+                            barColor = if (goalMet) ChartGoalMetColor else barColor,
+                            isToday = index == data.lastIndex,
+                            goalMet = goalMet
                         )
                     }
                 }
@@ -127,7 +130,7 @@ fun AnimatedWeeklyBarChart(
                         modifier = Modifier
                             .size(12.dp)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(PastelMint)
+                            .background(ChartGoalMetColor)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -147,7 +150,8 @@ private fun AnimatedBarWithLabel(
     maxValue: Int,
     label: String,
     barColor: Color,
-    isToday: Boolean
+    isToday: Boolean,
+    goalMet: Boolean = false
 ) {
     var animatedHeight by remember { mutableFloatStateOf(0f) }
     val heightAnimation by animateFloatAsState(
@@ -166,6 +170,17 @@ private fun AnimatedBarWithLabel(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(40.dp)
     ) {
+        // Goal-met indicator (color-blind safe alternative to mint hue)
+        if (goalMet) {
+            Text(
+                text = "✓",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                color = ChartGoalMetColor
+            )
+        }
+
         // Value on top
         Text(
             text = formatNumber(value),

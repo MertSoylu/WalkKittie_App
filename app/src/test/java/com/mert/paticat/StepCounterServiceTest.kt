@@ -127,5 +127,6 @@ class StepCounterServiceTest {
         // Then stepdiff = 200 -> 1 base point. Gold is boosted (x2) = 2. XP is not = 1.
         verify(catRepository, times(1)).addCoins(2, EconomySource.STEP_REWARD, null)
         verify(catRepository, times(1)).addXp(1)
+        verify(userPreferencesRepository, times(1)).addPendingRewards(xp = 1, gold = 2)
     }
 }

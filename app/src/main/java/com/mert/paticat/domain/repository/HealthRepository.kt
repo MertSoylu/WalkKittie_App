@@ -10,6 +10,7 @@ import java.time.LocalDate
 interface HealthRepository {
     fun getTodayStats(): Flow<DailyStats>
     fun getStatsForDate(date: LocalDate): Flow<DailyStats?>
+    fun getStatsForDateRange(start: LocalDate, end: LocalDate): Flow<List<DailyStats>>
     fun getWeeklyStats(): Flow<List<DailyStats>>
     fun getMonthlyStats(): Flow<List<DailyStats>>
     

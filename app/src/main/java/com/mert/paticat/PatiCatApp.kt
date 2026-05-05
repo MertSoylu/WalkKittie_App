@@ -13,18 +13,14 @@ class PatiCatApp : Application(), Configuration.Provider {
     
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
-    
-    @Inject
-    lateinit var adManager: com.mert.paticat.data.ads.AdManager
-    
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
-            
+
     override fun onCreate() {
         super.onCreate()
-        adManager.initialize()
         try {
             setupBackgroundWorkers()
         } catch (e: Exception) {

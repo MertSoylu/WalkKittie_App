@@ -46,36 +46,39 @@ fun WalkkittieTheme(
         darkColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
-            primaryContainer = primaryColor.copy(alpha = 0.7f), // Increased opacity for better text contrast
+            primaryContainer = primaryColor.copy(alpha = 0.28f),
+            onPrimaryContainer = Color.White,
             secondary = secondaryColor,
             onSecondary = Color.White,
             tertiary = AccentGold,
             onTertiary = Color(0xFF2E2100),
             background = BackgroundDark,
             onBackground = Color.White,
-            surface = SurfaceDark,
+            surface = MarshmallowSurfaceDark,
             onSurface = Color.White,
-            surfaceVariant = Color(0x40252525), // ~25% opaque — glassmorphism
-            onSurfaceVariant = Color.LightGray,
-            outlineVariant = Color.White.copy(alpha = 0.14f)
+            surfaceVariant = MarshmallowSurfaceTintedDark,
+            onSurfaceVariant = Color(0xFFD9D2EC),
+            outline = MarshmallowOutlineDark,
+            outlineVariant = MarshmallowOutlineSoftDark,
         )
     } else {
         lightColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
-            primaryContainer = primaryColor.copy(alpha = 0.1f), // Lighter container
-            onPrimaryContainer = Color.Black,
+            primaryContainer = primaryColor.copy(alpha = 0.14f),
+            onPrimaryContainer = TextHighEmphasis,
             secondary = secondaryColor,
             onSecondary = Color.White,
             tertiary = AccentGold,
             onTertiary = Color(0xFF2E2100),
             background = BackgroundLight,
             onBackground = TextHighEmphasis,
-            surface = SurfaceLight,
-            surfaceVariant = Color.White,
+            surface = MarshmallowSurface,
+            surfaceVariant = MarshmallowSurfaceTinted,
             onSurface = TextHighEmphasis,
             onSurfaceVariant = TextMediumEmphasis,
-            outlineVariant = Color.Black.copy(alpha = 0.08f)
+            outline = MarshmallowOutline,
+            outlineVariant = MarshmallowOutlineSoft,
         )
     }
 

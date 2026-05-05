@@ -19,12 +19,19 @@ import com.mert.paticat.domain.model.InteractionType
 import com.mert.paticat.domain.model.ShopItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -63,10 +70,56 @@ class CatViewModel @Inject constructor(
     val catChoice: StateFlow<RockPaperScissors?> = gameDelegate.catChoice
 
     // ===== Pet animation =====
+    // Monotonic ID drives one-shot animation. Composables observe id changes
+    // (NOT a null-reset). Keeps `petResult: StateFlow<Boolean?>` API for back-compat.
+    private var petResultIdCounter = 0L
     private val _petResult = MutableStateFlow<Boolean?>(null)
     val petResult: StateFlow<Boolean?> = _petResult.asStateFlow()
 
+    private val _petResultEvent = MutableStateFlow<PetResultEvent?>(null)
+    val petResultEvent: StateFlow<PetResultEvent?> = _petResultEvent.asStateFlow()
+
+    data class PetResultEvent(val id: Long, val allowed: Boolean)
+
+    // ===== Feeding lock (rapid double-tap protection) =====
+    // Single source of truth: uiState.isFeedingInProgress. Removed redundant
+    // _isFeedingInProgress flow (was prone to desync on exception).
+
+    // ===== Boost timer flow =====
+    // Single VM-scoped flow emits remaining boost time every 1s. Replaces per-Composable
+    // while-loop polling in ActiveBoostSummary / BoostItemCard.
+    val boostTimeRemaining: StateFlow<List<BoostRemaining>> =
+        flow {
+            while (currentCoroutineContext().isActive) {
+                emit(computeBoostRemaining())
+                delay(1000L)
+            }
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    private fun computeBoostRemaining(): List<BoostRemaining> {
+        val now = System.currentTimeMillis()
+        val state = _uiState.value
+        return listOf(
+            BoostRemaining(BoostKind.STEP, state.stepBoostExpiresAt, "👟"),
+            BoostRemaining(BoostKind.XP, state.xpBoostExpiresAt, "🌟"),
+            BoostRemaining(BoostKind.COMBO, state.comboBoostExpiresAt, "💎"),
+        ).filter { it.expiresAt > now }
+    }
+
+    enum class BoostKind { STEP, XP, COMBO }
+    data class BoostRemaining(val kind: BoostKind, val expiresAt: Long, val emoji: String) {
+        fun remainingMs(now: Long = System.currentTimeMillis()): Long =
+            (expiresAt - now).coerceAtLeast(0L)
+    }
+
     // ===== SharedPreferences for ad tracking =====
+    // TODO: Make sleepAdCount single-source-of-truth. Currently uiState.sleepAdCount
+    // and prefs[KEY_SLEEP_AD_COUNT] are written in lock-step (sleepCat / reduceSleepTime).
+    // Migration: expose a Flow<Int> from a SleepAdRepository (or DataStore) and observe
+    // it into uiState in observeCat(). Skipped — touches sleep flow + repository surface,
+    // bigger than a polish edit.
     private val prefs: SharedPreferences = context.getSharedPreferences("paticat_game_state", Context.MODE_PRIVATE)
     private val KEY_SLEEP_AD_COUNT = "sleep_ad_count"
     private val KEY_GOLD_AD_COUNT = "gold_ad_count"
@@ -109,27 +162,30 @@ class CatViewModel @Inject constructor(
 
     // ===== Initialization =====
 
-    private fun refreshDailyAdCount() {
+    /**
+     * Single source of truth for the day-rollover prefs read.
+     * Returns today's gold-ad usage count and resets the counter on a new day.
+     * Both [refreshDailyAdCount] and [getTodayGoldAdCount] route through this.
+     */
+    private fun readAndRolloverGoldAdCount(): Int {
         val today = java.time.LocalDate.now().toString()
         val storedDate = prefs.getString(KEY_GOLD_AD_DATE, "") ?: ""
-        if (storedDate != today) {
+        return if (storedDate != today) {
             prefs.edit().putInt(KEY_GOLD_AD_COUNT, 0).putString(KEY_GOLD_AD_DATE, today).apply()
-            _uiState.update { it.copy(dailyGoldAdsRemaining = EconomyConfig.DAILY_GOLD_AD_LIMIT) }
+            0
         } else {
-            val usedToday = prefs.getInt(KEY_GOLD_AD_COUNT, 0)
-            _uiState.update { it.copy(dailyGoldAdsRemaining = (EconomyConfig.DAILY_GOLD_AD_LIMIT - usedToday).coerceAtLeast(0)) }
+            prefs.getInt(KEY_GOLD_AD_COUNT, 0)
         }
     }
 
-    private fun getTodayGoldAdCount(): Int {
-        val today = java.time.LocalDate.now().toString()
-        val storedDate = prefs.getString(KEY_GOLD_AD_DATE, "") ?: ""
-        if (storedDate != today) {
-            prefs.edit().putInt(KEY_GOLD_AD_COUNT, 0).putString(KEY_GOLD_AD_DATE, today).apply()
-            return 0
+    private fun refreshDailyAdCount() {
+        val usedToday = readAndRolloverGoldAdCount()
+        _uiState.update {
+            it.copy(dailyGoldAdsRemaining = (EconomyConfig.DAILY_GOLD_AD_LIMIT - usedToday).coerceAtLeast(0))
         }
-        return prefs.getInt(KEY_GOLD_AD_COUNT, 0)
     }
+
+    private fun getTodayGoldAdCount(): Int = readAndRolloverGoldAdCount()
 
     private fun canClaimDailyGoldAd(): Boolean {
         return getTodayGoldAdCount() < EconomyConfig.DAILY_GOLD_AD_LIMIT
@@ -174,10 +230,13 @@ class CatViewModel @Inject constructor(
     private fun observeCat() {
         viewModelScope.launch {
             catRepository.getCat().collect { cat ->
-                _uiState.value = _uiState.value.copy(
-                    cat = cat, isLoading = false,
-                    sleepAdCount = prefs.getInt(KEY_SLEEP_AD_COUNT, 0)
-                )
+                _uiState.update {
+                    it.copy(
+                        cat = cat,
+                        isLoading = false,
+                        sleepAdCount = prefs.getInt(KEY_SLEEP_AD_COUNT, 0)
+                    )
+                }
             }
         }
     }
@@ -200,9 +259,13 @@ class CatViewModel @Inject constructor(
         if (isCatSleeping()) return
         viewModelScope.launch {
             val allowed = catRepository.petCat()
+            // Monotonic ID — composables observe id changes to trigger animation.
+            // No fragile null-reset after delay.
+            petResultIdCounter += 1
+            _petResultEvent.value = PetResultEvent(id = petResultIdCounter, allowed = allowed)
+            // Back-compat: keep boolean flag for existing collectors.
             _petResult.value = allowed
             if (!allowed) setMessage(context.getString(R.string.cat_pet_limit_reached))
-            delay(50); _petResult.value = null
         }
     }
 
@@ -240,12 +303,20 @@ class CatViewModel @Inject constructor(
     }
 
     fun feedCatWithItem(item: ShopItem) {
+        // Single SoT: uiState.isFeedingInProgress.
+        if (_uiState.value.isFeedingInProgress) return
         if (isCatSleeping()) { setMessage(context.getString(R.string.cat_msg_sleeping, getSleepRemainingTime())); return }
         if (_uiState.value.cat.hunger >= 95) { setMessage(context.getString(R.string.cat_msg_full)); return }
         if ((_uiState.value.inventory[item] ?: 0) <= 0) { setMessage(context.getString(R.string.shop_error_no_stock)); return }
         viewModelScope.launch {
-            val success = shopRepository.feedCatWithItem(item)
-            if (success) setMessage(context.getString(R.string.cat_msg_yummy))
+            _uiState.update { it.copy(isFeedingInProgress = true) }
+            try {
+                val success = shopRepository.feedCatWithItem(item)
+                if (success) setMessage(context.getString(R.string.cat_msg_yummy))
+            } finally {
+                // Always reset the flag — covers exception path too.
+                _uiState.update { it.copy(isFeedingInProgress = false) }
+            }
         }
     }
 
@@ -317,11 +388,17 @@ class CatViewModel @Inject constructor(
             System.currentTimeMillis() + remainingMillis
         }
 
-        val newCount = prefs.getInt(KEY_SLEEP_AD_COUNT, 0) + 1
-        prefs.edit().putInt(KEY_SLEEP_AD_COUNT, newCount).apply()
-
         viewModelScope.launch {
-            catRepository.updateSleepState(isSleeping = !isWakingUp, sleepEndTime = newEndTime, energy = boostedEnergy, lastUpdated = System.currentTimeMillis())
+            // Repo write first; if it throws, the ad-counter is NOT consumed
+            // (so the user keeps their remaining sleep-ad allowance).
+            try {
+                catRepository.updateSleepState(isSleeping = !isWakingUp, sleepEndTime = newEndTime, energy = boostedEnergy, lastUpdated = System.currentTimeMillis())
+            } catch (e: Exception) {
+                setMessage(context.getString(R.string.cat_ad_error))
+                return@launch
+            }
+            val newCount = prefs.getInt(KEY_SLEEP_AD_COUNT, 0) + 1
+            prefs.edit().putInt(KEY_SLEEP_AD_COUNT, newCount).apply()
             _uiState.value = _uiState.value.copy(sleepAdCount = newCount)
             if (isWakingUp) setMessage(context.getString(R.string.cat_msg_woke_up))
             else setMessage(context.getString(R.string.cat_msg_sleep_reduced))
@@ -361,6 +438,10 @@ class CatViewModel @Inject constructor(
     fun tapReflexTarget(targetId: Int) = gameDelegate.tapReflexTarget(targetId)
     fun startCatchGame() = gameDelegate.startCatchGame()
     fun finishCatchGame(score: Int) = gameDelegate.finishCatchGame(score)
+    fun catchTick(dt: Float) = gameDelegate.catchTick(dt)
+    fun moveCatchPaddle(dx: Float, arenaWidthPx: Float, paddleWidthPx: Float) =
+        gameDelegate.moveCatchPaddle(dx, arenaWidthPx, paddleWidthPx)
+    val catchGameState: StateFlow<CatchGameState> get() = gameDelegate.catchGameState
 
     // ===== Ads =====
 
@@ -392,7 +473,15 @@ class CatViewModel @Inject constructor(
         _uiState.update { it.copy(foodAdState = AdState.Loading) }
         adManager.loadRewardedAd(adManager.FOOD_AD_ID,
             onAdLoaded = { ad -> _uiState.update { it.copy(foodAdState = AdState.Loaded(ad)) } },
-            onAdFailed = { _uiState.update { it.copy(foodAdState = AdState.Error) } }
+            onAdFailed = { err ->
+                _uiState.update {
+                    it.copy(
+                        foodAdState = AdState.Error,
+                        adError = context.getString(R.string.cat_ad_error)
+                            + (err?.message?.let { m -> ": $m" } ?: "")
+                    )
+                }
+            }
         )
     }
 
@@ -404,7 +493,31 @@ class CatViewModel @Inject constructor(
             return
         }
         if (state is AdState.Loaded) {
-            state.ad.show(activity) { _ -> addGoldForAd(); _uiState.update { it.copy(foodAdState = AdState.Idle) } }
+            // Attach show-time failure listener (RewardedAd.show has no error callback param).
+            state.ad.fullScreenContentCallback =
+                object : com.google.android.gms.ads.FullScreenContentCallback() {
+                    override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                        _uiState.update {
+                            it.copy(
+                                foodAdState = AdState.Error,
+                                adError = context.getString(R.string.cat_ad_error) + ": ${adError.message}"
+                            )
+                        }
+                    }
+                    override fun onAdDismissedFullScreenContent() {
+                        _uiState.update { it.copy(foodAdState = AdState.Idle) }
+                    }
+                }
+            try {
+                state.ad.show(activity) { _ -> addGoldForAd() }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        foodAdState = AdState.Error,
+                        adError = context.getString(R.string.cat_ad_error) + ": ${e.message ?: e.javaClass.simpleName}"
+                    )
+                }
+            }
         }
     }
 
@@ -415,7 +528,15 @@ class CatViewModel @Inject constructor(
         _uiState.update { it.copy(sleepAdState = AdState.Loading) }
         adManager.loadRewardedAd(adManager.SLEEP_AD_ID,
             onAdLoaded = { ad -> _uiState.update { it.copy(sleepAdState = AdState.Loaded(ad)) } },
-            onAdFailed = { _uiState.update { it.copy(sleepAdState = AdState.Error) } }
+            onAdFailed = { err ->
+                _uiState.update {
+                    it.copy(
+                        sleepAdState = AdState.Error,
+                        adError = context.getString(R.string.cat_ad_error)
+                            + (err?.message?.let { m -> ": $m" } ?: "")
+                    )
+                }
+            }
         )
     }
 
@@ -427,9 +548,34 @@ class CatViewModel @Inject constructor(
             return
         }
         if (state is AdState.Loaded) {
-            state.ad.show(activity) { _ -> reduceSleepTime(); _uiState.update { it.copy(sleepAdState = AdState.Idle) } }
+            state.ad.fullScreenContentCallback =
+                object : com.google.android.gms.ads.FullScreenContentCallback() {
+                    override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                        _uiState.update {
+                            it.copy(
+                                sleepAdState = AdState.Error,
+                                adError = context.getString(R.string.cat_ad_error) + ": ${adError.message}"
+                            )
+                        }
+                    }
+                    override fun onAdDismissedFullScreenContent() {
+                        _uiState.update { it.copy(sleepAdState = AdState.Idle) }
+                    }
+                }
+            try {
+                state.ad.show(activity) { _ -> reduceSleepTime() }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        sleepAdState = AdState.Error,
+                        adError = context.getString(R.string.cat_ad_error) + ": ${e.message ?: e.javaClass.simpleName}"
+                    )
+                }
+            }
         }
     }
+
+    fun clearAdError() { _uiState.update { it.copy(adError = null) } }
 
     fun setAdLoading(isLoading: Boolean) { _uiState.update { it.copy(isAdLoading = isLoading, adLoadError = false) } }
     fun setAdError(hasError: Boolean) { _uiState.update { it.copy(adLoadError = hasError, isAdLoading = false) } }
@@ -468,10 +614,16 @@ class CatViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        // Ensure GameDelegate cleans up any in-flight game jobs (memory/reflex/catch).
+        try {
+            gameDelegate.closeMiniGame()
+        } catch (_: IllegalStateException) {
+            // Delegate already torn down — safe to ignore.
+        }
         networkCallback?.let {
             try {
                 (context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).unregisterNetworkCallback(it)
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 // Already unregistered or invalid
             }
         }

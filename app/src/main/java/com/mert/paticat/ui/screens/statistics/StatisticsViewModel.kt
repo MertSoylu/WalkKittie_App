@@ -18,7 +18,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -46,7 +49,6 @@ data class DetailedStat(
 data class StatisticsUiState(
     val selectedRange: StatsRange = StatsRange.WEEKLY,
     val todayStats: DailyStats = DailyStats(LocalDate.now()),
-    val historyStats: List<DailyStats> = emptyList(),
     val detailedStats: DetailedStat = DetailedStat(),
     val stepGoal: Int = 10000,
     val waterGoal: Int = 2000,
@@ -56,6 +58,7 @@ data class StatisticsUiState(
     val dateRangeLabel: String = "",
     val nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null,
     val isLoading: Boolean = true,
+    val error: String? = null,
     val lastAddedWater: Int? = null,
     // Cat Care
     val catCareRange: StatsRange = StatsRange.DAILY,
@@ -64,6 +67,7 @@ data class StatisticsUiState(
     val careChartLabels: List<String> = emptyList()
 )
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val dailyStatsDao: DailyStatsDao,
@@ -79,9 +83,10 @@ class StatisticsViewModel @Inject constructor(
     val uiState: StateFlow<StatisticsUiState> = _uiState.asStateFlow()
 
     init {
-        loadData()
-        loadCatCareData()
-        observeAds()
+        // Move side-effecting work off the constructor's call stack.
+        viewModelScope.launch { loadData() }
+        viewModelScope.launch { loadCatCareData() }
+        viewModelScope.launch { observeAds() }
     }
 
     private fun observeAds() {
@@ -96,14 +101,20 @@ class StatisticsViewModel @Inject constructor(
     private var careJob: kotlinx.coroutines.Job? = null
 
     fun selectRange(range: StatsRange) {
-        // For activity/history tabs, DAILY maps to WEEKLY for chart consistency
-        val effectiveRange = if (range == StatsRange.DAILY) StatsRange.WEEKLY else range
-        _uiState.value = _uiState.value.copy(selectedRange = effectiveRange, isLoading = true)
+        _uiState.update { it.copy(selectedRange = range, isLoading = true, error = null) }
         loadData()
     }
 
     fun selectCatCareRange(range: StatsRange) {
-        _uiState.update { it.copy(catCareRange = range) }
+        // Clear chart data immediately — if the new load fails or is slow, stale
+        // data from the previous range won't linger on screen.
+        _uiState.update {
+            it.copy(
+                catCareRange = range,
+                careChartData = emptyList(),
+                careChartLabels = emptyList(),
+            )
+        }
         loadCatCareData()
     }
 
@@ -158,141 +169,161 @@ class StatisticsViewModel @Inject constructor(
     private fun loadData() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            val today = LocalDate.now()
-            val todayStr = today.toDbString()
-            val range = _uiState.value.selectedRange
-            
-            val startDate = when (range) {
-                StatsRange.DAILY -> today.minusDays(6)
-                StatsRange.WEEKLY -> today.minusDays(6)
-                StatsRange.MONTHLY -> today.minusMonths(5).withDayOfMonth(1) // Son 6 ay
-            }
-            val startDateStr = startDate.toDbString()
-            
-            val profileFlow = userProfileRepository.getUserProfile()
-            val todayStatsFlow = dailyStatsDao.getStatsForDate(todayStr)
-            val recentStatsFlow = dailyStatsDao.getStatsInRange(startDateStr, todayStr)
-            
-            combine(profileFlow, todayStatsFlow, recentStatsFlow, stepCounterManager.liveSteps) { profile, todayStats, allRecentStats, liveSteps ->
-                val stepGoal = profile?.dailyStepGoal ?: 10000
-                val waterGoal = profile?.dailyWaterGoalMl ?: 2000
-                val calorieGoal = profile?.dailyCalorieGoal ?: 2000
-                
-                var todayDomain = todayStats?.toDomain() ?: DailyStats(LocalDate.now())
-                
-                if (todayDomain.date == LocalDate.now() && liveSteps > todayDomain.steps) {
-                     todayDomain = todayDomain.copy(
-                         steps = liveSteps,
-                         distanceKm = (liveSteps * 0.75) / 1000.0
-                     )
+            try {
+                val today = LocalDate.now()
+                val todayStr = today.toDbString()
+                val range = _uiState.value.selectedRange
+
+                val startDate = when (range) {
+                    StatsRange.DAILY, StatsRange.WEEKLY -> today.minusDays(6)
+                    StatsRange.MONTHLY -> today.minusMonths(5).withDayOfMonth(1)
                 }
+                val startDateStr = startDate.toDbString()
 
-                val historyDomain = allRecentStats.map { 
-                    val domain = it.toDomain()
-                    if (domain.date == LocalDate.now()) todayDomain else domain
-                }.toMutableList()
-                
-                if (historyDomain.none { it.date == LocalDate.now() }) {
-                    historyDomain.add(0, todayDomain)
-                }
+                val profileFlow = userProfileRepository.getUserProfile()
+                val todayStatsFlow = dailyStatsDao.getStatsForDate(todayStr)
+                val recentStatsFlow = dailyStatsDao.getStatsInRange(startDateStr, todayStr)
 
-                val rangeDays = ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+                combine(profileFlow, todayStatsFlow, recentStatsFlow, stepCounterManager.liveSteps.debounce(500L).distinctUntilChanged()) { profile, todayStats, allRecentStats, liveSteps ->
+                    val stepGoal = profile?.dailyStepGoal ?: 10000
+                    val waterGoal = profile?.dailyWaterGoalMl ?: 2000
+                    val calorieGoal = profile?.dailyCalorieGoal ?: 2000
 
-                val filteredHistory = historyDomain.filter {
-                    !it.date.isBefore(startDate) && !it.date.isAfter(today)
-                }
+                    var todayDomain = todayStats?.toDomain() ?: DailyStats(LocalDate.now())
 
-                val chartDataPoints = mutableListOf<Int>()
-                val chartLabelsList = mutableListOf<String>()
-
-                if (range == StatsRange.MONTHLY) {
-                    // Her bar = bir ay. Son 6 ayı gerçek ay isimleriyle göster.
-                    for (i in 5 downTo 0) {
-                        val monthDate = today.minusMonths(i.toLong())
-                        val monthStart = monthDate.withDayOfMonth(1)
-                        val monthEnd = monthDate.withDayOfMonth(monthDate.lengthOfMonth())
-                        val monthSteps = filteredHistory
-                            .filter { !it.date.isBefore(monthStart) && !it.date.isAfter(monthEnd) }
-                            .sumOf { it.steps }
-                        chartDataPoints.add(monthSteps)
-                        chartLabelsList.add(monthDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                    if (todayDomain.date == LocalDate.now() && liveSteps > todayDomain.steps) {
+                        todayDomain = todayDomain.copy(
+                            steps = liveSteps,
+                            distanceKm = (liveSteps * 0.75) / 1000.0
+                        )
                     }
-                } else {
-                    for (i in 0 until rangeDays) {
-                        val dateToCheck = startDate.plusDays(i.toLong())
-                        val statsForDay = filteredHistory.find { it.date == dateToCheck }
-                        chartDataPoints.add(statsForDay?.steps ?: 0)
-                        chartLabelsList.add(getDayLabel(dateToCheck.dayOfWeek))
+
+                    val historyDomain = allRecentStats.map {
+                        val domain = it.toDomain()
+                        if (domain.date == LocalDate.now()) todayDomain else domain
+                    }.toMutableList()
+
+                    if (historyDomain.none { it.date == LocalDate.now() }) {
+                        historyDomain.add(0, todayDomain)
                     }
+
+                    val rangeDays = ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+
+                    val filteredHistory = historyDomain.filter {
+                        !it.date.isBefore(startDate) && !it.date.isAfter(today)
+                    }
+
+                    val chartDataPoints = mutableListOf<Int>()
+                    val chartLabelsList = mutableListOf<String>()
+
+                    if (range == StatsRange.MONTHLY) {
+                        for (i in 5 downTo 0) {
+                            val monthDate = today.minusMonths(i.toLong())
+                            val monthStart = monthDate.withDayOfMonth(1)
+                            val monthEnd = monthDate.withDayOfMonth(monthDate.lengthOfMonth())
+                            val monthSteps = filteredHistory
+                                .filter { !it.date.isBefore(monthStart) && !it.date.isAfter(monthEnd) }
+                                .sumOf { it.steps }
+                            chartDataPoints.add(monthSteps)
+                            val monthLabel = monthDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                            // Current month bar contains only MTD data — mark with asterisk
+                            chartLabelsList.add(if (i == 0) "$monthLabel*" else monthLabel)
+                        }
+                    } else {
+                        for (i in 0 until rangeDays) {
+                            val dateToCheck = startDate.plusDays(i.toLong())
+                            val statsForDay = filteredHistory.find { it.date == dateToCheck }
+                            chartDataPoints.add(statsForDay?.steps ?: 0)
+                            chartLabelsList.add(getDayLabel(dateToCheck.dayOfWeek))
+                        }
+                    }
+
+                    val totalSteps = filteredHistory.sumOf { it.steps }
+                    // Use rangeDays consistently for both avg and completion rate.
+                    // Previously avgSteps used activeDays (days with steps > 0) while
+                    // completionRate used rangeDays — denominators disagreed and made
+                    // "average" sensitive to skipped days.
+                    val safeDays = rangeDays.coerceAtLeast(1)
+
+                    val avgSteps = totalSteps / safeDays
+                    val bestDay = filteredHistory.maxOfOrNull { it.steps } ?: 0
+                    val totalCal = filteredHistory.sumOf { it.caloriesBurned }
+                    val avgCal = totalCal / safeDays
+                    val totalWater = filteredHistory.sumOf { it.waterMl }
+
+                    val goalsMet = filteredHistory.count { it.steps >= stepGoal }
+                    val completionRate = (goalsMet * 100) / safeDays
+
+                    val dateRangeLabel = when (range) {
+                        StatsRange.DAILY, StatsRange.WEEKLY -> {
+                            val fmt = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+                            "${startDate.format(fmt)} – ${today.format(fmt)}"
+                        }
+                        StatsRange.MONTHLY -> {
+                            val fmt = DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())
+                            "${startDate.format(fmt)} – ${today.format(fmt)}"
+                        }
+                    }
+
+                    StatisticsUiState(
+                        selectedRange = range,
+                        todayStats = todayDomain,
+                        detailedStats = DetailedStat(
+                            totalSteps = totalSteps,
+                            avgSteps = avgSteps,
+                            bestDaySteps = bestDay,
+                            totalCaloriesBurned = totalCal,
+                            avgCaloriesBurned = avgCal,
+                            totalWater = totalWater,
+                            completionRate = completionRate
+                        ),
+                        stepGoal = stepGoal,
+                        waterGoal = waterGoal,
+                        calorieGoal = calorieGoal,
+                        chartData = chartDataPoints,
+                        chartLabels = chartLabelsList,
+                        dateRangeLabel = dateRangeLabel,
+                        nativeAd = _uiState.value.nativeAd,
+                        isLoading = false,
+                        lastAddedWater = _uiState.value.lastAddedWater,
+                        catCareRange = _uiState.value.catCareRange,
+                        catCareSummary = _uiState.value.catCareSummary,
+                        careChartData = _uiState.value.careChartData,
+                        careChartLabels = _uiState.value.careChartLabels
+                    )
+                }.collect { newState ->
+                    _uiState.update { newState }
                 }
-                
-                val totalSteps = filteredHistory.sumOf { it.steps }
-                val daysDivider = rangeDays
-                
-                val avgSteps = totalSteps / daysDivider
-                val bestDay = filteredHistory.maxOfOrNull { it.steps } ?: 0
-                val totalCal = filteredHistory.sumOf { it.caloriesBurned }
-                val avgCal = totalCal / daysDivider
-                val totalWater = filteredHistory.sumOf { it.waterMl }
-
-                val goalsMet = filteredHistory.count { it.steps >= stepGoal }
-                val completionRate = if (daysDivider > 0) (goalsMet * 100 / daysDivider) else 0
-
-                val dateRangeLabel = when (range) {
-                    StatsRange.WEEKLY -> {
-                        val fmt = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
-                        "${startDate.format(fmt)} – ${today.format(fmt)}"
-                    }
-                    StatsRange.MONTHLY -> {
-                        val fmt = DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())
-                        "${startDate.format(fmt)} – ${today.format(fmt)}"
-                    }
-                    StatsRange.DAILY -> ""
-                }
-
-                StatisticsUiState(
-                    selectedRange = range,
-                    todayStats = todayDomain,
-                    historyStats = filteredHistory.sortedByDescending { it.date },
-                    detailedStats = DetailedStat(
-                        totalSteps = totalSteps,
-                        avgSteps = avgSteps,
-                        bestDaySteps = bestDay,
-                        totalCaloriesBurned = totalCal,
-                        avgCaloriesBurned = avgCal,
-                        totalWater = totalWater,
-                        completionRate = completionRate
-                    ),
-                    stepGoal = stepGoal,
-                    waterGoal = waterGoal,
-                    calorieGoal = calorieGoal,
-                    chartData = chartDataPoints,
-                    chartLabels = chartLabelsList,
-                    dateRangeLabel = dateRangeLabel,
-                    isLoading = false,
-                    lastAddedWater = _uiState.value.lastAddedWater,
-                    catCareRange = _uiState.value.catCareRange,
-                    catCareSummary = _uiState.value.catCareSummary,
-                    careChartData = _uiState.value.careChartData,
-                    careChartLabels = _uiState.value.careChartLabels
-                )
-            }.collect { newState ->
-                _uiState.value = newState
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
-    
+
     fun addWater(amountMl: Int) {
+        val sanitized = amountMl.coerceAtLeast(1)
         viewModelScope.launch {
-            healthRepository.addWater(amountMl)
-            _uiState.update { it.copy(lastAddedWater = amountMl) }
+            try {
+                healthRepository.addWater(sanitized)
+                _uiState.update { it.copy(lastAddedWater = sanitized, error = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
-    
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
     fun removeWater(amountMl: Int) {
         viewModelScope.launch {
-            healthRepository.removeWater(amountMl)
-            _uiState.update { it.copy(lastAddedWater = null) }
+            try {
+                healthRepository.removeWater(amountMl)
+                _uiState.update { it.copy(lastAddedWater = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 

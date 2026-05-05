@@ -52,6 +52,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var userPreferencesRepository: com.mert.paticat.data.local.preferences.UserPreferencesRepository
 
+    @Inject
+    lateinit var adManager: com.mert.paticat.data.ads.AdManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -127,16 +130,13 @@ class MainActivity : AppCompatActivity() {
             this,
             params,
             {
-                UserMessagingPlatform.loadAndShowConsentFormIfRequired(
-                    this
-                ) { loadAndShowError ->
-                    if (loadAndShowError != null) {
-                        if (BuildConfig.DEBUG) {
-                            android.util.Log.w("AdMob", "${loadAndShowError.errorCode}: ${loadAndShowError.message}")
-                        }
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(this) { loadAndShowError ->
+                    if (loadAndShowError != null && BuildConfig.DEBUG) {
+                        android.util.Log.w("AdMob", "${loadAndShowError.errorCode}: ${loadAndShowError.message}")
                     }
-                    // Ad initialization is handled by AdManager.initialize() in PatiCatApp —
-                    // no need to call MobileAds.initialize() again here.
+                    if (consentInformation.canRequestAds()) {
+                        adManager.initialize()
+                    }
                 }
             },
             { requestConsentError ->
@@ -145,5 +145,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+        // Returning users: consent already given in a prior session
+        if (consentInformation.canRequestAds()) {
+            adManager.initialize()
+        }
     }
 }

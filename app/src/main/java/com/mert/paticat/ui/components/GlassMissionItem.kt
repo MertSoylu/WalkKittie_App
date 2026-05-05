@@ -1,10 +1,16 @@
 package com.mert.paticat.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DirectionsWalk
@@ -12,29 +18,48 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mert.paticat.R
+import com.mert.paticat.domain.mission.missionStringRes
 import com.mert.paticat.domain.model.Mission
 import com.mert.paticat.domain.model.MissionType
+import com.mert.paticat.ui.components.marshmallow.ChipPill
+import com.mert.paticat.ui.components.marshmallow.PillowCard
 import com.mert.paticat.ui.theme.AccentGold
 import com.mert.paticat.ui.theme.PremiumBlue
 import com.mert.paticat.ui.theme.PremiumPink
 import com.mert.paticat.ui.theme.PremiumPurple
 import com.mert.paticat.ui.theme.SuccessGreen
 
+/**
+ * Marshmallow mission row. Function name retained for callers.
+ *
+ * Title/description lookup uses the explicit [missionStringRes] map (no
+ * reflection, no per-recomposition logging) and is memoized with [remember]
+ * keyed on the mission's title/description so the lookup happens once per
+ * mission identity, not on every recomposition.
+ */
 @Composable
-fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0, onMissionClick: (Mission) -> Unit = {}) {
+fun GlassMissionItem(
+    mission: Mission,
+    liveSteps: Int = 0,
+    liveWater: Int = 0,
+    onMissionClick: (Mission) -> Unit = {},
+) {
     val displayValue = when (mission.type) {
         MissionType.STEPS -> kotlin.math.max(mission.currentValue, liveSteps)
         MissionType.WATER -> kotlin.math.max(mission.currentValue, liveWater)
@@ -51,178 +76,131 @@ fun GlassMissionItem(mission: Mission, liveSteps: Int = 0, liveWater: Int = 0, o
         else -> PremiumPink
     }
 
-    val context = LocalContext.current
-
-    // Resolve Title
-    var titleResId = getMissionStringId(mission.title)
-    if (titleResId == 0) {
-        titleResId = context.resources.getIdentifier(mission.title, "string", context.packageName)
+    val titleResId = remember(mission.title) { missionStringRes(mission.title) }
+    val displayTitle = if (titleResId != 0) {
+        stringResource(titleResId)
+    } else {
+        // Fallback to the raw key — keeps UI alive when a new key was added without
+        // updating the map. Logging removed; once was per-recomposition spam.
+        mission.title
     }
-    val displayTitle = if (titleResId != 0) context.getString(titleResId) else mission.title
 
-    // Resolve and Format Description
-    var descResId = getMissionStringId(mission.description)
-    if (descResId == 0) {
-        descResId = context.resources.getIdentifier(mission.description, "string", context.packageName)
-    }
+    val descResId = remember(mission.description) { missionStringRes(mission.description) }
     val displayDesc = if (descResId != 0) {
-        try {
-            context.getString(descResId, mission.targetValue)
-        } catch (e: Exception) {
-            context.getString(descResId)
-        }
-    } else mission.description
+        // %d-formatted descriptions take targetValue; non-formatted ones ignore the arg.
+        stringResource(descResId, mission.targetValue)
+    } else {
+        mission.description
+    }
 
-    Card(
+    PillowCard(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(itemAlpha)
-            .clickable { onMissionClick(mission) },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted)
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isCompleted) 0.dp else 2.dp
-        )
+            .alpha(itemAlpha),
+        contentPadding = 14.dp,
+        onClick = { onMissionClick(mission) },
     ) {
-        Row {
-            // Left colored strip
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .width(4.dp)
-                    .fillMaxHeight()
+                    .size(44.dp)
+                    .clip(CircleShape)
                     .background(
-                        color = if (isCompleted) SuccessGreen.copy(alpha = 0.4f) else iconColor,
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp)
-                    )
-            )
-
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                        if (isCompleted) SuccessGreen.copy(alpha = 0.14f)
+                        else iconColor.copy(alpha = 0.14f),
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
-                // Icon Badge
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isCompleted) SuccessGreen.copy(alpha = 0.1f)
-                            else iconColor.copy(alpha = 0.1f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isCompleted) {
-                        Icon(Icons.Default.Check, null, tint = SuccessGreen)
-                    } else {
-                        val icon = when (mission.type) {
-                            MissionType.STEPS -> Icons.Default.DirectionsWalk
-                            MissionType.WATER -> Icons.Default.LocalDrink
-                            MissionType.GAME -> Icons.Default.SportsEsports
-                            else -> Icons.Default.Star
-                        }
-                        Icon(icon, null, tint = iconColor)
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        displayTitle,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleSmall,
-                        textDecoration = if (isCompleted) TextDecoration.LineThrough else null
+                if (isCompleted) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = stringResource(R.string.a11y_mission_complete),
+                        tint = SuccessGreen,
                     )
+                } else {
+                    val icon = when (mission.type) {
+                        MissionType.STEPS -> Icons.Default.DirectionsWalk
+                        MissionType.WATER -> Icons.Default.LocalDrink
+                        MissionType.GAME -> Icons.Default.SportsEsports
+                        else -> Icons.Default.Star
+                    }
+                    Icon(icon, contentDescription = displayTitle, tint = iconColor)
+                }
+            }
 
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = displayTitle,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                        else MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall,
+                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
+                )
+                Text(
+                    text = displayDesc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Normal,
+                )
+                if (!isCompleted) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (displayValue.toFloat() / mission.targetValue).coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(CircleShape),
+                        color = iconColor,
+                        trackColor = iconColor.copy(alpha = 0.1f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        displayDesc,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "$displayValue / ${mission.targetValue}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Normal
                     )
-
-                    if (!isCompleted) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LinearProgressIndicator(
-                            progress = { (displayValue.toFloat() / mission.targetValue).coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                            color = iconColor,
-                            trackColor = iconColor.copy(alpha = 0.1f),
-                            strokeCap = StrokeCap.Round
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "$displayValue / ${mission.targetValue}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-                // Reward Badges
-                Column(horizontalAlignment = Alignment.End) {
-                    if (!isCompleted) {
-                        Surface(
-                            color = AccentGold.copy(alpha = 0.15f),
-                            shape = CircleShape
-                        ) {
-                            Text(
-                                "+${mission.xpReward} XP",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Black,
-                                color = AccentGold
-                            )
-                        }
-                        if (mission.foodPointReward > 0) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Surface(
-                                color = PremiumPink.copy(alpha = 0.15f),
-                                shape = CircleShape
-                            ) {
-                                Text(
-                                    "+${mission.foodPointReward} 🪙",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = PremiumPink
-                                )
-                            }
-                        }
-                    } else {
-                        Icon(Icons.Default.DoneAll, null, tint = SuccessGreen.copy(alpha = 0.5f))
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (!isCompleted) {
+                    ChipPill(
+                        text = "+${mission.xpReward} XP",
+                        backgroundColor = AccentGold.copy(alpha = 0.18f),
+                        contentColor = AccentGold,
+                    )
+                    if (mission.foodPointReward > 0) {
+                        ChipPill(
+                            text = "+${mission.foodPointReward}",
+                            leadingEmoji = "🪙",
+                            backgroundColor = PremiumPink.copy(alpha = 0.16f),
+                            contentColor = PremiumPink,
+                        )
                     }
+                } else {
+                    Icon(
+                        Icons.Default.DoneAll,
+                        contentDescription = stringResource(R.string.a11y_mission_complete),
+                        tint = SuccessGreen.copy(alpha = 0.6f),
+                    )
                 }
             }
         }
     }
 }
 
-fun getMissionStringId(key: String): Int {
-    return when(key) {
-        "mission_steps_tier1_title" -> R.string.mission_steps_tier1_title
-        "mission_steps_tier1_desc" -> R.string.mission_steps_tier1_desc
-        "mission_steps_tier2_title" -> R.string.mission_steps_tier2_title
-        "mission_steps_tier2_desc" -> R.string.mission_steps_tier2_desc
-        "mission_steps_tier3_title" -> R.string.mission_steps_tier3_title
-        "mission_steps_tier3_desc" -> R.string.mission_steps_tier3_desc
-        "mission_steps_tier4_title" -> R.string.mission_steps_tier4_title
-        "mission_steps_tier4_desc" -> R.string.mission_steps_tier4_desc
-        "mission_water_tier1_title" -> R.string.mission_water_tier1_title
-        "mission_water_tier1_desc" -> R.string.mission_water_tier1_desc
-        "mission_water_tier2_title" -> R.string.mission_water_tier2_title
-        "mission_water_tier2_desc" -> R.string.mission_water_tier2_desc
-        "mission_game_tier1_title" -> R.string.mission_game_tier1_title
-        "mission_game_tier1_desc" -> R.string.mission_game_tier1_desc
-        else -> 0
-    }
-}
+/**
+ * Backwards-compat alias retained for [MissionCard] which still references it.
+ * New code should call [missionStringRes] directly.
+ */
+fun getMissionStringId(key: String): Int = missionStringRes(key)

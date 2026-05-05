@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">WalkKittie</string>
+    <string name="splash_subtitle">Your Virtual Companion &amp; Health Tracker</string>
     <!-- Welcome Screen -->
     <string name="welcome_page1_title">Meet Your Cat! 🐱</string>
     <string name="welcome_page1_desc">Adopt a virtual cat companion. Walk, drink water, and complete daily goals to keep it happy and healthy!</string>
@@ -63,12 +64,23 @@
     <string name="inventory_empty">No food yet. Buy some from the shop!</string>
     <string name="inventory_empty_hint">You can buy items from the shop</string>
     <string name="shop_open_button">Open Shop</string>
+    <string name="shop_tab_food">Food</string>
+    <string name="shop_tab_boost">Boost</string>
+    <string name="shop_tab_inventory">Bag</string>
+    <string name="shop_active_boosts_title">Active boosts</string>
+    <string name="shop_no_active_boosts">No boost yet, ready to play ✨</string>
+    <string name="shop_inventory_empty_title">Bag is empty</string>
+    <string name="shop_boost_label_gold">2x gold</string>
+    <string name="shop_boost_label_xp">2x XP</string>
+    <string name="shop_boost_label_combo">2x gold + XP</string>
     <string name="feed_button">Feed 🍖</string>
     <string name="feed_disabled_sleeping">Cat is sleeping 💤</string>
     <string name="cat_action_play">Play</string>
     <string name="cat_play_room">Game Room</string>
     <string name="cat_play_room_disabled">Not enough energy ⚡</string>
     <string name="cat_action_sleep">Sleep</string>
+    <string name="cat_room_hint">Cat room ready ✨</string>
+    <string name="cat_room_cta">Go to cat room</string>
     <string name="cat_full_energy">Restores Energy ⚡</string>
     <string name="cat_ad_reduce_sleep">Watch Ad: Fill Energy ⚡</string>
     <string name="cat_pet_limit_reached">Your cat is tired! Come back in 5 hours to pet again. 🐱</string>
@@ -105,6 +117,8 @@
     <string name="stats_best_day">Best Day</string>
     <string name="stats_goal_success">Goal Success</string>
     <string name="stats_chart_no_data">No Data</string>
+    <string name="undo_action">Undo</string>
+    <string name="stats_mtd_note">(current month, MTD)</string>
     <string name="stats_add_meal_title">Add Meal</string>
     <string name="stats_meal_name">Meal Name</string>
     <string name="stats_calories_input">Calories (kcal)</string>
@@ -210,13 +224,6 @@
     <string name="game_reward_reflex">10 gold • 25 XP</string>
     <string name="game_reward_catch">12 gold • 30 XP</string>
 
-    <!-- Shop Screen -->
-    <string name="shop_title">Shop</string>
-    <string name="shop_balance_total">Total Balance</string>
-    <string name="shop_stock_food">Food Stock</string>
-    <string name="shop_tab_food">Food</string>
-    <string name="shop_tab_accessories">Accessories</string>
-    <string name="shop_tab_special">Special</string>
 
     <!-- Profile Screen -->
     <string name="profile_title">My Profile</string>
@@ -263,6 +270,10 @@
     <string name="btn_save">Save</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_confirm">Confirm</string>
+    <string name="shop_confirm_buy">%1$d coins will be spent. Are you sure?</string>
+    <string name="reset_progress">Reset Progress</string>
+    <string name="reset_confirm_message">All your progress will be deleted. This cannot be undone.</string>
+    <string name="settings_privacy_options">Privacy Options</string>
 
     <!-- Dialogs -->
 
@@ -382,13 +393,13 @@
     <string name="shop_item_step_multiplier">2x Step Boost</string>
     <string name="shop_item_step_multiplier_desc">Earn 2x gold from steps for 24 hours</string>
     <string name="shop_boost_active">⏱ %s left</string>
-    <string name="shop_boost_purchased">Boost active! 2x gold for 24h ⚡</string>
+    <string name="shop_boost_purchased">2x gold active! ⚡</string>
     <string name="shop_item_xp_multiplier">2x XP Boost</string>
     <string name="shop_item_xp_multiplier_desc">Earn 2x XP from steps for 24 hours</string>
-    <string name="shop_boost_xp_purchased">XP boost active! 2x XP for 24h 🌟</string>
+    <string name="shop_boost_xp_purchased">2x XP active! 🌟</string>
     <string name="shop_item_combo_multiplier">2x Combo Boost</string>
     <string name="shop_item_combo_multiplier_desc">Earn 2x gold and 2x XP from steps for 24 hours</string>
-    <string name="shop_boost_combo_purchased">Combo active! 2x gold + 2x XP for 24h 💎</string>
+    <string name="shop_boost_combo_purchased">Combo boost active! 💎</string>
     <string name="shop_item_canned_food">Canned</string>
     <string name="shop_item_canned_food_desc">Tasty canned food</string>
     <string name="shop_item_tuna">Tuna</string>
@@ -564,4 +575,67 @@
     <!-- Boosters -->
     <string name="booster_title">Active Boosters ⚡</string>
     <string name="dialog_close">Close</string>
+
+    <!-- Language labels -->
+    <string name="language_turkish">Turkish</string>
+    <string name="language_english">English</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_mission_complete">Mission complete</string>
+    <string name="a11y_mission_pending">Mission in progress</string>
+    <string name="a11y_streak_icon">Streak</string>
+    <string name="a11y_difficulty_stars">Difficulty: %1$d stars</string>
+
+    <!-- Buttons -->
+    <string name="btn_spinning">Spinning…</string>
+
+    <!-- Reset confirmation -->
+    <string name="reset_hold_to_confirm">Hold 2s to reset</string>
+    <string name="reset_irreversible_warning">This action cannot be undone</string>
+
+    <!-- Game errors -->
+    <string name="game_error_insufficient_energy">Not enough energy</string>
+    <string name="game_quit_confirm_title">Quit game</string>
+    <string name="game_quit_confirm_message">Are you sure you want to quit? Progress will be lost.</string>
+    <string name="game_quit_confirm_yes">Quit</string>
+    <string name="game_quit_confirm_no">Keep playing</string>
+
+    <!-- Buy confirmation -->
+    <string name="buy_confirm_title">Purchase confirmation</string>
+    <string name="buy_confirm_message">%2$d gold will be spent for %1$s. Confirm?</string>
+
+    <!-- Ad states -->
+    <string name="ad_state_loading">Loading ad…</string>
+    <string name="ad_state_expired">Refreshing ad…</string>
+    <string name="ad_state_failed">Ad failed to load</string>
+
+    <!-- Accessibility / Icon descriptions (additions) -->
+    <string name="loading_cat_icon">Loading cat icon</string>
+    <string name="icon_paw">Paw icon</string>
+    <string name="icon_play_cta">Play button</string>
+    <string name="icon_cat_emoji">Cat icon</string>
+    <string name="icon_shop_fab">Shop</string>
+    <string name="icon_booster_fab">Booster</string>
+    <string name="icon_chart_emoji">Chart icon</string>
+    <string name="cd_difficulty_stars">Difficulty: %1$d of %2$d stars</string>
+    <string name="cd_catch_falling_item">Falling item</string>
+    <string name="cd_reflex_tap_target">Tap target</string>
+    <string name="empty_state_chart_emoji_cd">No data yet</string>
+    <string name="empty_state_cat_emoji_cd">No activity yet</string>
+
+    <!-- Stats / Game labels (additions) -->
+    <string name="stats_summary_title">Summary</string>
+    <string name="game_unlock_level">Level %1$d</string>
+
+    <!-- Level info section headers -->
+    <string name="level_section_early">Early game</string>
+    <string name="level_section_mid">Mid game</string>
+    <string name="level_section_late">Late game</string>
+
+    <!-- Theme names -->
+    <string name="theme_name_pink">Pink</string>
+    <string name="theme_name_blue">Blue</string>
+    <string name="theme_name_green">Green</string>
+    <string name="theme_name_purple">Purple</string>
+    <string name="theme_name_orange">Orange</string>
 </resources>

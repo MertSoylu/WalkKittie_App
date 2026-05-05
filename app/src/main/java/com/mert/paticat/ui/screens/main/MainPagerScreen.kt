@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mert.paticat.MainViewModel
 import com.mert.paticat.ui.components.*
+import com.mert.paticat.ui.components.marshmallow.MarshmallowNavBar
 import com.mert.paticat.ui.navigation.Screen
 import com.mert.paticat.ui.navigation.getBottomNavItems
 import com.mert.paticat.ui.screens.cat.CatScreen
@@ -54,12 +56,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun MainPagerScreen(
     onNavigateToGames: () -> Unit,
     onNavigateToLevelInfo: () -> Unit = {},
+    onResetComplete: () -> Unit = {},
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val catName by viewModel.catName.collectAsStateWithLifecycle()
     val bottomNavItems = getBottomNavItems()
 
-    val pagerState = rememberPagerState(pageCount = { bottomNavItems.size })
+    val savedTab = rememberSaveable { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(initialPage = savedTab.intValue, pageCount = { bottomNavItems.size })
+    LaunchedEffect(pagerState.currentPage) { savedTab.intValue = pagerState.currentPage }
     val coroutineScope = rememberCoroutineScope()
 
     // Tutorial Logic
@@ -91,6 +96,9 @@ fun MainPagerScreen(
     // Page Change Effect for Tutorial
     LaunchedEffect(pagerState.currentPage, catName, isTutorialEligible) {
         if (!isTutorialEligible) return@LaunchedEffect
+        // Wait until cat repo emits the user-provided name; tutorial copy
+        // interpolates `catName` into several strings.
+        if (catName.isBlank()) return@LaunchedEffect
         val currentPage = bottomNavItems[pagerState.currentPage]
         val prefKey = "tutorial_completed_v5_${currentPage.route}"
 
@@ -214,7 +222,10 @@ fun MainPagerScreen(
                             if (route == Screen.Games.route) onNavigateToGames()
                         })
                         Screen.Statistics -> StatisticsScreen()
-                        Screen.Profile -> ProfileScreen(onNavigateToLevelInfo = onNavigateToLevelInfo)
+                        Screen.Profile -> ProfileScreen(
+                            onNavigateToLevelInfo = onNavigateToLevelInfo,
+                            onResetComplete = onResetComplete,
+                        )
                         else -> Box(Modifier.fillMaxSize())
                     }
                 }
@@ -229,7 +240,7 @@ fun MainPagerScreen(
                 .navigationBarsPadding(),
             contentAlignment = Alignment.BottomCenter
         ) {
-            GlassFloatingBottomBar(
+            MarshmallowNavBar(
                 items = bottomNavItems,
                 selectedIndex = pagerState.currentPage,
                 pageOffset = pagerState.currentPageOffsetFraction,

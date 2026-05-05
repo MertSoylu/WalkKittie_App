@@ -12,7 +12,19 @@ data class ProfileUiState(
     val userProfile: UserProfile = UserProfile(),
     val darkModeEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    // True while a preference write is in-flight — UI can disable toggles to
+    // prevent double-tap thrash.
+    val isSavingPrefs: Boolean = false,
+    // Last preference-save error message; null when the most recent save succeeded.
+    val saveError: String? = null,
+    // True while a locale switch is being applied (DataStore write + activity recreate).
+    val isLocaleSwitching: Boolean = false,
+    // Errors propagated from the data observers (cat / profile / notifications flows).
+    val observeError: String? = null,
+    // True while resetAllData() is running — UI should block destructive
+    // actions and show a progress indicator.
+    val isResetting: Boolean = false
 ) {
     val userName: String get() = userProfile.name
     val level: Int get() = cat.level

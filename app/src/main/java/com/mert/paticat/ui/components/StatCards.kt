@@ -38,9 +38,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mert.paticat.ui.theme.PastelBlue
 import com.mert.paticat.ui.theme.PastelMint
-import com.mert.paticat.ui.theme.PastelPink
 
 /**
  * A cute stat card with icon and progress.
@@ -52,7 +50,7 @@ fun StatCard(
     subtitle: String? = null,
     icon: ImageVector,
     progress: Float = 0f,
-    progressColor: Color = PastelPink,
+    progressColor: Color = MaterialTheme.colorScheme.primary,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     modifier: Modifier = Modifier
 ) {
@@ -147,7 +145,7 @@ fun GradientStatCard(
     value: String,
     subtitle: String? = null,
     icon: ImageVector,
-    gradientColors: List<Color> = listOf(PastelPink, PastelBlue),
+    gradientColors: List<Color> = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary),
     modifier: Modifier = Modifier
 ) {
     Card(

@@ -18,7 +18,8 @@ data class HomeUiState(
     val currentStreak: Int = 0,
     val nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null,
     val error: String? = null,
-    val lastAddedWater: Int? = null
+    val lastAddedWater: Int? = null,
+    val userMessage: String? = null
 ) {
     val stepProgress: Float
         get() = (todayStats.steps.toFloat() / stepGoal).coerceIn(0f, 1f)
