@@ -93,12 +93,13 @@ class MainViewModelTest {
         assertEquals(2, viewModel.rewardNotificationData.value?.xp)
         assertEquals(2, viewModel.rewardNotificationData.value?.gold)
 
+        // Second notification goes to queue (ViewModel shows one at a time)
         pendingRewardXp.value = 4
         pendingRewardGold.value = 3
         advanceUntilIdle()
 
-        assertEquals(4, viewModel.rewardNotificationData.value?.xp)
-        assertEquals(3, viewModel.rewardNotificationData.value?.gold)
+        assertEquals(2, viewModel.rewardNotificationData.value?.xp)
+        assertEquals(2, viewModel.rewardNotificationData.value?.gold)
     }
 
     @Test

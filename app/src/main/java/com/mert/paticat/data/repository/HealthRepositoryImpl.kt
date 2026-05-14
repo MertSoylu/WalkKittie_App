@@ -64,7 +64,7 @@ class HealthRepositoryImpl @Inject constructor(
         if (existing != null) {
             dailyStatsDao.updateWater(today, existing.waterMl + amountMl)
         } else {
-            dailyStatsDao.insertStats(
+            dailyStatsDao.insertDailyStats(
                 DailyStatsEntity(date = today, waterMl = amountMl)
             )
         }
@@ -81,7 +81,7 @@ class HealthRepositoryImpl @Inject constructor(
         if (existing != null) {
             dailyStatsDao.updateSteps(today, steps)
         } else {
-            dailyStatsDao.insertStats(
+            dailyStatsDao.insertDailyStats(
                 DailyStatsEntity(date = today, steps = steps)
             )
         }
@@ -92,7 +92,7 @@ class HealthRepositoryImpl @Inject constructor(
         if (existing != null) {
             dailyStatsDao.updateCalories(today, calories)
         } else {
-            dailyStatsDao.insertStats(
+            dailyStatsDao.insertDailyStats(
                 DailyStatsEntity(date = today, caloriesBurned = calories)
             )
         }

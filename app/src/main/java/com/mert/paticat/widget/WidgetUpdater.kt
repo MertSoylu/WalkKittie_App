@@ -1,21 +1,24 @@
 package com.mert.paticat.widget
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import com.mert.paticat.domain.model.Cat
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 object WidgetUpdater {
-    @OptIn(DelicateCoroutinesApi::class)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     fun updateWidget(context: Context, cat: Cat) {
-        GlobalScope.launch {
+        scope.launch {
             try {
-                val glanceId = GlanceAppWidgetManager(context).getGlanceIds(CatWidget::class.java).firstOrNull()
-                if (glanceId != null) {
+                val glanceIds = GlanceAppWidgetManager(context).getGlanceIds(CatWidget::class.java)
+                for (glanceId in glanceIds) {
                     updateAppWidgetState(context, glanceId) { prefs ->
                         prefs[intPreferencesKey("cat_hunger")] = cat.hunger
                         prefs[intPreferencesKey("cat_energy")] = cat.energy
@@ -23,8 +26,10 @@ object WidgetUpdater {
                     }
                     CatWidget().update(context, glanceId)
                 }
+            } catch (e: IllegalStateException) {
+                Log.w("WidgetUpdater", "No active widget to update", e)
             } catch (e: Exception) {
-                // Ignore if widget is not active
+                Log.e("WidgetUpdater", "Widget update failed", e)
             }
         }
     }

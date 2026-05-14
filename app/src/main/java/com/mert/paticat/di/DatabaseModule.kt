@@ -31,7 +31,8 @@ object DatabaseModule {
                 PatiCatDatabase.MIGRATION_10_11,
                 PatiCatDatabase.MIGRATION_11_12,
                 PatiCatDatabase.MIGRATION_12_13,
-                PatiCatDatabase.MIGRATION_13_14
+                PatiCatDatabase.MIGRATION_13_14,
+                PatiCatDatabase.MIGRATION_14_15
             )
             // Only allow destructive migration from versions before explicit migrations existed.
             // Versions 8+ are covered by explicit migrations — a missing migration will crash

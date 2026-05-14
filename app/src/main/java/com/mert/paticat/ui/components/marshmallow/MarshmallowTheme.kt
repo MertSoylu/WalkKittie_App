@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -373,6 +379,10 @@ fun MarshmallowTabs(
                     .clip(pillShape)
                     .background(bg, pillShape)
                     .pillowPress(onClick = { onSelect(index) })
+                    .semantics {
+                        role = Role.Tab
+                        this.selected = selected
+                    }
                     .padding(vertical = 12.dp, horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -411,11 +421,10 @@ fun SoftSwitch(
             .clip(trackShape)
             .background(if (checked) onColor else offColor, trackShape)
             .pillowPress(onClick = { onCheckedChange(!checked) }),
-        contentAlignment = Alignment.CenterStart,
     ) {
         Box(
             modifier = Modifier
-                .padding(start = animOffset)
+                .offset(x = animOffset)
                 .size(26.dp)
                 .clip(CircleShape)
                 .background(Color.White),
@@ -443,7 +452,9 @@ fun SectionHeader2(
         }
         Text(
             text = title,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,

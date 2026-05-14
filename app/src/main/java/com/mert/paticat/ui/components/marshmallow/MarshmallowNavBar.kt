@@ -98,8 +98,8 @@ fun MarshmallowNavBar(
                 label = "pill_offset"
             )
             val pillLiveDp = (itemWidth * smoothedOffset) + pillPaddingH
-            val isSwipingPrecisely = abs(pageOffset) > 0.01f
-            val pillOffsetDp = if (isSwipingPrecisely) pillLiveDp else pillTargetDp
+            val pillMaxDp = itemWidth * (items.size - 1) + pillPaddingH
+            val pillOffsetDp = pillLiveDp.coerceIn(pillPaddingH, pillMaxDp)
 
             Box(
                 modifier = Modifier

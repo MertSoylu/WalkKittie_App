@@ -23,6 +23,7 @@ val WalkkittieFontFamily = FontFamily(
     Font(googleFont = NunitoFont, fontProvider = provider, weight = FontWeight.SemiBold),
     Font(googleFont = NunitoFont, fontProvider = provider, weight = FontWeight.Bold),
     Font(googleFont = NunitoFont, fontProvider = provider, weight = FontWeight.ExtraBold),
+    Font(googleFont = NunitoFont, fontProvider = provider, weight = FontWeight.Normal),
 )
 
 val Typography = Typography(

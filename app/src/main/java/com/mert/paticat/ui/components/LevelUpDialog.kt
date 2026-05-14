@@ -16,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -87,8 +90,6 @@ fun LevelUpDialog(
                 .clickable(enabled = false) {},
             contentAlignment = Alignment.Center
         ) {
-            ParticleSystemCanvas(state = particleSystem, modifier = Modifier.fillMaxSize())
-
             AnimatedVisibility(
                 visible = showDialog,
                 enter = scaleIn(
@@ -192,16 +193,16 @@ fun LevelUpDialog(
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
 
-                        Box(
+                        Button(
+                            onClick = {
+                                showDialog = false
+                                onDismiss()
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp)
-                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp))
-                                .bounceClick {
-                                    showDialog = false
-                                    onDismiss()
-                                },
-                            contentAlignment = Alignment.Center
+                                .height(64.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Text(
                                 stringResource(R.string.level_up_button),
@@ -214,7 +215,6 @@ fun LevelUpDialog(
                 }
             }
 
-            ParticleSystemCanvas(state = particleSystem, modifier = Modifier.fillMaxSize())
         }
     }
 }

@@ -40,11 +40,10 @@ class SoundManager(context: Context) {
     
     fun playPurr() {
         try {
-            // Only play if not already playing
-            if (purrMediaPlayer?.isPlaying == true) {
-                return
-            }
-            purrMediaPlayer?.start()
+            val mp = purrMediaPlayer ?: return
+            if (mp.isPlaying) return
+            mp.seekTo(0)
+            mp.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }

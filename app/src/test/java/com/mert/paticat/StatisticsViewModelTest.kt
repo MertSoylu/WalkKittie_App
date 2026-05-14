@@ -107,8 +107,8 @@ class StatisticsViewModelTest {
         advanceTimeBy(600L) // let debounce(500L) fire
         advanceUntilIdle()
 
-        // total = 14000, active days = 2 → avg = 7000 (NOT 14000/7 = 2000)
-        assertEquals(7000, vm.uiState.value.detailedStats.avgSteps)
+        // total = 14000, rangeDays = 7 → avg = 2000 (uses range not active days for consistency)
+        assertEquals(2000, vm.uiState.value.detailedStats.avgSteps)
     }
 
     @Test

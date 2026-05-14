@@ -688,8 +688,8 @@ private fun ProfileHero(
                 }
                 Spacer(Modifier.width(8.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    IconButton(onClick = onEditName) { Icon(Icons.Default.Edit, null, tint = brandColor) }
-                    IconButton(onClick = onEditCatName) { Icon(Icons.Default.Pets, null, tint = brandColor) }
+                    IconButton(onClick = onEditName) { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.profile_edit_name), tint = brandColor) }
+                    IconButton(onClick = onEditCatName) { Icon(Icons.Default.Pets, contentDescription = stringResource(R.string.profile_edit_cat_name), tint = brandColor) }
                 }
             }
 
@@ -716,7 +716,7 @@ private fun ProfileHero(
                     )
                     Icon(
                         Icons.Default.Edit,
-                        null,
+                        contentDescription = stringResource(R.string.profile_edit_cat_name),
                         tint = brandColor.copy(alpha = 0.7f),
                         modifier = Modifier.size(16.dp),
                     )
@@ -761,7 +761,7 @@ fun ThemeSelectionItem(theme: ThemeColor, isSelected: Boolean, onClick: () -> Un
             contentAlignment = Alignment.Center,
         ) {
             if (isSelected) {
-                Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Icon(Icons.Default.Check, contentDescription = stringResource(R.string.theme_selected), tint = Color.White, modifier = Modifier.size(22.dp))
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -800,7 +800,7 @@ fun ProfileStatCard(
                     .background(color.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
+                Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.height(8.dp))
             Text(text = value, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = color)
@@ -814,10 +814,6 @@ fun ProfileStatCard(
         }
     }
 }
-
-@Composable
-fun NewProfileStatItem(label: String, value: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier) =
-    ProfileStatCard(label, value, icon, color, modifier)
 
 // ==================== GOAL ITEM ====================
 
@@ -843,7 +839,7 @@ fun GoalItem(
                     .background(color.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
+                Icon(icon, contentDescription = title, tint = color, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -859,14 +855,10 @@ fun GoalItem(
                     fontSize = 18.sp,
                 )
             }
-            Icon(Icons.Default.ChevronRight, null, tint = color, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.icon_chevron), tint = color, modifier = Modifier.size(20.dp))
         }
     }
 }
-
-@Composable
-fun NewGoalItem(title: String, value: String, icon: ImageVector, color: Color, onClick: () -> Unit) =
-    GoalItem(title, value, icon, color, onClick)
 
 // ==================== SETTINGS ROW ====================
 
@@ -892,7 +884,7 @@ fun SettingsRow(
                 .background(iconColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, null, tint = iconColor, modifier = Modifier.size(17.dp))
+            Icon(icon, contentDescription = title, tint = iconColor, modifier = Modifier.size(17.dp))
         }
         Spacer(Modifier.width(14.dp))
         Text(
@@ -903,16 +895,6 @@ fun SettingsRow(
         )
         trailingContent()
     }
-}
-
-@Composable
-fun NewSettingsSwitchRow(icon: ImageVector, title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    SettingsRow(
-        icon = icon,
-        iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        title = title,
-        trailingContent = { SoftSwitch(checked = checked, onCheckedChange = onCheckedChange) },
-    )
 }
 
 // ==================== DIALOGS ====================
@@ -1053,6 +1035,6 @@ private fun StepperRoundButton(icon: ImageVector, color: Color, onClick: () -> U
             .pillowPress(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(28.dp))
+        Icon(icon, contentDescription = stringResource(R.string.icon_button), tint = color, modifier = Modifier.size(28.dp))
     }
 }

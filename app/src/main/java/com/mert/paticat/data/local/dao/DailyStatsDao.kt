@@ -29,9 +29,6 @@ interface DailyStatsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDailyStats(stats: DailyStatsEntity)
     
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertStats(stats: DailyStatsEntity)
-    
     @Update
     suspend fun updateStats(stats: DailyStatsEntity)
     

@@ -623,6 +623,13 @@
     <string name="empty_state_chart_emoji_cd">Henüz veri yok</string>
     <string name="empty_state_cat_emoji_cd">Henüz aktivite yok</string>
 
+    <!-- Profile accessibility -->
+    <string name="profile_edit_name">İsmi Düzenle</string>
+    <string name="profile_edit_cat_name">Kedi İsmi Düzenle</string>
+    <string name="theme_selected">Seçili tema</string>
+    <string name="icon_button">Buton</string>
+    <string name="icon_chevron">İleri</string>
+
     <!-- Stats / Game labels (additions) -->
     <string name="stats_summary_title">Özet</string>
     <string name="game_unlock_level">Seviye %1$d</string>

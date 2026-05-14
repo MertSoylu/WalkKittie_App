@@ -171,19 +171,13 @@ fun CatScreen(
     }
 
     val isSleeping = viewModel.isCatSleeping()
-    var tick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(isSleeping) {
-        while (isSleeping) { delay(1000); tick++ }
-    }
+    val sleepTimeRemaining by viewModel.sleepTimeRemaining.collectAsStateWithLifecycle()
+    val activeBoosters by viewModel.activeBoosters.collectAsStateWithLifecycle()
 
     DisposableEffect(Unit) { onDispose { soundManager.release() } }
 
     var showShop by remember { mutableStateOf(false) }
     var showBoosterDialog by remember { mutableStateOf(false) }
-    var boosterRefreshTick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(showBoosterDialog) {
-        while (showBoosterDialog) { delay(1000); boosterRefreshTick++ }
-    }
 
     // Debounced 500ms — prevents ad reload thrash on network state flicker.
     LaunchedEffect(Unit) {
@@ -236,7 +230,7 @@ fun CatScreen(
     }
 
     if (showBoosterDialog) {
-        BoosterDialog(viewModel = viewModel, tick = boosterRefreshTick, onDismiss = { showBoosterDialog = false })
+        BoosterDialog(boosters = activeBoosters, getTime = { viewModel.getBoosterRemainingTime(it) }, onDismiss = { showBoosterDialog = false })
     }
 
     Scaffold(
@@ -305,8 +299,8 @@ fun CatScreen(
                         isSleeping = isSleeping,
                         showHeart = showHeart,
                         motionEnabled = motionEnabled,
-                        activeBoostersExist = viewModel.getActiveBoosters().isNotEmpty(),
-                        firstBoosterEmoji = viewModel.getActiveBoosters().firstOrNull()?.emoji ?: "",
+                        activeBoostersExist = activeBoosters.isNotEmpty(),
+                        firstBoosterEmoji = activeBoosters.firstOrNull()?.emoji ?: "",
                         onPositioned = { coords ->
                             val bounds = coords.boundsInWindow()
                             catCenter = Offset(bounds.center.x, bounds.center.y)
@@ -331,9 +325,8 @@ fun CatScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                @Suppress("UNUSED_EXPRESSION") boosterRefreshTick
-                ActiveBoostStrip(
-                    boosters = viewModel.getActiveBoosters(),
+                    ActiveBoostStrip(
+                    boosters = activeBoosters,
                     formatRemaining = { viewModel.getBoosterRemainingTime(it) },
                     onClick = { showBoosterDialog = true },
                 )
@@ -362,7 +355,7 @@ fun CatScreen(
                         sleepAdState = uiState.sleepAdState,
                         sleepAdsRemaining = uiState.sleepAdsRemaining,
                         isNetworkAvailable = uiState.isNetworkAvailable,
-                        sleepRemaining = remember(tick) { viewModel.getSleepRemainingTime() },
+                        sleepRemaining = sleepTimeRemaining,
                         onFeed = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             showShop = true
@@ -1611,10 +1604,8 @@ fun GoldTutorialDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun BoosterDialog(viewModel: CatViewModel, tick: Int, onDismiss: () -> Unit) {
-    @Suppress("UNUSED_EXPRESSION") tick
-    val activeBoosters = viewModel.getActiveBoosters()
-    if (activeBoosters.isEmpty()) {
+fun BoosterDialog(boosters: List<com.mert.paticat.ui.screens.cat.CatViewModel.BoosterInfo>, getTime: (Long) -> String, onDismiss: () -> Unit) {
+    if (boosters.isEmpty()) {
         onDismiss()
         return
     }
@@ -1635,7 +1626,7 @@ fun BoosterDialog(viewModel: CatViewModel, tick: Int, onDismiss: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                activeBoosters.forEach { booster ->
+                boosters.forEach { booster ->
                     PillowCard(
                         modifier = Modifier.fillMaxWidth(),
                         backgroundColor = PremiumBlue.copy(alpha = 0.10f),
@@ -1667,7 +1658,7 @@ fun BoosterDialog(viewModel: CatViewModel, tick: Int, onDismiss: () -> Unit) {
                                 )
                             }
                             Text(
-                                text = viewModel.getBoosterRemainingTime(booster.expiresAt),
+                                text = getTime(booster.expiresAt),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = PremiumBlue,

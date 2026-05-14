@@ -214,7 +214,7 @@ fun StatusBarMini(
 
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "%$value",
+            text = "$value%",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = color,

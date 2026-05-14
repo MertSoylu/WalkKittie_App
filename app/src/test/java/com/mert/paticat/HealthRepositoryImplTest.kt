@@ -33,7 +33,7 @@ class HealthRepositoryImplTest {
         repository.addWater(300)
 
         val captor = argumentCaptor<DailyStatsEntity>()
-        verify(dao).insertStats(captor.capture())
+        verify(dao).insertDailyStats(captor.capture())
         assertEquals(300, captor.firstValue.waterMl)
     }
 

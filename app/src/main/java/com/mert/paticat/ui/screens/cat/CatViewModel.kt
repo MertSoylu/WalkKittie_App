@@ -22,6 +22,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -85,9 +88,32 @@ class CatViewModel @Inject constructor(
     // Single source of truth: uiState.isFeedingInProgress. Removed redundant
     // _isFeedingInProgress flow (was prone to desync on exception).
 
+    // ===== Sleep timer flow =====
+    // Emits remaining sleep time string every second while sleeping.
+    // Replaces local polling in CatScreen.
+    val sleepTimeRemaining: StateFlow<String> =
+        _uiState.map { state ->
+            if (state.cat.isSleeping && state.cat.sleepEndTime > 0L) {
+                formatRemainingTime(state.cat.sleepEndTime)
+            } else ""
+        }
+            .onStart { emit("") }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "")
+
     // ===== Boost timer flow =====
     // Single VM-scoped flow emits remaining boost time every 1s. Replaces per-Composable
     // while-loop polling in ActiveBoostSummary / BoostItemCard.
+    val activeBoosters: StateFlow<List<BoosterInfo>> =
+        flow {
+            while (currentCoroutineContext().isActive) {
+                emit(computeBoosters())
+                delay(1000L)
+            }
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
     val boostTimeRemaining: StateFlow<List<BoostRemaining>> =
         flow {
             while (currentCoroutineContext().isActive) {
@@ -284,22 +310,14 @@ class CatViewModel @Inject constructor(
 
     data class BoosterInfo(val name: String, val expiresAt: Long, val emoji: String)
 
-    fun getActiveBoosters(): List<BoosterInfo> {
+    private fun computeBoosters(): List<BoosterInfo> {
         val state = _uiState.value
         val now = System.currentTimeMillis()
-        val boosters = mutableListOf<BoosterInfo>()
-
-        if (state.stepBoostExpiresAt > now) {
-            boosters.add(BoosterInfo("Step Boost", state.stepBoostExpiresAt, "👟"))
+        return buildList {
+            if (state.stepBoostExpiresAt > now) add(BoosterInfo("Step Boost", state.stepBoostExpiresAt, "👟"))
+            if (state.xpBoostExpiresAt > now) add(BoosterInfo("XP Boost", state.xpBoostExpiresAt, "⭐"))
+            if (state.comboBoostExpiresAt > now) add(BoosterInfo("Combo Boost", state.comboBoostExpiresAt, "💫"))
         }
-        if (state.xpBoostExpiresAt > now) {
-            boosters.add(BoosterInfo("XP Boost", state.xpBoostExpiresAt, "⭐"))
-        }
-        if (state.comboBoostExpiresAt > now) {
-            boosters.add(BoosterInfo("Combo Boost", state.comboBoostExpiresAt, "💫"))
-        }
-
-        return boosters
     }
 
     fun feedCatWithItem(item: ShopItem) {

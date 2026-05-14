@@ -3,6 +3,7 @@ package com.mert.paticat.data.repository
 import com.mert.paticat.data.local.dao.UserProfileDao
 import com.mert.paticat.data.local.entity.UserProfileEntity
 import com.mert.paticat.data.local.toDomain
+import com.mert.paticat.data.local.toEntity
 import com.mert.paticat.domain.model.UserProfile
 import com.mert.paticat.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
@@ -59,18 +60,4 @@ class UserProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun UserProfile.toEntity(): UserProfileEntity {
-        return UserProfileEntity(
-            id = id,
-            name = name,
-            gender = gender,
-            weight = weight,
-            dailyStepGoal = dailyStepGoal,
-            dailyWaterGoalMl = dailyWaterGoalMl,
-            dailyCalorieGoal = dailyCalorieGoal,
-            currentStreak = currentStreak,
-            longestStreak = longestStreak,
-            totalXpEarned = totalXpEarned
-        )
-    }
 }

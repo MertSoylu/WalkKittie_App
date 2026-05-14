@@ -91,7 +91,7 @@ fun TutorialOverlay(
                 .padding(horizontal = 16.dp)
                 .shadow(24.dp, RoundedCornerShape(28.dp)),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -108,7 +108,7 @@ fun TutorialOverlay(
                         Icon(
                             Icons.Default.Close,
                             contentDescription = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.tutorial_btn_close),
-                            tint = Color.Gray.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -185,7 +185,7 @@ fun TutorialOverlay(
                 Text(
                     text = target.description.asString(),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
@@ -235,7 +235,7 @@ fun TutorialOverlay(
                     ) {
                         Text(
                             text = androidx.compose.ui.res.stringResource(com.mert.paticat.R.string.tutorial_btn_skip),
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                     }
@@ -244,7 +244,7 @@ fun TutorialOverlay(
                 // Progress text
                 Text(
                     text = "${currentStep + 1} / ${targets.size}",
-                    color = Color.Gray.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 8.dp)
                 )
